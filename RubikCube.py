@@ -253,7 +253,6 @@ if __name__ == '__main__':
     print("Back col 0:")
     cube.print_cube_state()
 
-
     assert not cube.is_solved(), "Failed Test 2: Cube should not be solved"
 
     # Test 3: Undo the rotations and confirm it's solved
