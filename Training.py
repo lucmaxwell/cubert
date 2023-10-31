@@ -1,20 +1,20 @@
 import numpy as np
 import torch
-import torch.optim as optim
 import matplotlib.pyplot as plt
 from datetime import datetime
 import os
 import time
+import torch.nn.functional
 
-from RubikCubeEnv import RubiksCubeEnv
+from RubikCubeEnv import RubiksCubeEnv, NUM_SCRAMBLE
 from RubikLearningAgent import RubikLearningAgent
 
 
 # Hyperparameters
-GAMMA = 0.99
+GAMMA = 0.99 # Discount rate
 EPSILON_START = 1.0
 EPSILON_DECAY = 0.995
-NUM_EPISODES = 1000
+NUM_EPISODES = 100
 BATCH_SIZE = 32
 
 
@@ -23,8 +23,8 @@ if __name__ == '__main__':
 
     # Initialize environment and agent
     env = RubiksCubeEnv()
-    agent = RubikLearningAgent()
-    optimizer = optim.Adam(agent.parameters(), lr=0.001)
+    training_model = RubikLearningAgent()
+    optimizer = optim.Adam(training_model.parameters(), lr=0.001)
     criterion = torch.nn.MSELoss()
 
     # Initialize variables for tracking performance
@@ -36,98 +36,87 @@ if __name__ == '__main__':
     # Load pre-trained model if available
     model_path = "rubik_model.pth"
     if os.path.exists(model_path):
-        agent.load_state_dict(torch.load(model_path))
+        training_model.load_state_dict(torch.load(model_path))
 
     # Training loop
     epsilon = EPSILON_START
-    for episode in range(NUM_EPISODES):
+    for episode in range(1, NUM_EPISODES + 1):
         state = env.reset()
         done = False
         total_reward = 0
-        episode_loss = 0
 
-        while not done:
+        # Print the initial state
+        print(f"Initial state episode {episode}:")
+        env.render()
+
+        move_count = 0
+        while not done and move_count < NUM_SCRAMBLE:
+            action = env.action_space.sample()
+            n_state, reward, done,  = env.step(action)
+            total_reward += reward
+        print('Episode:{} Score:{}'.format(episode, score))
+
+
             # Epsilon-greedy action selection
-            if np.random.rand() < epsilon:
-                sampled_action = env.action_space.sample()
-                action = {
-                    'face': sampled_action['face'],
-                    'spin': sampled_action['spin'],
-                    'row_or_col': sampled_action['row_or_col']}
-            else:
-                q_values = agent(torch.tensor(state, dtype=torch.float32))  # Modified line
-                action_key = q_values.argmax().item()
-                action = {
-                    'face': action_key // 12,
-                    'spin': (action_key % 12) // 3,
-                    'row_or_col': action_key % 3}
+            sampled_action = env.action_space.sample()
+            action = {
+                'face': sampled_action['face'],
+                'spin': sampled_action['spin'],
+                'row_or_col': sampled_action['row_or_col']}
+            # Stable path
+            if np.random.rand() > epsilon:
+                state_tensor = torch.FloatTensor(state).unsqueeze(0)
+                with torch.no_grad():
+                    q_values = training_model(state_tensor)
+                _, action = torch.max(q_values, dim=1)
+                action = action.item()
 
+            # Take action and get reward
             next_state, reward, done, _, _ = env.step(action)
             total_reward += reward
 
-            # Append to lists
-            states.append(state)
-            actions.append(action)
-            rewards.append(reward)
-            next_states.append(next_state)
+            # Q-function update
+            state_tensor = torch.FloatTensor(state).unsqueeze(0)
+            next_state_tensor = torch.FloatTensor(next_state).unsqueeze(0)
+            action_tensor = torch.LongTensor([action]).unsqueeze(0)
 
-            # If batch is large enough, perform an update
-            if len(states) >= BATCH_SIZE:
-                state_batch = torch.tensor(states, dtype=torch.float32)
-                next_state_batch = torch.tensor(next_states, dtype=torch.float32)
-                # Convert actions and rewards to tensors as needed
+            q_values = training_model(state_tensor)
+            current_q_value = q_values.gather(1, action_tensor).squeeze()
 
-                # Calculate Q-values and loss using batches
-                q_values = agent(state_batch)
-                # ... (Your existing code for calculating target and loss)
+            with torch.no_grad():
+                next_q_values = training_model(next_state_tensor)
+                max_next_q_value = next_q_values.max(1)[0]
+                target_q_value = reward + (GAMMA * max_next_q_value) * (not done)
 
-                # Clear the lists
-                states.clear()
-                actions.clear()
-                rewards.clear()
-                next_states.clear()
-
-                # Perform the optimization step
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-
-            next_state, reward, done, _, _ = env.step(action)
-            total_reward += reward
-
-            # Update Q-values using Bellman equation
-            q_values = agent(torch.tensor(state, dtype=torch.float32).unsqueeze(0))
-            target = reward + GAMMA * agent(torch.tensor(next_state, dtype=torch.float32).unsqueeze(0)).max().item()
-            prediction = agent(torch.tensor(state, dtype=torch.float32).unsqueeze(0))[action]
-
-            loss = criterion(prediction, target)
-            episode_loss += loss.item()
-
+            loss = torch.nn.functional.mse_loss(current_q_value, target_q_value)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
+            # Update
+            move_count += 1
             state = next_state
 
         # Update epsilon
         epsilon *= EPSILON_DECAY
 
         # Logging
-        print(f"Episode: {episode}, Total Reward: {total_reward}, Loss: {episode_loss}, Epsilon: {epsilon}")
+        print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {epsilon}")
         rewards.append(total_reward)
-        losses.append(episode_loss)
 
         # Save model checkpoint after every 100 episodes
         if episode % 100 == 0:
-            torch.save(agent.state_dict(), f"rubik_model_checkpoint_{episode}.pth")
+            torch.save(training_model.state_dict(), f"rubik_model_checkpoint_{episode}.pth")
+
+    # Release resource
+    env.close()
 
     # Save final model
-    torch.save(agent.state_dict(), "rubik_model_final.pth")
+    torch.save(training_model.state_dict(), "rubik_model_final.pth")
 
     # Generate and save performance reports
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     np.save(f"rewards_{timestamp}.npy", np.array(rewards))
-    np.save(f"losses_{timestamp}.npy", np.array(losses))
 
     # Generate and save plots
     plt.figure()
@@ -136,13 +125,6 @@ if __name__ == '__main__':
     plt.xlabel("Episode")
     plt.ylabel("Total Reward")
     plt.savefig(f"rewards_plot_{timestamp}.png")
-
-    plt.figure()
-    plt.plot(losses)
-    plt.title("Loss per Episode")
-    plt.xlabel("Episode")
-    plt.ylabel("Loss")
-    plt.savefig(f"losses_plot_{timestamp}.png")
 
     end_time = time.time()
     elapsed_time = end_time - start_time
