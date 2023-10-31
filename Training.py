@@ -1,14 +1,14 @@
-import numpy as np
-import torch
-import matplotlib.pyplot as plt
-from datetime import datetime
 import os
 import time
+from datetime import datetime
+import matplotlib.pyplot as plt
+import numpy as np
 import torch.nn.functional
+from stable_baselines3 import PPO
+from stable_baselines3.common.vec_env import DummyVecEnv
 
 from RubikCubeEnv import RubiksCubeEnv, NUM_SCRAMBLE
 from RubikLearningAgent import RubikLearningAgent
-
 
 # Hyperparameters
 GAMMA = 0.99 # Discount rate
@@ -21,11 +21,28 @@ BATCH_SIZE = 32
 if __name__ == '__main__':
     start_time = time.time()
 
-    # Initialize environment and agent
+    save_path = os.path.join('Training', 'Saved Models')
+    log_path = os.path.join('Training', 'Logs')
+
+    # Create the environment and vector for parallel environments
     env = RubiksCubeEnv()
-    training_model = RubikLearningAgent()
-    optimizer = optim.Adam(training_model.parameters(), lr=0.001)
-    criterion = torch.nn.MSELoss()
+    env = DummyVecEnv([lambda: env])
+
+    model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
+
+    # Train the agent
+    model.learn(total_timesteps=10000)
+
+    # Test the trained agent
+    obs = env.reset()
+    done = False
+    while not done:
+        action, _states = model.predict(obs)
+        obs, rewards, done, info = env.step(action)
+        env.render()
+
+
+
 
     # Initialize variables for tracking performance
     states = []
@@ -41,7 +58,7 @@ if __name__ == '__main__':
     # Training loop
     epsilon = EPSILON_START
     for episode in range(1, NUM_EPISODES + 1):
-        state = env.reset()
+        env.reset()
         done = False
         total_reward = 0
 
@@ -52,50 +69,13 @@ if __name__ == '__main__':
         move_count = 0
         while not done and move_count < NUM_SCRAMBLE:
             action = env.action_space.sample()
-            n_state, reward, done,  = env.step(action)
-            total_reward += reward
-        print('Episode:{} Score:{}'.format(episode, score))
-
-
-            # Epsilon-greedy action selection
-            sampled_action = env.action_space.sample()
-            action = {
-                'face': sampled_action['face'],
-                'spin': sampled_action['spin'],
-                'row_or_col': sampled_action['row_or_col']}
-            # Stable path
-            if np.random.rand() > epsilon:
-                state_tensor = torch.FloatTensor(state).unsqueeze(0)
-                with torch.no_grad():
-                    q_values = training_model(state_tensor)
-                _, action = torch.max(q_values, dim=1)
-                action = action.item()
-
-            # Take action and get reward
-            next_state, reward, done, _, _ = env.step(action)
+            n_state, reward, done, _, _ = env.step(action)
             total_reward += reward
 
-            # Q-function update
-            state_tensor = torch.FloatTensor(state).unsqueeze(0)
-            next_state_tensor = torch.FloatTensor(next_state).unsqueeze(0)
-            action_tensor = torch.LongTensor([action]).unsqueeze(0)
-
-            q_values = training_model(state_tensor)
-            current_q_value = q_values.gather(1, action_tensor).squeeze()
-
-            with torch.no_grad():
-                next_q_values = training_model(next_state_tensor)
-                max_next_q_value = next_q_values.max(1)[0]
-                target_q_value = reward + (GAMMA * max_next_q_value) * (not done)
-
-            loss = torch.nn.functional.mse_loss(current_q_value, target_q_value)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            # Update
+            # Action taken
             move_count += 1
-            state = next_state
+        print('Episode:{} Score:{}'.format(episode, total_reward))
+
 
         # Update epsilon
         epsilon *= EPSILON_DECAY
