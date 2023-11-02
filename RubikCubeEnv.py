@@ -39,7 +39,7 @@ class RubiksCubeEnv(gymnasium.Env):
             dtype=np.uint8)
 
         # Define the reward range
-        self.reward_range = (0, 1)
+        self.reward_range = (-1, 1)
 
 
     def reset(self, **kwargs):
@@ -63,7 +63,7 @@ class RubiksCubeEnv(gymnasium.Env):
 
         # Calculate reward based on the number of correct squares
         done = self.cube.is_solved()
-        reward = (self.cube.count_correct_squares() / TOTAL_SQUARES) * 0.1 + 0.9 * done
+        reward = 1 if done else -1
 
         # Return
         return self._get_observation(), reward, done, False, {}
