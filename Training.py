@@ -14,9 +14,9 @@ from RubikCubeEnv import RubiksCubeEnv, NUM_SCRAMBLE
 GAMMA = 0.99 # Discount rate
 EPSILON_START = 1.0
 EPSILON_DECAY = 0.995
-NUM_EPISODES = 10000
 BATCH_SIZE = 32
 
+NUM_EPISODES = 100000
 NUM_PARALLEL_ENV = 20
 VERBOSE = 1
 MODEL_NAME = "ppo_rubik_model_gen_1"
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     print(f"Training on device: {device}")
 
     # Train and save the agent
-    training_model.learn(total_timesteps=10000)
+    training_model.learn(total_timesteps=1000000)
     for episode in range(NUM_EPISODES):
         obs = env.reset()
 

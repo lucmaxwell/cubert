@@ -51,6 +51,10 @@ class RubiksCubeEnv(gymnasium.Env):
         # Decode the action
         face, spin, row_or_col = decode_action(action)
 
+        # print("Initial state:")
+        # self.cube.print_cube_state()
+        # print(f"Action face {face} spin {spin} row/col {row_or_col}")
+
         # Apply the action
         if spin == 0:
             self.cube.rotate_row_left(face, row_or_col)
@@ -65,14 +69,15 @@ class RubiksCubeEnv(gymnasium.Env):
         done = self.cube.is_solved()
         reward = 1 if done else -1
 
+        # print("Action result:")
+        # self.cube.print_cube_state()
+
         # Return
         return self._get_observation(), reward, done, False, {}
 
-    '''
     def render(self, mode='human'):
         if mode == 'human':
-            self.cube.render()
-    '''
+            self.cube.print_cube_state()
 
     def _get_observation(self):
         observation = np.zeros((TOTAL_FACES, CUBE_SIZE, CUBE_SIZE), dtype=np.uint8)

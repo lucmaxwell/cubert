@@ -12,9 +12,6 @@ from stable_baselines3.common.monitor import Monitor
 from RubikCubeEnv import RubiksCubeEnv, NUM_SCRAMBLE
 from RubikLearningAgent import RubikLearningAgent
 
-# Test parameter
-NUM_ITERATION = 10000
-
 MODEL_NAME = "ppo_rubik_model_gen_1"
 
 
@@ -31,14 +28,15 @@ if __name__ == '__main__':
     training_model = PPO.load(model_file_path, env=env)
 
     # Test the trained agent
-    obs = env.reset()
     NUM_RUN = 1000
     solved_count = 0
     for iteration in range(NUM_RUN):
+        obs = env.reset()
+
         done = False
         move_count = 0
         total_reward_collected = 0
-        while not done and move_count < NUM_SCRAMBLE * 2:
+        while not done and move_count < NUM_SCRAMBLE:
             action, _states = training_model.predict(obs)
             obs, rewards, done, info = env.step(action)
 
