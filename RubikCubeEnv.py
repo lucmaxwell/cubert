@@ -1,69 +1,90 @@
-import gym
-from gym import spaces
-import torch
+import gymnasium
 import numpy as np
+from stable_baselines3.common.env_checker import check_env
 
-from RubikCube import RubikCube, Face
+from RubikCube import RubikCube, Face, SquareColour
 
 # Global cube size
 CUBE_SIZE = 3
 
 # Define the action space dictionary globally
 TOTAL_FACES = 6
-TOTAL_SPINS = 4
-action_space_dict = {
-    'face': spaces.Discrete(TOTAL_FACES),  # 6 faces
-    'spin': spaces.Discrete(TOTAL_SPINS),  # 0 for left, 1 for right, 2 for down, 3 for up
-    'row_or_col': spaces.Discrete(CUBE_SIZE)  # Row or column index
-}
+TOTAL_SPINS = 4 # Left, right, down, up
+TOTAL_ACTIONS = TOTAL_FACES * TOTAL_SPINS * CUBE_SIZE # Each face has the cube size selection of row or column
+
+NUM_SCRAMBLE = 1
+
+TOTAL_SQUARES = CUBE_SIZE**2 * TOTAL_FACES
 
 
-class RubiksCubeEnv(gym.Env):
+def decode_action(action):
+    face = action // (TOTAL_SPINS * CUBE_SIZE)
+    remaining = action % (TOTAL_SPINS * CUBE_SIZE)
+    spin = remaining // CUBE_SIZE
+    row_or_col = remaining % CUBE_SIZE
+    return face, spin, row_or_col
+
+
+class RubiksCubeEnv(gymnasium.Env):
     def __init__(self):
         super(RubiksCubeEnv, self).__init__()
 
         self.cube = RubikCube(CUBE_SIZE)
 
         # Define action and observation space
-        self.action_space = spaces.Dict(action_space_dict)
-        self.observation_space = spaces.Box(low=0, high=5, shape=(6, CUBE_SIZE, CUBE_SIZE), dtype=np.int8)
+        self.action_space = gymnasium.spaces.Discrete(TOTAL_ACTIONS)
+        self.observation_space = gymnasium.spaces.Box(
+            low=0, high=(TOTAL_FACES - 1),
+            shape=(TOTAL_FACES, CUBE_SIZE, CUBE_SIZE),
+            dtype=np.uint8)
 
-        self.reward_range = (-1, 1)
-        self.reset()
+        # Define the reward range
+        self.reward_range = (0, 1)
+
 
     def reset(self, **kwargs):
-        self.cube = RubikCube(CUBE_SIZE)
-        return self._get_observation()
+        self.cube.reset()
+        self.cube.scramble(NUM_SCRAMBLE)
+        return self._get_observation(), {}
 
     def step(self, action):
-        # Extract the action
-        face = Face(action['face'])
-        direction = action['spin']
-        row_or_col = action['row_or_col']
+        # Decode the action
+        face, spin, row_or_col = decode_action(action)
 
         # Apply the action
-        if direction == 0:
+        if spin == 0:
             self.cube.rotate_row_left(face, row_or_col)
-        elif direction == 1:
+        elif spin == 1:
             self.cube.rotate_row_right(face, row_or_col)
-        elif direction == 2:
+        elif spin == 2:
             self.cube.rotate_column_down(face, row_or_col)
-        elif direction == 3:
+        elif spin == 3:
             self.cube.rotate_column_up(face, row_or_col)
 
         # Calculate reward based on the number of correct squares
-        correct_squares = self.cube.count_correct_squares()
-        reward = correct_squares / (self.cube.size * self.cube.size * 6)  # Normalize
-
-        # Check if the cube is solved
         done = self.cube.is_solved()
-        if done:
-            reward += 1.0  # Extra reward for solving the cube
+        reward = (self.cube.count_correct_squares() / TOTAL_SQUARES) * 0.1 + 0.9 * done
 
+        # Return
         return self._get_observation(), reward, done, False, {}
 
+    '''
+    def render(self, mode='human'):
+        if mode == 'human':
+            self.cube.render()
+    '''
+
     def _get_observation(self):
-        observation = np.zeros((6, 3, 3), dtype=np.int8)
+        observation = np.zeros((TOTAL_FACES, CUBE_SIZE, CUBE_SIZE), dtype=np.uint8)
         for i, face in enumerate(Face):
             observation[i] = self.cube.get_face_colors(face)
         return observation
+
+
+if __name__ == '__main__':
+    # Create an instance of the environment
+    env = RubiksCubeEnv()
+    check_env(env)
+
+    # Action space sample
+    print(env.action_space.sample())

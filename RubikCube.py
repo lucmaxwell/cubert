@@ -1,10 +1,8 @@
 import random
-from typing import List, Dict
 from enum import Enum
 import copy
 
 import numpy as np
-import pygame
 
 
 class Face(Enum):
@@ -74,42 +72,9 @@ class RubikCube:
         self.face_list = {}
         self.reset()
 
-        # Initialize Pygame
-        pygame.init()
-        self.win_size = 500  # Window size
-        self.win = pygame.display.set_mode((self.win_size, self.win_size))
-        pygame.display.set_caption('Rubik\'s Cube')
-
     def reset(self):
         self.current_front_face = Face.Front
         self.face_list = {face: RubikFace(self.size, self.get_default_color(face)) for face in Face}
-
-    def render(self):
-        color_map = {
-            SquareColour.Red: (255, 0, 0),
-            SquareColour.Green: (0, 255, 0),
-            SquareColour.Orange: (255, 165, 0),
-            SquareColour.Blue: (0, 0, 255),
-            SquareColour.Yellow: (255, 255, 0),
-            SquareColour.White: (255, 255, 255)
-        }
-
-        square_size = self.win_size // (self.size * 3)  # 3 faces visible at once
-
-        # Clear the window with a black background
-        self.win.fill((0, 0, 0))
-
-        # Draw the cube
-        for i, face_index in enumerate([Face.Front, Face.Top, Face.Right]):
-            face_np = self.get_face_colors(face_index)
-            for row in range(self.size):
-                for col in range(self.size):
-                    x = col * square_size
-                    y = row * square_size
-                    pygame.draw.rect(self.win, color_map[SquareColour(face_np[row][col])],
-                                     (x + i * self.size * square_size, y, square_size, square_size))
-
-        pygame.display.update()
 
     @staticmethod
     def get_default_color(given_face):

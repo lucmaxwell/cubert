@@ -1,34 +1,23 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional
 
 
 class RubikLearningAgent(nn.Module):
     def __init__(self):
         super(RubikLearningAgent, self).__init__()
 
-        # First Convolutional layer: Captures 3x3 patterns on each face
-        self.conv1 = nn.Conv2d(6, 64, 3)
-        self.bn1 = nn.BatchNorm2d(64)  # Batch Normalization
-
-        # First Fully Connected Layer: 128 units to capture complex features
-        self.fc1 = nn.Linear(64, 128)
-        self.bn2 = nn.BatchNorm1d(128)  # Batch Normalization
-
-        # Output Layer: 12 possible actions (rotations)
-        self.fc2 = nn.Linear(128, 12)
+        # Input layer: 54 squares * 6 possible colors = 324
+        # Hidden layers: two layers of 128 neurons each
+        # Output layer: 72 possible actions (6 faces * 3 rows/cols * 2 directions)
+        self.fc1 = nn.Linear(324, 128)
+        self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(128, 72)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = torch.relu(x)
-
-        x = torch.flatten(x, 1)  # Flatten while keeping the batch dimension
-
-        x = self.fc1(x)
-        x = self.bn2(x)
-        x = torch.relu(x)
-
-        x = self.fc2(x)
+        x = torch.nn.functional.relu(self.fc1(x))
+        x = torch.nn.functional.relu(self.fc2(x))
+        x = self.fc3(x)
         return x
 
     def get_expected_future_reward(self, next_state, immediate_reward, discount_factor=0.99):
@@ -44,6 +33,7 @@ class RubikLearningAgent(nn.Module):
 
         # Calculate expected future reward
         # y = r + γ * max over a' of Q(s', a')
+        # MSELoss
         max_next_action_value = next_action_values.max().item()
         expected_reward = immediate_reward + discount_factor * max_next_action_value
 

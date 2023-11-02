@@ -1,14 +1,14 @@
 import os
+import random
 import time
-from datetime import datetime
-import matplotlib.pyplot as plt
-import numpy as np
-import torch.nn.functional
 from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.monitor import Monitor
+import torch
 
 from RubikCubeEnv import RubiksCubeEnv, NUM_SCRAMBLE
-from RubikLearningAgent import RubikLearningAgent
+
 
 # Hyperparameters
 GAMMA = 0.99 # Discount rate
@@ -17,95 +17,69 @@ EPSILON_DECAY = 0.995
 NUM_EPISODES = 100
 BATCH_SIZE = 32
 
+NUM_PARALLEL_ENV = 20
+VERBOSE = 0
+MODEL_NAME = "ppo_rubik_model_gen_1"
+
 
 if __name__ == '__main__':
     start_time = time.time()
 
+    print(torch.__version__)
+
     save_path = os.path.join('Training', 'Saved Models')
-    log_path = os.path.join('Training', 'Logs')
+    #log_path = os.path.join('Training', 'Logs')
 
     # Create the environment and vector for parallel environments
-    env = RubiksCubeEnv()
-    env = DummyVecEnv([lambda: env])
+    #env = DummyVecEnv([lambda: Monitor(RubiksCubeEnv())])
+    env = SubprocVecEnv([lambda: Monitor(RubiksCubeEnv()) for _ in range(NUM_PARALLEL_ENV)])
 
-    model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
+    # Create a new model by default
+    #training_model = PPO('MlpPolicy', env, verbose=VERBOSE, tensorboard_log=log_path)
+    training_model = PPO('MlpPolicy', env, verbose=VERBOSE, device="cuda")
 
-    # Train the agent
-    model.learn(total_timesteps=10000)
+    # Check if a saved model exists and load it
+    model_file_path = os.path.join(save_path, MODEL_NAME)
+    if os.path.isfile(model_file_path + ".zip"):
+        print("Loading existing model...")
+        training_model = PPO.load(model_file_path, env=env)
 
-    # Test the trained agent
-    obs = env.reset()
-    done = False
-    while not done:
-        action, _states = model.predict(obs)
-        obs, rewards, done, info = env.step(action)
-        env.render()
+    # CUDA available
+    print(f"CUDA is available {torch.cuda.is_available()}")
 
+    # Print whether training is using CUDA
+    device = training_model.policy.device
+    print(f"Training on device: {device}")
 
+    # Train and save the agent
+    for k in range(1, 2):  # 13 levels of complexity
+        for episode in range(1000):  # 100 episodes per level
+            # Set the number of scramble moves
+            NUM_SCRAMBLE = random.randint(1, k)
 
+            # Reset environment (and scramble the cube)
+            obs = env.reset()
 
-    # Initialize variables for tracking performance
-    states = []
-    actions = []
-    rewards = []
-    next_states = []
+            for step in range(k):  # Maximum k steps to solve the cube
+                action, _ = training_model.predict(obs)
+                obs, rewards, done, info = env.step(action)
 
-    # Load pre-trained model if available
-    model_path = "rubik_model.pth"
-    if os.path.exists(model_path):
-        training_model.load_state_dict(torch.load(model_path))
+                # Learn from the single step
+                training_model.learn(total_timesteps=1)
 
-    # Training loop
-    epsilon = EPSILON_START
-    for episode in range(1, NUM_EPISODES + 1):
-        env.reset()
-        done = False
-        total_reward = 0
+            print(f"Episode {episode + 1} completed.")
 
-        # Print the initial state
-        print(f"Initial state episode {episode}:")
-        env.render()
-
-        move_count = 0
-        while not done and move_count < NUM_SCRAMBLE:
-            action = env.action_space.sample()
-            n_state, reward, done, _, _ = env.step(action)
-            total_reward += reward
-
-            # Action taken
-            move_count += 1
-        print('Episode:{} Score:{}'.format(episode, total_reward))
-
-
-        # Update epsilon
-        epsilon *= EPSILON_DECAY
-
-        # Logging
-        print(f"Episode: {episode}, Total Reward: {total_reward}, Epsilon: {epsilon}")
-        rewards.append(total_reward)
-
-        # Save model checkpoint after every 100 episodes
-        if episode % 100 == 0:
-            torch.save(training_model.state_dict(), f"rubik_model_checkpoint_{episode}.pth")
+        # Save the model after each level of complexity
+        training_model.save(model_file_path)
+        print(f"Model saved after {k} levels of complexity.")
 
     # Release resource
     env.close()
 
-    # Save final model
-    torch.save(training_model.state_dict(), "rubik_model_final.pth")
-
-    # Generate and save performance reports
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    np.save(f"rewards_{timestamp}.npy", np.array(rewards))
-
-    # Generate and save plots
-    plt.figure()
-    plt.plot(rewards)
-    plt.title("Total Rewards per Episode")
-    plt.xlabel("Episode")
-    plt.ylabel("Total Reward")
-    plt.savefig(f"rewards_plot_{timestamp}.png")
-
+    # End time
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Elapsed time: {elapsed_time} seconds")
+
+    # Evaluate the model
+    evaluate_policy(training_model, RubiksCubeEnv())
