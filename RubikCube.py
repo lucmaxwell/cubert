@@ -207,9 +207,9 @@ class RubikCube:
                 self.rotate_row_right(face, index)
 
     def get_face_colors(self, given_face):
-        face_np = np.zeros((self.size, self.size), dtype=np.int8)
-        for i in range(3):
-            for j in range(3):
+        face_np = np.zeros((self.size, self.size), dtype=np.uint8)
+        for i in range(self.size):
+            for j in range(self.size):
                 face_np[i, j] = self.face_list[given_face].square_list[i][j].color.value
         return face_np
 
@@ -222,6 +222,14 @@ class RubikCube:
                     if square.color == correct_color:
                         correct_count += 1
         return correct_count
+
+    def set_state_from_observation(self, observation):
+        """Initialize the state of the cube based on the given observation."""
+        for face_index, face in enumerate(Face):
+            for i in range(self.size):
+                for j in range(self.size):
+                    color_value = observation[face_index][i][j]
+                    self.face_list[face].square_list[i][j].color = SquareColour(color_value)
 
 
 if __name__ == '__main__':

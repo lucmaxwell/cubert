@@ -9,12 +9,12 @@ CUBE_SIZE = 3
 
 # Define the action space dictionary globally
 TOTAL_FACES = 6
-TOTAL_SPINS = 4 # Left, right, down, up
-TOTAL_ACTIONS = TOTAL_FACES * TOTAL_SPINS * CUBE_SIZE # Each face has the cube size selection of row or column
+TOTAL_SPINS = 4  # Left, right, down, up
+TOTAL_ACTIONS = TOTAL_FACES * TOTAL_SPINS * CUBE_SIZE  # Each face has the cube size selection of row or column
 
 NUM_SCRAMBLE = 1
 
-TOTAL_SQUARES = CUBE_SIZE**2 * TOTAL_FACES
+TOTAL_SQUARES = CUBE_SIZE ** 2 * TOTAL_FACES
 
 
 def decode_action(action):
@@ -29,8 +29,6 @@ class RubiksCubeEnv(gymnasium.Env):
     def __init__(self):
         super(RubiksCubeEnv, self).__init__()
 
-        self.cube = RubikCube(CUBE_SIZE)
-
         # Define action and observation space
         self.action_space = gymnasium.spaces.Discrete(TOTAL_ACTIONS)
         self.observation_space = gymnasium.spaces.Box(
@@ -38,13 +36,20 @@ class RubiksCubeEnv(gymnasium.Env):
             shape=(TOTAL_FACES, CUBE_SIZE, CUBE_SIZE),
             dtype=np.uint8)
 
+        self.cube = RubikCube(CUBE_SIZE)
+        self.initial_cube_obs = self._get_observation()
+        self.scramble()
+
         # Define the reward range
         self.reward_range = (-1, 1)
 
+    def scramble(self):
+        self.cube = RubikCube(CUBE_SIZE)
+        self.cube.scramble(NUM_SCRAMBLE)
+        self.initial_cube_obs = self._get_observation()
 
     def reset(self, **kwargs):
-        self.cube.reset()
-        self.cube.scramble(NUM_SCRAMBLE)
+        self.cube.set_state_from_observation(self.initial_cube_obs)
         return self._get_observation(), {}
 
     def step(self, action):
@@ -75,21 +80,34 @@ class RubiksCubeEnv(gymnasium.Env):
         # Return
         return self._get_observation(), reward, done, False, {}
 
-    def render(self, mode='human'):
-        if mode == 'human':
-            self.cube.print_cube_state()
+    def render(self):
+        self.cube.print_cube_state()
 
     def _get_observation(self):
         observation = np.zeros((TOTAL_FACES, CUBE_SIZE, CUBE_SIZE), dtype=np.uint8)
         for i, face in enumerate(Face):
-            observation[i] = self.cube.get_face_colors(face)
+            observation[i, :, :] = self.cube.get_face_colors(face)
+
+        # Ensure that the observation matches the defined observation space
+        assert self.observation_space.contains(observation), "The generated observation is out of bounds!"
+
         return observation
 
 
 if __name__ == '__main__':
     # Create an instance of the environment
     env = RubiksCubeEnv()
-    check_env(env)
 
     # Action space sample
     print(env.action_space.sample())
+
+    # Initial state and reset
+    print("Initial state:")
+    env.render()
+
+    # Reset state
+    env.reset()
+    print("Reset state should be the same as initial:")
+    env.render()
+
+    check_env(env)

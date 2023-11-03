@@ -16,32 +16,31 @@ MODEL_NAME = "ppo_rubik_model_gen_1"
 
 
 if __name__ == '__main__':
+    start_time = time.time()
 
     save_path = os.path.join('Training', 'Saved Models')
 
     # Create the environment and vector for parallel environments
-    env = DummyVecEnv([lambda: Monitor(RubiksCubeEnv())])
+    env = RubiksCubeEnv()
+    wrapper_env = DummyVecEnv([lambda: Monitor(env)])
 
     # Load the model
     print("Loading existing model...")
     model_file_path = os.path.join(save_path, MODEL_NAME)
-    training_model = PPO.load(model_file_path, env=env)
+    training_model = PPO.load(model_file_path, env=wrapper_env)
 
     # Test the trained agent
-    NUM_RUN = 1000
+    NUM_RUN = 100
     solved_count = 0
     for iteration in range(NUM_RUN):
-        obs = env.reset()
+        env.scramble()
+        obs, _ = env.reset()
 
         done = False
         move_count = 0
-        total_reward_collected = 0
         while not done and move_count < NUM_SCRAMBLE:
             action, _states = training_model.predict(obs)
-            obs, rewards, done, info = env.step(action)
-
-            # Update reward
-            total_reward_collected += rewards
+            obs, rewards, done, _, _ = env.step(action)
 
             # Update move count
             move_count += 1
@@ -50,3 +49,8 @@ if __name__ == '__main__':
             solved_count += 1
 
     print(f"Solved {solved_count / NUM_RUN * 100}%")
+
+    # End time
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Elapsed time: {elapsed_time} seconds")
