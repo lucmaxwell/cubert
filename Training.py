@@ -80,12 +80,3 @@ if __name__ == '__main__':
 
     # Test
     testing(MODEL_NAME)
-
-    # Evaluate the model
-    num_scrambles = range(1, 13 + 1)
-    for num_scramble in num_scrambles:
-        eval_env = RubiksCubeEnv(num_scramble=num_scramble)
-        monitored_eval_env = Monitor(eval_env)
-
-        mean_reward, std_reward = evaluate_policy(training_model, monitored_eval_env, n_eval_episodes=100)
-        print(f"Evaluation {num_scramble}: Mean reward: {mean_reward}, Std: {std_reward}")
