@@ -30,7 +30,7 @@ class RubiksCubeEnv(gymnasium.Env):
         self.num_scramble = num_scramble
 
         self.cube = RubikCube(self.cube_size)
-        self.initial_cube_obs = self._get_observation()
+        self.scrambled_state = self._get_observation()
         self.scramble()
 
         # Define the reward range
@@ -39,10 +39,10 @@ class RubiksCubeEnv(gymnasium.Env):
     def scramble(self):
         self.cube = RubikCube(self.cube_size)
         self.cube.scramble(self.num_scramble)
-        self.initial_cube_obs = self._get_observation()
+        self.scrambled_state = self._get_observation()
 
     def reset(self, **kwargs):
-        self.cube.set_state_from_observation(self.initial_cube_obs)
+        self.cube.set_state_from_observation(self.scrambled_state)
         return self._get_observation(), {}
 
     def step(self, action):
