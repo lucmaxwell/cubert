@@ -18,7 +18,7 @@ EPSILON_START = 0
 EPSILON_DECAY = 0
 BATCH_SIZE = 32
 
-NUM_EPISODES = 1000
+NUM_EPISODES = 100
 NUM_STEP_PER_EPISODE = 1000
 NUM_PARALLEL_ENV = 10
 VERBOSE = 1
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     # Create a new model by default
     #training_model = PPO('MlpPolicy', wrapper_env, verbose=VERBOSE, tensorboard_log=log_path, device="cuda")
     #training_model = PPO('MlpPolicy', env, verbose=VERBOSE, device="cuda")
-    training_model = PPO('MlpPolicy', wrapper_env, learning_rate=0.03, verbose=VERBOSE, tensorboard_log=log_path, device="cuda")
+    training_model = PPO('MlpPolicy', wrapper_env, learning_rate=0.000003, verbose=VERBOSE, tensorboard_log=log_path, device="cuda")
 
     # Check if a saved model exists and load it
     model_file_path = os.path.join(save_path, MODEL_NAME)

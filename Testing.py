@@ -12,7 +12,7 @@ from stable_baselines3.common.monitor import Monitor
 from RubikCubeEnv import RubiksCubeEnv, NUM_SCRAMBLE
 from RubikLearningAgent import RubikLearningAgent
 
-MODEL_NAME = "ppo_rubik_model_gen_1"
+MODEL_NAME = "best_child"
 
 
 if __name__ == '__main__':
