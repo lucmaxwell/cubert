@@ -1,56 +1,81 @@
+import math
 import os
 import time
-from datetime import datetime
-import matplotlib.pyplot as plt
-import numpy as np
-import torch.nn.functional
+
+from matplotlib import pyplot as plt
 from stable_baselines3 import PPO
-from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.common.vec_env import DummyVecEnv
-from stable_baselines3.common.monitor import Monitor
 
-from RubikCubeEnv import RubiksCubeEnv, NUM_SCRAMBLE
-from RubikLearningAgent import RubikLearningAgent
+from RubikCubeEnv import RubiksCubeEnv
 
-MODEL_NAME = "best_child"
+MODEL_NAME = "ppo_episode_train"
 
 
-if __name__ == '__main__':
+def testing(model_name):
     start_time = time.time()
 
     save_path = os.path.join('Training', 'Saved Models')
 
     # Create the environment and vector for parallel environments
     env = RubiksCubeEnv()
-    wrapper_env = DummyVecEnv([lambda: Monitor(env)])
 
     # Load the model
+    model_file_path = os.path.join(save_path, model_name + ".zip")
+    if not os.path.isfile(model_file_path):
+        raise FileNotFoundError(f"Model file not found: {model_file_path}")
     print("Loading existing model...")
-    model_file_path = os.path.join(save_path, MODEL_NAME)
-    training_model = PPO.load(model_file_path, env=wrapper_env)
+    training_model = PPO.load(model_file_path, env=env)
 
     # Test the trained agent
-    NUM_RUN = 100
-    solved_count = 0
-    for iteration in range(NUM_RUN):
-        env.scramble()
-        obs, _ = env.reset()
+    solved_count_list = []
+    num_scrambles = range(1, 13 + 1)
+    for num_scramble in num_scrambles:
+        MAX_STEPS = int(math.ceil(num_scramble * 2.5))
+        env.set_num_scramble(num_scramble)
 
-        done = False
-        move_count = 0
-        while not done and move_count < NUM_SCRAMBLE:
-            action, _states = training_model.predict(obs)
-            obs, rewards, done, _, _ = env.step(action)
+        solved_count = 0
+        for _ in range(100):
+            env.scramble()
+            obs, _ = env.reset()
 
-            # Update move count
-            move_count += 1
+            # Solve
+            solved = False
+            num_steps = 0
+            while not solved and num_steps < MAX_STEPS:
+                # Action and reward
+                action, _ = training_model.predict(obs, deterministic=True)
+                obs, reward, solved, _, _ = env.step(action)
 
-        if done:
-            solved_count += 1
+                num_steps += 1
 
-    print(f"Solved {solved_count / NUM_RUN * 100}%")
+            if solved:
+                solved_count += 1
+
+        solved_count_list.append(solved_count)
+
+        print(f"Scramble {num_scramble:<2d} {solved_count}%")
 
     # End time
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Elapsed time: {elapsed_time} seconds")
+
+    # Create the plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(num_scrambles, solved_count_list, marker='o')
+    plt.title('Solved Counts vs Number of Scrambles')
+    plt.xlabel('Number of Scrambles')
+    plt.ylabel('Solved Counts')
+    plt.xticks(num_scrambles)
+    plt.grid(True)
+
+    # Annotate each point with its value
+    for i, count in enumerate(solved_count_list):
+        plt.annotate(str(count), (num_scrambles[i], solved_count_list[i]), textcoords="offset points", xytext=(0, 10),
+                     ha='center')
+
+    # Show the plot
+    plt.show()
+
+
+if __name__ == '__main__':
+    testing(MODEL_NAME)

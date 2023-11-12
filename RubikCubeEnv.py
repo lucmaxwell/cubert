@@ -36,6 +36,9 @@ class RubiksCubeEnv(gymnasium.Env):
         # Define the reward range
         self.reward_range = (-1, 1)
 
+    def set_num_scramble(self, num_scramble):
+        self.num_scramble = num_scramble
+
     def scramble(self):
         self.cube = RubikCube(self.cube_size)
         self.cube.scramble(self.num_scramble)
@@ -57,11 +60,11 @@ class RubiksCubeEnv(gymnasium.Env):
             self.cube.rotate_counter_clockwise(face)
 
         # Calculate reward based on the number of correct squares
-        done = self.cube.is_solved()
-        reward = 1 if done else -1
+        solved = self.cube.is_solved()
+        reward = 1 if solved else -1
 
         # Return
-        return self._get_observation(), reward, done, False, {}
+        return self._get_observation(), reward, solved, False, {}
 
     def render(self):
         #self.cube.print_cube_state()

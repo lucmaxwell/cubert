@@ -2,9 +2,7 @@ import math
 import os
 import time
 from stable_baselines3 import PPO
-from stable_baselines3.common.evaluation import evaluate_policy
 import torch
-from stable_baselines3.common.monitor import Monitor
 
 from RubikCubeEnv import RubiksCubeEnv
 from Testing import testing
@@ -13,7 +11,7 @@ from Testing import testing
 NUM_PARALLEL_ENV = 10
 VERBOSE = 1
 
-TOTAL_TIME_STEPS = 100000
+TOTAL_TIME_STEPS = 10000
 
 NUM_SCRAMBLE = 1
 MAX_STEPS_ATTEMPT = int(math.ceil(NUM_SCRAMBLE * 2.5))

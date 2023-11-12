@@ -210,12 +210,6 @@ class RubikCube:
         """
         last_move = None
 
-        def opposite_direction(self, direction):
-            """
-            Returns the opposite direction for a given direction.
-            """
-            return 'counter_clockwise' if direction == 'clockwise' else 'clockwise'
-
         for _ in range(moves):
             while True:
                 # Choose a random face and direction
@@ -223,7 +217,7 @@ class RubikCube:
                 direction = random.choice(['clockwise', 'counter_clockwise'])
 
                 # Check if the current move is the inverse of the last move
-                if last_move is None or (last_move != (face, self.opposite_direction(direction))):
+                if last_move is None or (last_move != (face, 'counter_clockwise' if direction == 'clockwise' else 'clockwise')):
                     break
 
             # Perform the rotation
