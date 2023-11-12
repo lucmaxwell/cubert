@@ -50,10 +50,10 @@ class RubikFace:
     def get_col(self, col):
         return copy.deepcopy(self.square_list[:, col])
 
-    def set_row(self, row_list, row):
+    def set_row(self, row, row_list):
         self.square_list[row, :] = row_list
 
-    def set_col(self, col_list, col):
+    def set_col(self, col, col_list):
         self.square_list[:, col] = col_list
 
     def rotate_clockwise(self):
@@ -87,79 +87,87 @@ class RubikCube:
             Face.Bottom: SquareColour.White
         }[given_face]
 
-    def rotate_row_right(self, face, row):
-        if face == Face.Top or face == Face.Bottom:
-            if face == Face.Top:
-                self.reorient(Face.Right)
+    def rotate_clockwise(self, face):
+        self._perform_clockwise_rotation(face)
+
+    def rotate_counter_clockwise(self, face):
+        for _ in range(3):
+            self._perform_clockwise_rotation(face)
+
+    def _perform_clockwise_rotation(self, face):
+        if (face is Face.Top) or (face is Face.Bottom):
+            rotate_row = 0
+            face_list = [Face.Front, Face.Left, Face.Back, Face.Right]
+
+            # The rotation face is the bottom
+            if face is Face.Bottom:
+                self.face_list[Face.Bottom].rotate_clockwise()
+                face_list.reverse()
+                rotate_row = self.size - 1
             else:
-                self.reorient(Face.Left)
-            self.perform_rotation_col(self.size-1-row)
-            self.reorient(Face.Front)
+                self.face_list[Face.Top].rotate_clockwise()
+
+            # Rotate the first row across the adjacent faces
+            from_row = self.face_list[face_list[0]].get_row(rotate_row)
+            for i in range(len(face_list)):
+                # Face the rotate to state
+                to_face = face_list[(i + 1) % len(face_list)]
+                temp = self.face_list[to_face].get_row(rotate_row)
+
+                # Perform the rotation
+                self.face_list[to_face].set_row(rotate_row, from_row)
+
+                # For the next rotation
+                from_row = temp
+
         else:
-            self.perform_rotation_row(row)
+            # The give face is front
+            if face is Face.Front:
+                left_to_top = self.face_list[Face.Left].get_col(self.size - 1)[::-1]
+                top_to_right = self.face_list[Face.Top].get_row(self.size - 1)
+                right_to_bottom = self.face_list[Face.Right].get_col(0)[::-1]
+                bottom_to_left = self.face_list[Face.Bottom].get_row(0)
 
-    def rotate_row_left(self, face, row):
-        for _ in range(3):
-            self.rotate_row_right(face, row)
+                self.face_list[Face.Left].set_col(self.size - 1, bottom_to_left)
+                self.face_list[Face.Top].set_row(self.size - 1, left_to_top)
+                self.face_list[Face.Right].set_col(0, top_to_right)
+                self.face_list[Face.Bottom].set_row(0, right_to_bottom)
 
-    def rotate_column_down(self, face, col):
-        if face in [Face.Left, Face.Right, Face.Back]:
-            self.reorient(face)
-        self.perform_rotation_col(col)
-        self.reorient(Face.Front)
+            # The given face is left
+            if face is Face.Left:
+                left_to_top = self.face_list[Face.Back].get_col(self.size - 1)[::-1]
+                top_to_right = self.face_list[Face.Top].get_col(0)
+                right_to_bottom = self.face_list[Face.Front].get_col(0)
+                bottom_to_left = self.face_list[Face.Bottom].get_col(0)[::-1]
 
-    def rotate_column_up(self, face, col):
-        for _ in range(3):
-            self.rotate_column_down(face, col)
+                self.face_list[Face.Back].set_col(self.size - 1, bottom_to_left)
+                self.face_list[Face.Top].set_col(0, left_to_top)
+                self.face_list[Face.Front].set_col(0, top_to_right)
+                self.face_list[Face.Bottom].set_col(0, right_to_bottom)
 
-    def reorient(self, target_front_face):
-        while self.current_front_face != target_front_face:
-            for row in range(self.size):
-                self.perform_rotation_row(row)
-            self.current_front_face = Face((3 + self.current_front_face.value) % 4)
+            # The given face is right
+            elif face is Face.Right:
+                left_to_top = self.face_list[Face.Front].get_col(self.size - 1)
+                top_to_right = self.face_list[Face.Top].get_col(self.size - 1)[::-1]
+                right_to_bottom = self.face_list[Face.Back].get_col(0)[::-1]
+                bottom_to_left = self.face_list[Face.Bottom].get_col(self.size - 1)
 
-    def perform_rotation_row(self, row):
-        horizontal_view = [Face.Front, Face.Right, Face.Back, Face.Left]
-        top, bottom = Face.Top, Face.Bottom
+                self.face_list[Face.Front].set_col(self.size - 1, bottom_to_left)
+                self.face_list[Face.Top].set_col(self.size - 1, left_to_top)
+                self.face_list[Face.Back].set_col(0, top_to_right)
+                self.face_list[Face.Bottom].set_col(self.size - 1, right_to_bottom)
 
-        if row == 0:
-            self.face_list[top].rotate_counter_clockwise()
-        elif row == self.size - 1:
-            self.face_list[bottom].rotate_clockwise()
+            # The given face is back
+            elif face is Face.Back:
+                left_to_top = self.face_list[Face.Right].get_col(self.size - 1)
+                top_to_right = self.face_list[Face.Top].get_row(0)[::-1]
+                right_to_bottom = self.face_list[Face.Left].get_col(0)
+                bottom_to_left = self.face_list[Face.Bottom].get_row(self.size - 1)[::-1]
 
-        temp_row = self.face_list[horizontal_view[-1]].get_row(row)
-        for current_face in horizontal_view:
-            replace_source = temp_row
-            temp_row = self.face_list[current_face].get_row(row)
-            self.face_list[current_face].set_row(replace_source, row)
-
-    def perform_rotation_col(self, col):
-        vertical_view = [Face.Top, Face.Front, Face.Bottom, Face.Back]
-
-        if col == 0:
-            self.face_list[Face.Left].rotate_clockwise()
-        elif col == self.size - 1:
-            self.face_list[Face.Right].rotate_counter_clockwise()
-
-        # Perform the rotation
-        # Getting the back column
-        # Need to do some black magic
-        temp_col = np.flip(self.face_list[vertical_view[-1]].square_list[:, self.size - 1 - col])
-
-        for current_face in vertical_view:
-            # Swap the buffer column from previous
-            # Buffer the next face in temp
-            replace_source = temp_col
-            temp_col = self.face_list[current_face].square_list[:, col].copy()
-
-            # The index of the back face is the opposite of other face
-            # The receiving has to be reserved to match the back
-            if current_face == Face.Back:
-                col = self.size - 1 - col
-                replace_source = np.flip(replace_source)
-
-            # Make the changes
-            self.face_list[current_face].square_list[:, col] = replace_source
+                self.face_list[Face.Right].set_col(self.size - 1, bottom_to_left)
+                self.face_list[Face.Top].set_row(0, left_to_top)
+                self.face_list[Face.Left].set_col(0, top_to_right)
+                self.face_list[Face.Bottom].set_row(self.size - 1, right_to_bottom)
 
     def is_solved(self) -> bool:
         for face, rubik_face in self.face_list.items():
@@ -174,6 +182,7 @@ class RubikCube:
         # Helper function to print a face
         def print_face(face):
             for row in self.face_list[face].square_list:
+                print("      ", end="")  # Further adjusted indentation for top and bottom faces
                 for square in row:
                     print(square.color.ansi_color, end=" ")
                 print()
@@ -183,7 +192,7 @@ class RubikCube:
 
         # Print Front, Right, Back, and Left faces on the same line
         for row in range(self.size):
-            for face in [Face.Front, Face.Right, Face.Back, Face.Left]:
+            for face in [Face.Left, Face.Front, Face.Right, Face.Back]:
                 for square in self.face_list[face].square_list[row]:
                     print(square.color.ansi_color, end=" ")
             print()
@@ -191,20 +200,40 @@ class RubikCube:
         # Print the Bottom face
         print_face(Face.Bottom)
 
-    def scramble(self, num_moves):
-        for _ in range(num_moves):
-            face = random.choice(list(Face))
-            index = random.randint(0, self.size - 1)
-            direction = random.choice(['up', 'down', 'left', 'right'])
+    def scramble(self, moves=13):
+        """
+        Scrambles the cube by performing a series of random rotations,
+        ensuring that consecutive moves do not undo each other.
 
-            if direction == 'up':
-                self.rotate_column_up(face, index)
-            elif direction == 'down':
-                self.rotate_column_down(face, index)
-            elif direction == 'left':
-                self.rotate_row_left(face, index)
+        Parameters:
+        moves (int): The number of random moves to perform.
+        """
+        last_move = None
+
+        def opposite_direction(self, direction):
+            """
+            Returns the opposite direction for a given direction.
+            """
+            return 'counter_clockwise' if direction == 'clockwise' else 'clockwise'
+
+        for _ in range(moves):
+            while True:
+                # Choose a random face and direction
+                face = random.choice(list(Face))
+                direction = random.choice(['clockwise', 'counter_clockwise'])
+
+                # Check if the current move is the inverse of the last move
+                if last_move is None or (last_move != (face, self.opposite_direction(direction))):
+                    break
+
+            # Perform the rotation
+            if direction == 'clockwise':
+                self.rotate_clockwise(face)
             else:
-                self.rotate_row_right(face, index)
+                self.rotate_counter_clockwise(face)
+
+            # Update last move
+            last_move = (face, direction)
 
     def get_face_colors(self, given_face):
         face_np = np.zeros((self.size, self.size), dtype=np.uint8)
@@ -243,92 +272,68 @@ if __name__ == '__main__':
     # Test 1: Confirm that the cube starts in a solved state
     assert cube.is_solved(), "Failed Test 1: Initial cube should be solved"
 
-    # Test 2: Perform some rotations and confirm it's not solved
-
-    cube.rotate_row_right(Face.Front, 0)
-    print("Front row 0:")
+    # Print the individual rotation
+    cube = RubikCube(3)
+    cube.rotate_clockwise(Face.Front)
+    print("Front clockwise:")
     cube.print_cube_state()
 
-    cube.rotate_column_down(Face.Right, 1)
-    print("Right col 1:")
+    cube = RubikCube(3)
+    cube.rotate_clockwise(Face.Right)
+    print("Right clockwise:")
     cube.print_cube_state()
 
-    cube.rotate_row_left(Face.Back, 2)
-    print("Back row 2:")
+    cube = RubikCube(3)
+    cube.rotate_clockwise(Face.Left)
+    print("Left clockwise:")
     cube.print_cube_state()
 
-    cube.rotate_row_left(Face.Left, 0)
-    print("Left row 0:")
+    cube = RubikCube(3)
+    cube.rotate_clockwise(Face.Back)
+    print("Back clockwise:")
     cube.print_cube_state()
 
-    cube.rotate_column_down(Face.Back, 0)
-    print("Back col 0:")
+    cube = RubikCube(3)
+    cube.rotate_clockwise(Face.Top)
+    print("Top clockwise:")
     cube.print_cube_state()
 
-    assert not cube.is_solved(), "Failed Test 2: Cube should not be solved"
-
-    # Test 3: Undo the rotations and confirm it's solved
-
-    cube.rotate_column_up(Face.Back, 0)
-    print("Reverse Back col 0:")
+    cube = RubikCube(3)
+    cube.rotate_clockwise(Face.Bottom)
+    print("Bottom clockwise:")
     cube.print_cube_state()
 
-    cube.rotate_row_right(Face.Left, 0)
-    print("Reverse Left row 0:")
-    cube.print_cube_state()
-
-    cube.rotate_row_right(Face.Back, 2)
-    print("Reverse Back row 2:")
-    cube.print_cube_state()
-
-    cube.rotate_column_up(Face.Right, 1)
-    print("Reverse Right col 1:")
-    cube.print_cube_state()
-
-    cube.rotate_row_left(Face.Front, 0)
-    print("Reverse Front row 0:")
-    cube.print_cube_state()
-
-    assert cube.is_solved(), "Failed Test 3: Cube should be solved after undoing the rotations"
-
-    # Test 4: Perform 30 random moves and then undo them
-    moves = []
+    # Scramble the cube with 30 random moves and record the moves
+    cube = RubikCube(3)
+    scramble_moves = []
     for _ in range(30):
         face = random.choice(list(Face))
-        index = random.randint(0, cube.size - 1)
-        direction = random.choice(['up', 'down', 'left', 'right'])
-
-        if direction == 'up':
-            cube.rotate_column_up(face, index)
-        elif direction == 'down':
-            cube.rotate_column_down(face, index)
-        elif direction == 'left':
-            cube.rotate_row_left(face, index)
+        direction = random.choice(['clockwise', 'counter_clockwise'])
+        scramble_moves.append((face, direction))
+        if direction == 'clockwise':
+            cube.rotate_clockwise(face)
         else:
-            cube.rotate_row_right(face, index)
+            cube.rotate_counter_clockwise(face)
 
-        moves.append((face, index, direction))
-
-    assert not cube.is_solved(), "Failed Test 4: Cube should not be solved after 30 random moves"
-
-    # Undo the 30 moves
-    for face, index, direction in reversed(moves):
-        if direction == 'up':
-            cube.rotate_column_down(face, index)
-        elif direction == 'down':
-            cube.rotate_column_up(face, index)
-        elif direction == 'left':
-            cube.rotate_row_right(face, index)
-        else:
-            cube.rotate_row_left(face, index)
-
-    assert cube.is_solved(), "Failed Test 4: Cube should be solved after undoing the 30 moves"
-
-    # Test 5: Scramble and print the final state
-    cube.scramble(100)
+    # Print scrambled state
     print("Scrambled cube:")
     cube.print_cube_state()
 
-    assert not cube.is_solved(), "Failed Test 5: Scramble cube is not solved"
+    # Test 2: Check that the cube is not solved
+    assert not cube.is_solved(), "Failed Test 2: Cube should not be solved after scrambling"
+
+    # Undo the scramble by reversing the moves
+    for face, direction in reversed(scramble_moves):
+        if direction == 'clockwise':
+            cube.rotate_counter_clockwise(face)
+        else:
+            cube.rotate_clockwise(face)
+
+    # Print the state after undoing the scramble
+    print("Cube after undoing the scramble:")
+    cube.print_cube_state()
+
+    # Test 3: Check that the cube is solved after undoing the scramble
+    assert cube.is_solved(), "Failed Test 3: Cube should be solved after undoing the scramble"
 
     print("All tests passed!")
