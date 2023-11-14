@@ -5,7 +5,7 @@ from stable_baselines3 import PPO
 import torch
 
 from RubikCubeEnv import RubiksCubeEnv
-from Testing import testing
+from workSpace.Testing import testing
 
 # Hyperparameters
 NUM_PARALLEL_ENV = 10
