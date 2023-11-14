@@ -2,12 +2,10 @@ import math
 import os
 import time
 from stable_baselines3 import PPO
-from stable_baselines3.common.evaluation import evaluate_policy
 import torch
-from stable_baselines3.common.monitor import Monitor
 
 from RubikCubeEnv import RubiksCubeEnv
-from Testing import testing
+from workSpace.Testing import testing
 
 # Hyperparameters
 NUM_PARALLEL_ENV = 10

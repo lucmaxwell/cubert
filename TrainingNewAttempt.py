@@ -1,4 +1,3 @@
-import math
 import os
 import random
 import time
@@ -6,12 +5,13 @@ from stable_baselines3 import PPO
 import torch
 
 from RubikCubeEnv import RubiksCubeEnv
-from Testing import testing
+from workSpace.Testing import testing, validate_reinforcement
 
 # Hyperparameters
 VERBOSE = 0
 
 MODEL_NAME = "ppo_episode_train"
+
 
 if __name__ == '__main__':
     start_time = time.time()
@@ -34,7 +34,7 @@ if __name__ == '__main__':
         training_model = PPO('MlpPolicy', env=env, verbose=VERBOSE, device="cuda")
 
     # Training
-    TOTAL_EPISODE = 100
+    TOTAL_EPISODE = 100 * 5
     for episode in range(TOTAL_EPISODE):
         # Random number of scramble
         num_scramble_list = range(1, 2 + 1)
@@ -42,50 +42,57 @@ if __name__ == '__main__':
         print(f"Episode: {episode + 1}, number of scramble: {num_scramble}")
 
         # Setup to run the episode
-        MAX_STEPS_PER_EPISODE = int(math.ceil(num_scramble * 2.5))
+        MAX_STEPS_PER_EPISODE = env.get_max_steps_per_episode()
         env.set_num_scramble(num_scramble)
-        episode_reward = 0
-        num_steps_to_solved = 0
-        training_model.ent_coef = 0.0
 
         # New scramble cube
         env.scramble()
 
         # Solve the Rubik's Cube
+        num_steps_to_solved = 0
+        total_steps = 0
         attempt = 0
         solved = False
         while not solved:
-            attempt += 1
-
             obs, _ = env.reset()
 
             for step in range(MAX_STEPS_PER_EPISODE):
+                total_steps += 1
+
                 # Action and reward
                 action, _ = training_model.predict(obs)
                 obs, reward, solved, _, _ = env.step(action)
-
-                episode_reward += reward
 
                 if solved:
                     num_steps_to_solved = step + 1
                     break
 
-            # If not solved, increase the exploration
-            if not solved and attempt % 10 == 0:
-                if training_model.ent_coef < 1.0:
-                    training_model.ent_coef += 0.01
-
             # Learn
             if solved:
-                training_model.learn(total_timesteps=num_steps_to_solved)
-
                 # There is a better solution
                 if num_steps_to_solved > num_scramble:
-                    print(f"Not optimal solution. Number of steps solved: {num_steps_to_solved}, ent_coef: {training_model.ent_coef}")
+                    print(
+                        f"Not optimal solution. Number of steps solved: {num_steps_to_solved}")
                     solved = False
 
+                # Found and learned the most efficient solution
+                # Validate the reinforcement
+                elif not validate_reinforcement(env, training_model):
+                    print(f"Validate reinforcement failed.")
+                    solved = False
+
+        training_model.learn(total_timesteps=total_steps)
+
         # Print episode information
-        print(f"Number of steps solved: {num_steps_to_solved}, Total Reward: {episode_reward}")
+        print(f"Number of steps solved: {num_steps_to_solved}, Total steps: {total_steps}")
+
+        # Checkpoint save
+        if (episode + 1) % 100 == 0:
+            checkpoint_model_name = MODEL_NAME + "_" + str(episode + 1)
+            checkpoint_path = os.path.join(save_path, checkpoint_model_name + ".zip")
+            training_model.save(checkpoint_path)
+
+            testing(checkpoint_model_name, checkpoint_model_name)
 
     # Save the model
     training_model.save(model_file_path)
@@ -100,4 +107,4 @@ if __name__ == '__main__':
     print(f"Elapsed time: {elapsed_time} seconds")
 
     # Test
-    testing(MODEL_NAME)
+    testing(MODEL_NAME, MODEL_NAME)
