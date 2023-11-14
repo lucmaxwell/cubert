@@ -1,3 +1,5 @@
+import math
+
 import gymnasium
 import numpy as np
 from stable_baselines3.common.env_checker import check_env
@@ -7,6 +9,7 @@ from RubikCube import RubikCube, Face, SquareColour
 # Define the action space dictionary globally
 TOTAL_FACES = 6
 TOTAL_SPINS = 2  # Clockwise, Counter-clockwise
+
 
 def decode_action(action):
     face = action // TOTAL_SPINS
@@ -19,6 +22,7 @@ class RubiksCubeEnv(gymnasium.Env):
         super(RubiksCubeEnv, self).__init__()
 
         self.cube_size = cube_size
+        self.current_num_steps = 0
 
         # Define action and observation space
         self.action_space = gymnasium.spaces.Discrete(TOTAL_FACES * TOTAL_SPINS)
@@ -34,21 +38,36 @@ class RubiksCubeEnv(gymnasium.Env):
         self.scramble()
 
         # Define the reward range
-        self.reward_range = (-1, 1)
+        self.reward_range = (-1, self.num_scramble)
 
     def set_num_scramble(self, num_scramble):
         self.num_scramble = num_scramble
+        self.reward_range = (-1, self.num_scramble)
+
+    def get_num_scramble(self):
+        return self.num_scramble
+
+    def get_max_steps(self):
+        return int(math.ceil(self.num_scramble * 2.5))
+
+    def get_current_num_steps(self):
+        return self.current_num_steps
 
     def scramble(self):
         self.cube = RubikCube(self.cube_size)
         self.cube.scramble(self.num_scramble)
         self.scrambled_state = self._get_observation()
+        self.current_num_steps = 0
+        return self._get_observation()
 
     def reset(self, **kwargs):
         self.cube.set_state_from_observation(self.scrambled_state)
+        self.current_num_steps = 0
         return self._get_observation(), {}
 
     def step(self, action):
+        self.current_num_steps += 1
+
         # Decode the action
         face, spin = decode_action(action)
         face = Face(face)
@@ -61,13 +80,13 @@ class RubiksCubeEnv(gymnasium.Env):
 
         # Calculate reward based on the number of correct squares
         solved = self.cube.is_solved()
-        reward = 1 if solved else -1
+        reward = self.num_scramble if solved and self.current_num_steps <= self.num_scramble else -1
 
         # Return
         return self._get_observation(), reward, solved, False, {}
 
     def render(self):
-        #self.cube.print_cube_state()
+        # self.cube.print_cube_state()
         pass
 
     def _get_observation(self):
