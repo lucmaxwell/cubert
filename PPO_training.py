@@ -1,10 +1,9 @@
-import os
 import time
 
-from workSpace.Testing import test
+from Testing import test
 from UtilityFunctions import load_model_PPO, save_model
 
-TOTAL_STEPS = 100
+TOTAL_STEPS = 50000
 MODEL_NAME = "ppo_training"
 
 if __name__ == '__main__':
