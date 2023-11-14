@@ -55,17 +55,17 @@ def test(model, env, plot_title):
 
         solved_count = 0
         for _ in range(100):
-            obs = env.scramble()
+            obs = env.scramble(num_scramble)
+
+            #print("Original:")
+            #env.render()
 
             # Solve
             solved = False
-            num_steps = 0
-            while not solved and num_steps < MAX_STEPS:
+            while not solved and env.get_current_num_steps() < MAX_STEPS:
                 # Action and reward
                 action, _ = model.predict(obs, deterministic=True)
-                obs, reward, solved, _, _ = env.step(action)
-
-                num_steps += 1
+                obs, _, solved, _, _ = env.step(action)
 
             if solved:
                 solved_count += 1
@@ -93,14 +93,9 @@ def test(model, env, plot_title):
 
 
 if __name__ == '__main__':
-    MODEL_NAME = "dqn_train_100"
-
-    save_path = os.path.join('Training', 'Saved Models')
-
-    # Create the environment and vector for parallel environments
-    environment = RubiksCubeEnv()
+    MODEL_NAME = "ppo_training"
 
     # Create a new model by default
-    test_model = load_model_DQN(save_path, MODEL_NAME, environment)
+    test_model, environment, _ = load_model_PPO(MODEL_NAME, num_scramble=2)
 
     test(test_model, environment, MODEL_NAME)
