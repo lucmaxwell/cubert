@@ -1,0 +1,1 @@
+100% on single scramble. Trained with 50,000 steps and subsequence training show that the model is stable.
