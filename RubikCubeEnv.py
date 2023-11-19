@@ -19,11 +19,8 @@ def decode_action(action):
 
 
 class RubiksCubeEnv(gymnasium.Env):
-    def __init__(self, num_scramble=1, cube_size=3):
+    def __init__(self, num_scramble=1, cube_size=3, max_steps_per_episode=100):
         super(RubiksCubeEnv, self).__init__()
-
-        self.cube_size = cube_size
-        self.current_num_steps = 0
 
         # Define action and observation space
         self.action_space = gymnasium.spaces.Discrete(TOTAL_FACES * TOTAL_SPINS)
@@ -32,24 +29,38 @@ class RubiksCubeEnv(gymnasium.Env):
             shape=(TOTAL_FACES, cube_size, cube_size),
             dtype=np.uint8)
 
+        # Define the reward range
+        self.reward_range = (-1, 1)
+
+        self.cube_size = cube_size
         self.num_scramble = num_scramble
         self.current_num_scramble = num_scramble
 
-        self.cube = RubikCube(self.cube_size)
-        self.reset()
+        self.max_steps_per_episode = max_steps_per_episode
+        self.current_num_steps = 0
+        self.episode_reward = 0
 
-        # Define the reward range
-        self.reward_range = (-1, self.num_scramble)
+        # Choosing number of scramble weight
+        self.weights = [n ** 2 for n in range(1, self.num_scramble + 1)]
+
+        self.solved = False
+        self.original_obs = None
+
+        # Create and scramble the Rubik's Cube
+        self.cube = RubikCube(self.cube_size)
+        self.scramble(self.current_num_scramble)
 
     def set_num_scramble(self, num_scramble):
         self.num_scramble = num_scramble
         self.reward_range = (-1, self.num_scramble)
+        self.weights = [n**2 for n in range(1, self.num_scramble + 1)]
 
     def get_num_scramble(self):
         return self.num_scramble
 
     def get_max_steps(self):
-        return int(math.ceil(self.num_scramble * 2.5))
+        #return int(math.ceil(self.num_scramble * 2.5))
+        return 50
 
     def get_current_num_steps(self):
         return self.current_num_steps
@@ -59,16 +70,33 @@ class RubiksCubeEnv(gymnasium.Env):
 
         self.cube = RubikCube(self.cube_size)
         self.cube.scramble(self.current_num_scramble)
+
         self.current_num_steps = 0
+        self.episode_reward = 0
+
+        self.solved = False
+        self.original_obs = self._get_observation()
 
         return self._get_observation()
 
     def reset(self, **kwargs):
-        self.current_num_scramble = random.choice(range(1, self.num_scramble + 1))
+        if self.solved:
+            self.current_num_scramble = random.choices(range(1, self.num_scramble + 1), weights=self.weights, k=1)[0]
 
-        self.cube = RubikCube(self.cube_size)
-        self.cube.scramble(self.current_num_scramble)
-        self.current_num_steps = 0
+            self.cube = RubikCube(self.cube_size)
+            self.cube.scramble(self.current_num_scramble)
+
+            self.current_num_steps = 0
+            self.episode_reward = 0
+
+            self.solved = False
+            self.original_obs = self._get_observation()
+
+        else:
+            self.cube.set_state_from_observation(self.original_obs)
+
+            self.current_num_steps = 0
+            self.episode_reward = 0
 
         return self._get_observation(), {}
 
@@ -85,26 +113,28 @@ class RubiksCubeEnv(gymnasium.Env):
         elif spin == 1:
             self.cube.rotate_counter_clockwise(face)
 
-        #print(f"Action face: {face} spin: {spin}")
-        #self.render()
+        # print(f"Action face: {face} spin: {spin}")
+        # self.render()
+
+        self.solved = self.cube.is_solved()
 
         # Calculate reward based on the number of correct squares
-        solved = self.cube.is_solved()
-        reward = self.current_num_scramble if solved and self.current_num_steps <= self.num_scramble else -1
+        reward = 1 if self.solved and self.current_num_steps <= self.num_scramble else -1
 
-        # Get the observation after the action
-        obs = self._get_observation()
+        # Update the episode reward
+        self.episode_reward += reward
 
-        # New scramble
-        if solved or self.current_num_steps > self.get_max_steps():
-            self.reset()
+        # New scramble or re-scramble
+        done = self.solved
+        if self.current_num_steps >= 100:
+            done = True
 
         # Return
-        return obs, reward, solved, False, {}
+        return self._get_observation(), reward, done, False, {}
 
     def render(self):
         self.cube.print_cube_state()
-        #pass
+        # pass
 
     def _get_observation(self):
         observation = np.zeros((TOTAL_FACES, self.cube_size, self.cube_size), dtype=np.uint8)

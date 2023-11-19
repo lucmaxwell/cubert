@@ -93,9 +93,9 @@ def test(model, env, plot_title):
 
 
 if __name__ == '__main__':
-    MODEL_NAME = "ppo_training"
+    MODEL_NAME = "dqn_training_gen_3"
 
     # Create a new model by default
-    test_model, environment, _ = load_model_PPO(MODEL_NAME, num_scramble=2)
+    test_model, environment, _ = load_model_DQN(MODEL_NAME, num_scramble=2)
 
     test(test_model, environment, MODEL_NAME)
