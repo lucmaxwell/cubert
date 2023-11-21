@@ -4,13 +4,13 @@ from Model_Validation import test
 from UtilityFunctions import load_model_DQN, save_model
 
 TOTAL_STEPS = 100000
-MODEL_NAME = "dqn_training_gen_3"
+MODEL_NAME = "dqn_training_gen_10"
 
 if __name__ == '__main__':
     start_time = time.time()
 
     # Create a new model by default
-    training_model, env, callback = load_model_DQN(MODEL_NAME, num_scramble=2)
+    training_model, env, callback = load_model_DQN(MODEL_NAME, num_scramble=5)
 
     # Training
     training_model.learn(total_timesteps=TOTAL_STEPS, callback=callback)

@@ -43,9 +43,6 @@ class RubiksCubeEnv(gymnasium.Env):
         # Choosing number of scramble weight
         self.weights = [n ** 2 for n in range(1, self.num_scramble + 1)]
 
-        self.solved = False
-        self.original_obs = None
-
         # Create and scramble the Rubik's Cube
         self.cube = RubikCube(self.cube_size)
         self.scramble(self.current_num_scramble)
@@ -60,7 +57,10 @@ class RubiksCubeEnv(gymnasium.Env):
 
     def get_max_steps(self):
         #return int(math.ceil(self.num_scramble * 2.5))
-        return 50
+        return self.num_scramble * 10
+
+    def is_solved(self):
+        return self.cube.is_solved()
 
     def get_current_num_steps(self):
         return self.current_num_steps
@@ -74,29 +74,18 @@ class RubiksCubeEnv(gymnasium.Env):
         self.current_num_steps = 0
         self.episode_reward = 0
 
-        self.solved = False
-        self.original_obs = self._get_observation()
-
         return self._get_observation()
 
     def reset(self, **kwargs):
-        if self.solved:
-            self.current_num_scramble = random.choices(range(1, self.num_scramble + 1), weights=self.weights, k=1)[0]
+        self.current_num_scramble = random.choices(range(1, self.num_scramble + 1), weights=self.weights, k=1)[0]
 
-            self.cube = RubikCube(self.cube_size)
-            self.cube.scramble(self.current_num_scramble)
+        #self.current_num_scramble = self.num_scramble
 
-            self.current_num_steps = 0
-            self.episode_reward = 0
+        self.cube = RubikCube(self.cube_size)
+        self.cube.scramble(self.current_num_scramble)
 
-            self.solved = False
-            self.original_obs = self._get_observation()
-
-        else:
-            self.cube.set_state_from_observation(self.original_obs)
-
-            self.current_num_steps = 0
-            self.episode_reward = 0
+        self.current_num_steps = 0
+        self.episode_reward = 0
 
         return self._get_observation(), {}
 
@@ -116,17 +105,15 @@ class RubiksCubeEnv(gymnasium.Env):
         # print(f"Action face: {face} spin: {spin}")
         # self.render()
 
-        self.solved = self.cube.is_solved()
-
         # Calculate reward based on the number of correct squares
-        reward = 1 if self.solved and self.current_num_steps <= self.num_scramble else -1
+        done = self.cube.is_solved()
+        reward = 1 if done and self.current_num_steps <= self.num_scramble else -1
 
         # Update the episode reward
         self.episode_reward += reward
 
-        # New scramble or re-scramble
-        done = self.solved
-        if self.current_num_steps >= 100:
+        # New scramble
+        if self.current_num_steps >= self.get_max_steps():
             done = True
 
         # Return

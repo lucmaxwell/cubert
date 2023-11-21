@@ -2,15 +2,63 @@ import os
 
 import numpy as np
 import torch
+import torch.cuda
 from stable_baselines3 import PPO, DQN
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback, CallbackList
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from torch import nn
+from torch import nn, optim
 import torch.nn.functional as F
 
-from CustomCallback import SaveOnEqualRewardCallback
 from RubikCubeEnv import RubiksCubeEnv
+
+
+class Network(BaseFeaturesExtractor):
+    def __init__(self, input_obs_space, features_dim, hidden_size=256):
+        super(Network, self).__init__(input_obs_space, features_dim)
+
+        # Dynamically calculate the flattened size of the observation space
+        flattened_obs_space = int(np.prod(input_obs_space.shape))
+
+        # Define the network layers
+        self.network = nn.Sequential(
+            nn.Linear(flattened_obs_space, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size*2),
+            nn.ReLU(),
+            nn.BatchNorm1d(hidden_size*2),
+            nn.Linear(hidden_size*2, hidden_size*2),
+            nn.ReLU(),
+            nn.BatchNorm1d(hidden_size * 2),
+            nn.Linear(hidden_size * 2, hidden_size * 2),
+            nn.ReLU(),
+            nn.BatchNorm1d(hidden_size * 2),
+            nn.Linear(hidden_size * 2, hidden_size * 2),
+            nn.ReLU(),
+            nn.BatchNorm1d(hidden_size * 2),
+            nn.Linear(hidden_size * 2, hidden_size * 2),
+            nn.ReLU(),
+            nn.BatchNorm1d(hidden_size * 2),
+            nn.Linear(hidden_size * 2, hidden_size * 2),
+            nn.ReLU(),
+            nn.BatchNorm1d(hidden_size * 2),
+            nn.Linear(hidden_size * 2, hidden_size * 2),
+            nn.ReLU(),
+            nn.BatchNorm1d(hidden_size * 2),
+            nn.Linear(hidden_size * 2, hidden_size * 2),
+            nn.ReLU(),
+            nn.BatchNorm1d(hidden_size * 2),
+            nn.Linear(hidden_size * 2, hidden_size * 2),
+            nn.ReLU(),
+            nn.Linear(hidden_size * 2, features_dim)
+            # Soft max?
+        )
+
+    def forward(self, observations):
+        # Flatten the observations
+        obs_flat = torch.flatten(observations, start_dim=1)
+
+        return self.network(obs_flat)
 
 
 def load_model_PPO(model_name, num_scramble=1):
@@ -23,15 +71,21 @@ def load_model_PPO(model_name, num_scramble=1):
     # Create the environment and vector for parallel environments
     env = RubiksCubeEnv(num_scramble=num_scramble)
 
+    # Define the policy kwargs with custom feature extractor
+    policy_kwargs = dict(
+        features_extractor_class=Network,
+        features_extractor_kwargs=dict(features_dim=env.action_space.n)
+    )
+
     # Create a new model by default
     training_model = None
     model_file_path = os.path.join(save_path, model_name + ".zip")
     if os.path.isfile(model_file_path):
         print(f"Loading existing model from {model_file_path}")
-        training_model = PPO.load(model_file_path, env=env, verbose=2, tensorboard_log=model_log_path, device="cuda")
+        training_model = PPO.load(model_file_path, env=env, policy_kwargs=policy_kwargs, verbose=2, tensorboard_log=model_log_path, device="cuda")
     else:
         print("Creating a new model...")
-        training_model = PPO('MlpPolicy', env=env, verbose=2, tensorboard_log=model_log_path, device="cuda")
+        training_model = PPO('MlpPolicy', env=env, policy_kwargs=policy_kwargs, verbose=2, tensorboard_log=model_log_path, device="cuda")
 
     # Callback
     checkpoint_callback = CheckpointCallback(save_freq=10000, save_path=os.path.join(save_path, model_name),
@@ -46,27 +100,6 @@ def load_model_PPO(model_name, num_scramble=1):
     return training_model, env, callback
 
 
-class Network(BaseFeaturesExtractor):
-    def __init__(self, observation_space, features_dim=128):
-        super(Network, self).__init__(observation_space, features_dim)
-
-        # Dynamically calculate the flattened size of the observation space
-        flattened_obs_space = int(np.prod(observation_space.shape))
-
-        # Define the network layers
-        self.layer1 = nn.Linear(flattened_obs_space, 256)
-        self.layer2 = nn.Linear(256, 256)
-        self.layer3 = nn.Linear(256, features_dim)
-
-    def forward(self, observations):
-        # Flatten the observations
-        obs_flat = observations.flatten(start_dim=1)
-
-        x = F.relu(self.layer1(obs_flat))
-        x = F.relu(self.layer2(x))
-        return self.layer3(x)
-
-
 def load_model_DQN(model_name, num_scramble=1):
     print(torch.__version__)
     print(f"CUDA is available: {torch.cuda.is_available()}")
@@ -78,7 +111,10 @@ def load_model_DQN(model_name, num_scramble=1):
     env = RubiksCubeEnv()
 
     # Define the policy kwargs with custom feature extractor
-    policy_kwargs = dict(features_extractor_class=Network)
+    policy_kwargs = dict(
+        features_extractor_class=Network,
+        features_extractor_kwargs=dict(features_dim=env.action_space.n)
+    )
 
     # Create a new model by default
     training_model = None
@@ -115,6 +151,5 @@ def save_model(model_name, model):
 if __name__ == '__main__':
     env = RubiksCubeEnv()
 
-    network = Network(env.observation_space)
+    network = Network(env.observation_space, env.action_space.n)
     print(network)
-

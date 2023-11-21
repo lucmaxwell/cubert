@@ -9,42 +9,6 @@ from RubikCubeEnv import RubiksCubeEnv
 from UtilityFunctions import load_model_PPO, load_model_DQN
 
 
-def validate_reinforcement(model, env, num_episodes=10):
-    success_count = 0
-    optimal_success_count = 0
-    total_steps = 0
-
-    for episode in range(num_episodes):
-        # New scramble cube
-        env.scramble()
-
-        obs, _ = env.reset()
-
-        solved = False
-        steps = 0
-        while not solved and steps < env.get_max_steps_per_episode():
-            steps += 1
-
-            action, _ = model.predict(obs, deterministic=True)
-            obs, _, solved, _ = env.step(action)
-
-        if solved:
-            success_count += 1
-
-            # Optimally solved
-            if steps <= env.get_num_scramble():
-                optimal_success_count += 1
-
-        total_steps += steps
-
-    average_steps = total_steps / num_episodes
-    success_rate = success_count / num_episodes
-    optimal_success_rate = optimal_success_count / num_episodes
-
-    # Return
-    return average_steps, success_rate, optimal_success_rate
-
-
 def test(model, env, plot_title):
     # Test the trained agent
     solved_count_list = []
@@ -61,14 +25,18 @@ def test(model, env, plot_title):
             #env.render()
 
             # Solve
-            solved = False
-            while not solved and env.get_current_num_steps() < MAX_STEPS:
+            done = False
+            while not done and env.get_current_num_steps() < MAX_STEPS:
                 # Action and reward
                 action, _ = model.predict(obs, deterministic=True)
-                obs, _, solved, _, _ = env.step(action)
+                obs, _, done, _, _ = env.step(action)
 
-            if solved:
+            if env.is_solved():
                 solved_count += 1
+
+            #print("Result:")
+            #env.render()
+            #print(f"Number of steps to solve: {env.get_current_num_steps()}")
 
         solved_count_list.append(solved_count)
 
@@ -93,9 +61,9 @@ def test(model, env, plot_title):
 
 
 if __name__ == '__main__':
-    MODEL_NAME = "dqn_training_gen_3"
+    MODEL_NAME = "dqn_training_gen_10"
 
     # Create a new model by default
-    test_model, environment, _ = load_model_DQN(MODEL_NAME, num_scramble=2)
+    test_model, environment, _ = load_model_DQN(MODEL_NAME, num_scramble=1)
 
     test(test_model, environment, MODEL_NAME)
