@@ -33,9 +33,17 @@ void setup() {
 
   pixels.clear();
 
-  for(int i=0; i<NUMPIXELS; i++){
-    pixels.setPixelColor(i, pixels.Color(0,0,0,5));
-  }
+
+  int brightness = 25;
+
+  // for(int i=0; i<NUMPIXELS; i++){
+  //   pixels.setPixelColor(i, pixels.Color(0,0,0,brightness));
+  // }
+
+  pixels.setPixelColor(0, pixels.Color(0,0,0,brightness));
+  pixels.setPixelColor(4, pixels.Color(0,0,0,brightness));
+  pixels.setPixelColor(8, pixels.Color(0,0,0,brightness));
+  pixels.setPixelColor(12, pixels.Color(0,0,0,brightness));
 
   pixels.show();
 
