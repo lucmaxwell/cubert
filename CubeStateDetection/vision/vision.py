@@ -23,8 +23,12 @@ BGRs = {
     5: (255, 255, 255)
 }
 
+print(f'Working in {os.getcwd()}')
+
 # Paths
-basePath = "./CubeStateDetection/vision/"
+basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
+
+# basePath = "./"
 imagesPath = basePath + "images/"
 outPath = basePath + "output/"
 image = "combined.jpg"
@@ -42,9 +46,27 @@ edgeHeight = 3
 # Read in the cube
 img = cv.imread(cube)
 hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+rgb = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 height = img.shape[0]
 width = img.shape[1]
-inline = img.reshape(height*width, 3)
+
+# Change to euclidian HSV coordinates
+inlineHsv = hsv.reshape(height*width, 3)
+inlineHsv = inlineHsv.astype(np.int32)
+
+inlineRgb = rgb.reshape(height*width, 3) / 255
+
+print(inlineHsv[0:10])
+hue = inlineHsv[:, 0] * np.pi / 180 * 2
+sat = inlineHsv[:, 1] #/ 255 * 100
+val = inlineHsv[:, 2] #/ 255 * 100
+
+inlineHsv[:, 0] = np.sin(hue) * sat
+inlineHsv[:, 1] = np.cos(hue) * sat
+inlineHsv[:, 2] = val
+
+# inline = img.reshape(height*width, 3)
+inline = inlineHsv
 
 figure = plt.figure()
 axis = figure.add_subplot(projection='3d')
@@ -56,15 +78,7 @@ colours_pred = kmeans.cluster_centers_
 colours_pred = colours_pred.astype(np.uint8)
 print(colours_pred)
 
-# agglomerate = AgglomerativeClustering(linkage="ward", n_clusters=6)
-# agglomerate.fit(inline)
-# ag_labels = agglomerate.labels_
-# ag_labels = ag_labels.reshape((height, width))
-# unique, counts = np.unique(ag_labels, return_counts=True)
-# print("Aggregate")
-# print(np.asarray((unique, counts)).T)
-
-axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=labels)
+axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
 # plt.show()
 
 labels = labels.reshape((height, width))
@@ -96,8 +110,6 @@ for i in range(edgeHeight):
         id = 0
         idNum = 0
         for k in range(len(colours)):
-            # masked = cv.bitwise_and(mask, colours[i])
-            # masked = (mask == colours[k]).astype(np.uint8) * 255
             masked = np.multiply(mask, colours[k])
 
             sum = np.sum(masked > 0)
@@ -114,5 +126,5 @@ for i in range(edgeHeight):
         outImage[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = colours_pred[id]
 
 print(solution)
-cv.imwrite(outPath + 'output.jpg', outImage)
+cv.imwrite(outPath + 'output.jpg', cv.cvtColor(outImage, cv.COLOR_HSV2BGR_FULL) )
 cv.imwrite(outPath + 'input.jpg', img)
