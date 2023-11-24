@@ -2,8 +2,11 @@ import cv2 as cv
 import numpy as np
 import os
 from sklearn.cluster import KMeans
+from sklearn.cluster import BisectingKMeans
+from sklearn.cluster import SpectralClustering
 from sklearn.cluster import AgglomerativeClustering
 import matplotlib.pyplot as plt
+import colorsys
 
 def writeImages(colours):
     cv.imwrite(outPath + '0.jpg', colours[0])
@@ -25,73 +28,74 @@ BGRs = {
 
 print(f'Working in {os.getcwd()}')
 
-# Paths
+# Parameters
 basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
-
-# basePath = "./"
 imagesPath = basePath + "images/"
 outPath = basePath + "output/"
-image = "combined.jpg"
+image = "new base 4led diffusion.jpg"
+cube = imagesPath + image
+
+edgeLength = 3
+edgeHeight = 3
 
 # Create output folder
 isExist = os.path.exists(outPath)
 if not isExist:
    os.makedirs(outPath)
 
-# Parameters
-cube = imagesPath + image
-edgeLength = 18
-edgeHeight = 3
-
 # Read in the cube
 img = cv.imread(cube)
+img = img.astype(np.uint8)
 hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 rgb = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+
 height = img.shape[0]
 width = img.shape[1]
 
-# Change to euclidian HSV coordinates
+# Make lists for clustering
 inlineHsv = hsv.reshape(height*width, 3)
 inlineHsv = inlineHsv.astype(np.int32)
-
 inlineRgb = rgb.reshape(height*width, 3) / 255
 
-print(inlineHsv[0:10])
-hue = inlineHsv[:, 0] * np.pi / 180 * 2
-sat = inlineHsv[:, 1] #/ 255 * 100
-val = inlineHsv[:, 2] #/ 255 * 100
+# HSV cylinderical to cartesian coordinates transformation
+hue = inlineHsv[:, 0] * np.pi / 180 * 2 # For some reason OpenCV's hue values only go from 0 to 180 so we need to multiply by 2 to get the range 0 to 360
+sat = inlineHsv[:, 1]
+val = inlineHsv[:, 2]
 
 inlineHsv[:, 0] = np.sin(hue) * sat
 inlineHsv[:, 1] = np.cos(hue) * sat
 inlineHsv[:, 2] = val
 
-# inline = img.reshape(height*width, 3)
 inline = inlineHsv
 
-figure = plt.figure()
-axis = figure.add_subplot(projection='3d')
-
+# Perform clustering
 kmeans = KMeans(n_clusters=6)
 kmeans.fit(inline)
 labels = kmeans.predict(inline)
+labels = labels.reshape((height, width))
 colours_pred = kmeans.cluster_centers_
-colours_pred = colours_pred.astype(np.uint8)
-print(colours_pred)
 
-axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
+# Convert the cluster centroids from cartesian to cylinderical coordinates
+for i in range(len(colours_pred)):
+    val = colours_pred[i][2]
+    hue = np.arctan2(colours_pred[i][0], colours_pred[i][1])
+    if(hue < 0):
+        hue = hue + (2*np.pi)
+    sat = colours_pred[i][1]/np.cos(hue)
+
+    hue =  hue / np.pi * 180 / 2
+    colours_pred[i] = [hue, sat, val]
+
+# Plot the colours
+# figure = plt.figure()
+# axis = figure.add_subplot(projection='3d')
+# axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
 # plt.show()
 
-labels = labels.reshape((height, width))
-unique, counts = np.unique(labels, return_counts=True)
-print("KMeans")
-print(np.asarray((unique, counts)).T)
-
+# Print debugging images
 colours = [0, 0, 0, 0, 0, 0]
 for i in range(0, 6):
     colours[i] = (labels == i).astype(np.uint8) * 255
-    # colours[i] = (ag_labels == i).astype(np.uint8) * 255
-    # print(colours[i])
-
 writeImages(colours)
 
 # Solve the cube
@@ -119,12 +123,13 @@ for i in range(edgeHeight):
             idNum += 1
 
         solution[i][j] = id
-        print(f"{i}, {j}: {id}")
+        print(f"({i}, {j}): {id}")
 
         # Output
         cv.imwrite(outPath + 'blank.jpg', mask)
         outImage[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = colours_pred[id]
 
+# Write results
 print(solution)
-cv.imwrite(outPath + 'output.jpg', cv.cvtColor(outImage, cv.COLOR_HSV2BGR_FULL) )
+cv.imwrite(outPath + 'output.jpg', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
 cv.imwrite(outPath + 'input.jpg', img)
