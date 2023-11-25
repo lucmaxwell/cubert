@@ -55,6 +55,7 @@ width = img.shape[1]
 # Make lists for clustering
 inlineHsv = hsv.reshape(height*width, 3)
 inlineHsv = inlineHsv.astype(np.int32)
+inlineHsv2 = inlineHsv.astype(np.int32)
 inlineRgb = rgb.reshape(height*width, 3) / 255
 
 # HSV cylinderical to cartesian coordinates transformation
@@ -62,9 +63,17 @@ hue = inlineHsv[:, 0] * np.pi / 180 * 2 # For some reason OpenCV's hue values on
 sat = inlineHsv[:, 1]
 val = inlineHsv[:, 2]
 
+sat2 = (pow(1.02, sat) - 1) / 155.97 * 255
+sat2 = np.array(sat2)
+sat2[sat2 > 5] = 255
+
 inlineHsv[:, 0] = np.sin(hue) * sat
 inlineHsv[:, 1] = np.cos(hue) * sat
 inlineHsv[:, 2] = val
+
+inlineHsv2[:, 0] = np.sin(hue) * sat2
+inlineHsv2[:, 1] = np.cos(hue) * sat2
+inlineHsv2[:, 2] = val
 
 inline = inlineHsv
 
@@ -85,12 +94,6 @@ for i in range(len(colours_pred)):
 
     hue =  hue / np.pi * 180 / 2
     colours_pred[i] = [hue, sat, val]
-
-# Plot the colours
-# figure = plt.figure()
-# axis = figure.add_subplot(projection='3d')
-# axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
-# plt.show()
 
 # Print debugging images
 colours = [0, 0, 0, 0, 0, 0]
@@ -133,3 +136,16 @@ for i in range(edgeHeight):
 print(solution)
 cv.imwrite(outPath + 'output.jpg', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
 cv.imwrite(outPath + 'input.jpg', img)
+
+
+
+# Plot the colours
+figure = plt.figure()
+axis = figure.add_subplot(1,2,1,projection='3d')
+axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
+
+axis = figure.add_subplot(1,2,2,projection='3d')
+# axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
+axis.scatter(inlineHsv2[:, 0], inlineHsv2[:, 1], inlineHsv2[:, 2], c=inlineRgb)
+# axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
+plt.show()
