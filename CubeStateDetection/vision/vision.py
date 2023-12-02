@@ -2,11 +2,8 @@ import cv2 as cv
 import numpy as np
 import os
 from sklearn.cluster import KMeans
-from sklearn.cluster import BisectingKMeans
-from sklearn.cluster import SpectralClustering
-from sklearn.cluster import AgglomerativeClustering
 import matplotlib.pyplot as plt
-import colorsys
+import urllib.request
 
 def writeImages(colours):
     cv.imwrite(outPath + '0.jpg', colours[0])
@@ -17,14 +14,11 @@ def writeImages(colours):
     cv.imwrite(outPath + '5.jpg', colours[5])
     return
 
-BGRs = {
-    0: (0, 0, 255),
-    1: (255, 0, 0),
-    2: (0, 255, 0),
-    3: (0, 100, 255),
-    4: (0, 255, 255),
-    5: (255, 255, 255)
-}
+def getImage(url):
+    req = urllib.request.urlopen(url)
+    arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+    img = cv.imdecode(arr, -1) # 'Load it as it is'
+    return img
 
 print(f'Working in {os.getcwd()}')
 
@@ -32,8 +26,12 @@ print(f'Working in {os.getcwd()}')
 basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
 imagesPath = basePath + "images/"
 outPath = basePath + "output/"
-image = "new base 4led diffusion.jpg"
+image = "cob3.jpg"
+imageUrl = "http://192.168.4.1/capture"
+useUrl = False
+mask = 'mask.png'
 cube = imagesPath + image
+maskPath = imagesPath + mask
 
 edgeLength = 3
 edgeHeight = 3
@@ -42,100 +40,124 @@ edgeHeight = 3
 isExist = os.path.exists(outPath)
 if not isExist:
    os.makedirs(outPath)
+if True:
+    # Read in the cube
+    if(useUrl):
+        img = getImage(imageUrl)
+        
+        top = 162
+        left = 249
+        height = 324
+        width = height
 
-# Read in the cube
-img = cv.imread(cube)
-img = img.astype(np.uint8)
-hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
-rgb = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+        img = img[top:top+height, left:left+width, :]
+        # cv.imshow('asdf', img)
+        # if cv.waitKey() & 0xff == 27: quit()
+        
+        # 239 from left, 113 from top, 377x377
+    else:
+        img = cv.imread(cube)
 
-height = img.shape[0]
-width = img.shape[1]
+    imageMask = cv.imread(maskPath)
+    img = img.astype(np.uint8)
+    imageMask = imageMask.astype(np.uint8)
+    imageMask = imageMask / 255
+    hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+    rgb = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
-# Make lists for clustering
-inlineHsv = hsv.reshape(height*width, 3)
-inlineHsv = inlineHsv.astype(np.int32)
-inlineHsv2 = inlineHsv.astype(np.int32)
-inlineRgb = rgb.reshape(height*width, 3) / 255
+    # cv.imshow("asdf", img * imageMask)
+    # if cv.waitKey() & 0xff == 27: quit()
 
-# HSV cylinderical to cartesian coordinates transformation
-hue = inlineHsv[:, 0] * np.pi / 180 * 2 # For some reason OpenCV's hue values only go from 0 to 180 so we need to multiply by 2 to get the range 0 to 360
-sat = inlineHsv[:, 1]
-val = inlineHsv[:, 2]
+    height = img.shape[0]
+    width = img.shape[1]
 
-sat2 = (pow(1.02, sat) - 1) / 155.97 * 255
-sat2 = np.array(sat2)
-sat2[sat2 > 5] = 255
+    # Make lists for clustering
+    inlineHsv = hsv.reshape(height*width, 3)
+    inlineHsv = inlineHsv.astype(np.int32)
+    inlineHsv2 = inlineHsv.astype(np.int32)
+    inlineRgb = rgb.reshape(height*width, 3) / 255
+    inlineMask = imageMask.reshape(height*width, 3)
+    # inlineMaskGray = cv.cvtColor(inlineMask, cv.COLOR_BGR2GRAY)
 
-inlineHsv[:, 0] = np.sin(hue) * sat
-inlineHsv[:, 1] = np.cos(hue) * sat
-inlineHsv[:, 2] = val
+    # HSV cylinderical to cartesian coordinates transformation
+    hue = inlineHsv[:, 0] * np.pi / 180 * 2 # For some reason OpenCV's hue values only go from 0 to 180 so we need to multiply by 2 to get the range 0 to 360
+    sat = inlineHsv[:, 1]
+    val = inlineHsv[:, 2]
 
-inlineHsv2[:, 0] = np.sin(hue) * sat2
-inlineHsv2[:, 1] = np.cos(hue) * sat2
-inlineHsv2[:, 2] = val
+    sat2 = (pow(1.02, sat) - 1) / 155.97 * 255
+    sat2 = np.array(sat2)
+    sat2[sat2 > 5] = 255
 
-inline = inlineHsv
+    inlineHsv[:, 0] = np.sin(hue) * sat
+    inlineHsv[:, 1] = np.cos(hue) * sat
+    inlineHsv[:, 2] = val
 
-# Perform clustering
-kmeans = KMeans(n_clusters=6)
-kmeans.fit(inline)
-labels = kmeans.predict(inline)
-labels = labels.reshape((height, width))
-colours_pred = kmeans.cluster_centers_
+    inlineHsv2[:, 0] = np.sin(hue) * sat2
+    inlineHsv2[:, 1] = np.cos(hue) * sat2
+    inlineHsv2[:, 2] = val
 
-# Convert the cluster centroids from cartesian to cylinderical coordinates
-for i in range(len(colours_pred)):
-    val = colours_pred[i][2]
-    hue = np.arctan2(colours_pred[i][0], colours_pred[i][1])
-    if(hue < 0):
-        hue = hue + (2*np.pi)
-    sat = colours_pred[i][1]/np.cos(hue)
+    inline = inlineHsv
 
-    hue =  hue / np.pi * 180 / 2
-    colours_pred[i] = [hue, sat, val]
+    kmeans = KMeans(n_clusters=6, n_init=10)
+    kmeans.fit(inline[inlineMaskGray > 0])
+    labels = kmeans.predict(inline)
+    labels = labels.reshape((height, width))
+    colours_pred = kmeans.cluster_centers_
 
-# Print debugging images
-colours = [0, 0, 0, 0, 0, 0]
-for i in range(0, 6):
-    colours[i] = (labels == i).astype(np.uint8) * 255
-writeImages(colours)
+    # Convert the cluster centroids from cartesian to cylinderical coordinates
+    for i in range(len(colours_pred)):
+        val = colours_pred[i][2]
+        hue = np.arctan2(colours_pred[i][0], colours_pred[i][1])
+        if(hue < 0):
+            hue = hue + (2*np.pi)
+        sat = colours_pred[i][1]/np.cos(hue)
 
-# Solve the cube
-solution = np.zeros((edgeHeight, edgeLength))
-outImage = np.zeros((height, width, 3), dtype='uint8')
+        hue =  hue / np.pi * 180 / 2
+        colours_pred[i] = [hue, sat, val]
 
-for i in range(edgeHeight):
-    for j in range(edgeLength):
+    # Print debugging images
+    colours = [0, 0, 0, 0, 0, 0]
+    for i in range(0, 6):
+        colours[i] = (labels == i).astype(np.uint8) * 255
+        # colours[i] = colours[i] * cv.cvtColor(imageMask, cv.COLOR_BGR2GRAY)
+    writeImages(colours)
 
-        # Mask off one of the 9 colours on the cube face
-        mask = np.zeros((height, width), dtype='uint8')
-        mask[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = 255
+    # Solve the cube
+    solution = np.zeros((edgeHeight, edgeLength))
+    outImage = np.zeros((height, width, 3), dtype='uint8')
 
-        # Find the colour that has the most pixels in that area
-        max =0
-        id = 0
-        idNum = 0
-        for k in range(len(colours)):
-            masked = np.multiply(mask, colours[k])
+    for i in range(edgeHeight):
+        for j in range(edgeLength):
 
-            sum = np.sum(masked > 0)
-            if(sum > max):
-                max = sum
-                id = idNum
-            idNum += 1
+            # Mask off one of the 9 colours on the cube face
+            mask = np.zeros((height, width), dtype='uint8')
+            mask[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = 255
 
-        solution[i][j] = id
-        print(f"({i}, {j}): {id}")
+            # Find the colour that has the most pixels in that area
+            max =0
+            id = 0
+            idNum = 0
+            for k in range(len(colours)):
+                masked = np.multiply(mask, colours[k])
 
-        # Output
-        cv.imwrite(outPath + 'blank.jpg', mask)
-        outImage[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = colours_pred[id]
+                sum = np.sum(masked > 0)
+                if(sum > max):
+                    max = sum
+                    id = idNum
+                idNum += 1
 
-# Write results
-print(solution)
-cv.imwrite(outPath + 'output.jpg', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
-cv.imwrite(outPath + 'input.jpg', img)
+            solution[i][j] = id
+            print(f"({i}, {j}): {id}")
+
+            # Output
+            cv.imwrite(outPath + 'blank.jpg', mask)
+            outImage[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = colours_pred[id]
+
+    # Write results
+    print(solution)
+    cv.imwrite(outPath + 'output.jpg', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
+    cv.imwrite(outPath + 'input.jpg', img)
+    cv.imwrite(outPath + 'masked.jpg', img * imageMask)
 
 
 
@@ -148,4 +170,4 @@ axis = figure.add_subplot(1,2,2,projection='3d')
 # axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
 axis.scatter(inlineHsv2[:, 0], inlineHsv2[:, 1], inlineHsv2[:, 2], c=inlineRgb)
 # axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
-plt.show()
+# plt.show()
