@@ -23,18 +23,20 @@ if not isExist:
 
 img = getImage(imageUrl)
 
-top = 162
-left = 249
+top = 160
+left = 260
 height = 324
 width = height
 
-img = img[top:top+height, left:left+width, :]
+# img = img[top:top+height, left:left+width, :]
 
 number = 0
-image = f"angle {number}.jpg"
+name = "cob"
+
+image = f"{name}{number}.jpg"
 
 while(os.path.exists(imagesPath + image)):
     number += 1
-    image = f"angle {number}.jpg"
+    image = f"{name}{number}.jpg"
 
 cv.imwrite(imagesPath + image, img)
