@@ -147,6 +147,7 @@ if True:
     # Solve the cube
     solution = np.zeros((edgeHeight, edgeLength))
     outImage = np.zeros((height, width, 3), dtype='uint8')
+    regionsImage = np.zeros((height, width, 3), dtype='uint8')
 
     for i in range(edgeHeight):
         for j in range(edgeLength):
@@ -175,7 +176,7 @@ if True:
             print(f"({i}, {j}): {id}")
 
             # Output
-            cv.imwrite(outPath + 'blank.jpg', mask)
+            regionsImage[mask != 0] = [255/edgeHeight * i, 255/edgeLength * j, 255]
             outImage[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = colours_pred[id]
 
     # Write results
@@ -184,6 +185,7 @@ if True:
     cv.imwrite(outPath + 'input.jpg', img)
     cv.imwrite(outPath + 'mask.jpg', imageMask * 255)
     cv.imwrite(outPath + 'masked.jpg', img * imageMask)
+    cv.imwrite(outPath + 'maskedRegions.jpg', regionsImage)
 
 # Plot the colours
 # figure = plt.figure()
