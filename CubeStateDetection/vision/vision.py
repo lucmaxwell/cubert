@@ -111,7 +111,7 @@ if True:
         imageMask[hsv[:, :, 2] < maskMin] = np.array([0, 0, 0])
         imageMask[hsv[:, :, 2] > maskMax] = np.array([0, 0, 0])
 
-    inlineMask = imageMask.reshape(height*width, 3)
+    inlineMask = imageMask.reshape(height*width, 3) != 0
     maskedPixels = (imageMask[:, :, 0] == 0)
 
     # Make lists for clustering
@@ -123,16 +123,15 @@ if True:
     sat = np.copy(inlineHsv[:, 1])
     val = np.copy(inlineHsv[:, 2])
     inlineHsv = hsvToXyz(hue, sat, val)
-    inline = inlineHsv
 
     # Apply the mask to the flattened image before fitting kmeans
     kmeans = KMeans(n_clusters=6, n_init=10)
-    masked = inline[inlineMask != 0]
-    masked = masked.reshape((masked.size//3, 3))
-    kmeans.fit(masked)
+    inlineMasked = inlineHsv[inlineMask]
+    inlineMasked = inlineMasked.reshape((inlineMasked.size//3, 3))
+    kmeans.fit(inlineMasked)
 
     # Predict the colour class for each pixel. Masked pixels are predicted but are masked later
-    labels = kmeans.predict(inline)
+    labels = kmeans.predict(inlineHsv)
     labels = labels.reshape((height, width))
 
     colours_pred = kmeans.cluster_centers_
@@ -188,9 +187,6 @@ if True:
 
 # Plot the colours
 # figure = plt.figure()
-# axis = figure.add_subplot(1,2,1,projection='3d')
-# axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
-
-# axis = figure.add_subplot(1,2,2,projection='3d')
-# axis.scatter(inlineHsv2[:, 0], inlineHsv2[:, 1], inlineHsv2[:, 2], c=inlineRgb)
+# axis = figure.add_subplot(1,1,1,projection='3d')
+# axis.scatter(inlineMasked[:, 0], inlineMasked[:, 1], inlineMasked[:, 2], c=inlineRgb[inlineMask].reshape((inlineMasked.size//3, 3)))
 # plt.show()
