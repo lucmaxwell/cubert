@@ -52,7 +52,7 @@ edgeLength = 3
 edgeHeight = 3
 
 useMask = False
-useMaskRange = True
+useAutoMask = True
 maskMin = 100
 maskMax = 240
 
@@ -107,7 +107,7 @@ if True:
         imageMask[:, :, :] = np.array([1,1,1])
 
     # Mask out the darkest and lightest pixels from the image
-    if(useMaskRange):
+    if(useAutoMask):
         imageMask[hsv[:, :, 2] < maskMin] = np.array([0, 0, 0])
         imageMask[hsv[:, :, 2] > maskMax] = np.array([0, 0, 0])
 
