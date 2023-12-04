@@ -112,24 +112,17 @@ if True:
         imageMask[hsv[:, :, 2] > maskMax] = np.array([0, 0, 0])
 
     inlineMask = imageMask.reshape(height*width, 3)
+    maskedPixels = (imageMask[:, :, 0] == 0)
 
     # Make lists for clustering
     inlineHsv = hsv.reshape(height*width, 3).astype(np.int32)
-    inlineHsv2 = np.copy(inlineHsv)
     inlineRgb = rgb.reshape(height*width, 3) / 255
 
     # HSV cylinderical to cartesian coordinates transformation
     hue = np.copy(inlineHsv[:, 0]) * np.pi / 180 * 2 # For some reason OpenCV's hue values only go from 0 to 180 so we need to multiply by 2 to get the range 0 to 360
     sat = np.copy(inlineHsv[:, 1])
     val = np.copy(inlineHsv[:, 2])
-
-    # Alternate saturation
-    sat2 = (pow(1.02, sat) - 1) / 155.97 * 255
-    sat2 = np.array(sat2)
-    sat2[sat2 > 5] = 255
-    
     inlineHsv = hsvToXyz(hue, sat, val)
-    inlineHsv2 = hsvToXyz(hue, sat2, val)
     inline = inlineHsv
 
     # Apply the mask to the flattened image before fitting kmeans
@@ -138,7 +131,7 @@ if True:
     masked = masked.reshape((masked.size//3, 3))
     kmeans.fit(masked)
 
-    # kmeans.fit(inline)
+    # Predict the colour class for each pixel. Masked pixels are predicted but are masked later
     labels = kmeans.predict(inline)
     labels = labels.reshape((height, width))
 
@@ -149,6 +142,7 @@ if True:
     colours = [0, 0, 0, 0, 0, 0]
     for i in range(0, 6):
         colours[i] = (labels == i).astype(np.uint8) * 255
+        colours[i][maskedPixels] = 0
     writeImages(colours)
 
     # Solve the cube
@@ -163,7 +157,7 @@ if True:
             mask[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = 255
 
             # Mask off pixels from the pixels from the image mask
-            mask[imageMask[:, :, 0] == 0] = 0
+            mask[maskedPixels] = 0
 
             # Find the colour that has the most pixels in that area
             max = 0
