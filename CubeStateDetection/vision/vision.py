@@ -45,12 +45,18 @@ def xyzToHsv(x, y, z):
 
 # Parameters
 useUrl = False
-useMask = True
-image = "cob3.jpg"
+clearOutputDirectory = False
+image = "bruno1.png"
 mask = 'mask.png'
 edgeLength = 3
 edgeHeight = 3
 
+useMask = False
+useMaskRange = True
+maskMin = 100
+maskMax = 240
+
+# Kind of also parameters but not really
 basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
 imagesPath = basePath + "images/"
 outPath = basePath + "output/"
@@ -62,25 +68,24 @@ maskPath = imagesPath + mask
 if not os.path.exists(outPath):
    os.makedirs(outPath)
 
-# files = glob.glob(outPath + '*')
-# for f in files:
-#     os.remove(f)
+if clearOutputDirectory:
+    files = glob.glob(outPath + '*')
+    for f in files:
+        os.remove(f)
 
+# Change to while for real time processing
 if True:
     # Read in the cube
     if(useUrl):
         img = getImage(imageUrl)
         
+        # 239 from left, 113 from top, 324x324
         top = 162
         left = 249
         height = 324
         width = height
 
         img = img[top:top+height, left:left+width, :]
-        # cv.imshow('asdf', img)
-        # if cv.waitKey() & 0xff == 27: quit()
-        
-        # 239 from left, 113 from top, 377x377
     else:
         img = cv.imread(cube)
 
@@ -91,15 +96,22 @@ if True:
     height = img.shape[0]
     width = img.shape[1]
 
+    # Load the mask
     if(useMask):
         imageMask = cv.imread(maskPath)
         imageMask = imageMask.astype(np.uint8)
         imageMask[imageMask != 255] = 0
         imageMask[imageMask == 255] = 1
-        inlineMask = imageMask.reshape(height*width, 3)
+    else:
+        imageMask = np.copy(img)
+        imageMask[:, :, :] = np.array([1,1,1])
 
-        # cv.imshow("asdf", img * imageMask)
-        # if cv.waitKey() & 0xff == 27: quit()
+    # Mask out the darkest and lightest pixels from the image
+    if(useMaskRange):
+        imageMask[hsv[:, :, 2] < maskMin] = np.array([0, 0, 0])
+        imageMask[hsv[:, :, 2] > maskMax] = np.array([0, 0, 0])
+
+    inlineMask = imageMask.reshape(height*width, 3)
 
     # Make lists for clustering
     inlineHsv = hsv.reshape(height*width, 3).astype(np.int32)
@@ -120,13 +132,11 @@ if True:
     inlineHsv2 = hsvToXyz(hue, sat2, val)
     inline = inlineHsv
 
+    # Apply the mask to the flattened image before fitting kmeans
     kmeans = KMeans(n_clusters=6, n_init=10)
-    if(useMask):
-        masked = inline[inlineMask != 0]
-        masked = masked.reshape((masked.size//3, 3))
-        kmeans.fit(masked)
-    else:
-        kmeans.fit(inline)
+    masked = inline[inlineMask != 0]
+    masked = masked.reshape((masked.size//3, 3))
+    kmeans.fit(masked)
 
     # kmeans.fit(inline)
     labels = kmeans.predict(inline)
@@ -148,12 +158,12 @@ if True:
     for i in range(edgeHeight):
         for j in range(edgeLength):
 
-            # Mask off one of the 9 colours on the cube face
+            # Mask off one of the 9 squares on the cube face
             mask = np.zeros((height, width), dtype='uint8')
             mask[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = 255
 
-            if(useMask):
-                mask[imageMask[:, :, 0] == 0] = 0
+            # Mask off pixels from the pixels from the image mask
+            mask[imageMask[:, :, 0] == 0] = 0
 
             # Find the colour that has the most pixels in that area
             max = 0
@@ -179,17 +189,14 @@ if True:
     print(solution)
     cv.imwrite(outPath + 'output.jpg', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
     cv.imwrite(outPath + 'input.jpg', img)
-    if(useMask):
-        cv.imwrite(outPath + 'masked.jpg', img * imageMask)
-
+    cv.imwrite(outPath + 'mask.jpg', imageMask * 255)
+    cv.imwrite(outPath + 'masked.jpg', img * imageMask)
 
 # Plot the colours
-figure = plt.figure()
-axis = figure.add_subplot(1,2,1,projection='3d')
-axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
+# figure = plt.figure()
+# axis = figure.add_subplot(1,2,1,projection='3d')
+# axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
 
-axis = figure.add_subplot(1,2,2,projection='3d')
-# axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
-axis.scatter(inlineHsv2[:, 0], inlineHsv2[:, 1], inlineHsv2[:, 2], c=inlineRgb)
-# axis.scatter(inline[:, 0], inline[:, 1], inline[:, 2], c=inlineRgb)
+# axis = figure.add_subplot(1,2,2,projection='3d')
+# axis.scatter(inlineHsv2[:, 0], inlineHsv2[:, 1], inlineHsv2[:, 2], c=inlineRgb)
 # plt.show()
