@@ -5,10 +5,11 @@ import glob
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import urllib.request
+import scipy.stats as stats
 
 def writeImages(colours):
     for i in range(colours.shape[0]):
-        cv.imwrite(outPath + f'{i}.jpg', colours[i])
+        cv.imwrite(outPath + f'{i}.png', colours[i])
     return
 
 def getImage(url):
@@ -158,32 +159,22 @@ if True:
             mask[maskedPixels] = 0
 
             # Find the colour that has the most pixels in that area
-            max = 0
-            id = 0
-            idNum = 0
-            for k in range(len(colours)):
-                masked = np.multiply(mask, colours[k])
-
-                sum = np.sum(masked > 0)
-                if(sum > max):
-                    max = sum
-                    id = idNum
-                idNum += 1
+            id = stats.mode(labels[mask == 255]).mode
 
             solution[i][j] = id
             print(f"({i}, {j}): {id}")
-
+            
             # Output
             regionsImage[mask != 0] = [255/edgeHeight * i, 255/edgeLength * j, 255]
             outImage[i, j] = colours_pred[id]
 
     # Write results
     print(solution)
-    cv.imwrite(outPath + 'output.jpg', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
-    cv.imwrite(outPath + 'input.jpg', img)
-    cv.imwrite(outPath + 'mask.jpg', imageMask * 255)
-    cv.imwrite(outPath + 'masked.jpg', img * imageMask)
-    cv.imwrite(outPath + 'maskedRegions.jpg', regionsImage)
+    cv.imwrite(outPath + 'output.png', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
+    cv.imwrite(outPath + 'input.png', img)
+    cv.imwrite(outPath + 'mask.png', imageMask * 255)
+    cv.imwrite(outPath + 'masked.png', img * imageMask)
+    cv.imwrite(outPath + 'maskedRegions.png', regionsImage)
 
 # Plot the colours
 # figure = plt.figure()
