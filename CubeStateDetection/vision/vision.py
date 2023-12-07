@@ -7,12 +7,8 @@ import matplotlib.pyplot as plt
 import urllib.request
 
 def writeImages(colours):
-    cv.imwrite(outPath + '0.jpg', colours[0])
-    cv.imwrite(outPath + '1.jpg', colours[1])
-    cv.imwrite(outPath + '2.jpg', colours[2])
-    cv.imwrite(outPath + '3.jpg', colours[3])
-    cv.imwrite(outPath + '4.jpg', colours[4])
-    cv.imwrite(outPath + '5.jpg', colours[5])
+    for i in range(colours.shape[0]):
+        cv.imwrite(outPath + f'{i}.jpg', colours[i])
     return
 
 def getImage(url):
@@ -46,15 +42,16 @@ def xyzToHsv(x, y, z):
 # Parameters
 useUrl = False
 clearOutputDirectory = False
-image = "bruno1.png"
+image = "bruno.png"
 mask = 'mask.png'
-edgeLength = 3
-edgeHeight = 3
+edgeLength = 100
+edgeHeight =161
+numColours = 4
 
 useMask = False
-useAutoMask = True
-maskMin = 100
-maskMax = 240
+useAutoMask = False
+maskMin = 75
+maskMax = 255
 
 # Kind of also parameters but not really
 basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
@@ -80,9 +77,9 @@ if True:
         img = getImage(imageUrl)
         
         # 239 from left, 113 from top, 324x324
-        top = 162
-        left = 249
-        height = 324
+        top = 150
+        left = 220
+        height = 230
         width = height
 
         img = img[top:top+height, left:left+width, :]
@@ -125,7 +122,7 @@ if True:
     inlineHsv = hsvToXyz(hue, sat, val)
 
     # Apply the mask to the flattened image before fitting kmeans
-    kmeans = KMeans(n_clusters=6, n_init=10)
+    kmeans = KMeans(n_clusters=numColours, n_init=10)
     inlineMasked = inlineHsv[inlineMask]
     inlineMasked = inlineMasked.reshape((inlineMasked.size//3, 3))
     kmeans.fit(inlineMasked)
@@ -138,15 +135,16 @@ if True:
     colours_pred = xyzToHsv(colours_pred[: ,0], colours_pred[:, 1], colours_pred[:, 2])
 
     # Print debugging images
-    colours = [0, 0, 0, 0, 0, 0]
-    for i in range(0, 6):
+    colours = np.zeros((numColours, labels.shape[0], labels.shape[1]))
+
+    for i in range(0, numColours):
         colours[i] = (labels == i).astype(np.uint8) * 255
         colours[i][maskedPixels] = 0
     writeImages(colours)
 
     # Solve the cube
     solution = np.zeros((edgeHeight, edgeLength))
-    outImage = np.zeros((height, width, 3), dtype='uint8')
+    outImage = np.zeros((edgeHeight, edgeLength, 3), dtype='uint8')
     regionsImage = np.zeros((height, width, 3), dtype='uint8')
 
     for i in range(edgeHeight):
@@ -177,7 +175,7 @@ if True:
 
             # Output
             regionsImage[mask != 0] = [255/edgeHeight * i, 255/edgeLength * j, 255]
-            outImage[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = colours_pred[id]
+            outImage[i, j] = colours_pred[id]
 
     # Write results
     print(solution)
