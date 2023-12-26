@@ -19,7 +19,7 @@ def decode_action(action):
 
 
 class RubiksCubeEnv(gymnasium.Env):
-    def __init__(self, num_scramble=1, cube_size=3, max_steps_per_episode=100):
+    def __init__(self, num_scramble=1, cube_size=3):
         super(RubiksCubeEnv, self).__init__()
 
         # Define action and observation space
@@ -36,12 +36,11 @@ class RubiksCubeEnv(gymnasium.Env):
         self.num_scramble = num_scramble
         self.current_num_scramble = num_scramble
 
-        self.max_steps_per_episode = max_steps_per_episode
         self.current_num_steps = 0
         self.episode_reward = 0
 
         # Choosing number of scramble weight
-        self.weights = [n ** 2 for n in range(1, self.num_scramble + 1)]
+        self.weights = [n for n in range(1, self.num_scramble + 1)]
 
         # Create and scramble the Rubik's Cube
         self.cube = RubikCube(self.cube_size)
@@ -57,7 +56,8 @@ class RubiksCubeEnv(gymnasium.Env):
 
     def get_max_steps(self):
         #return int(math.ceil(self.num_scramble * 2.5))
-        return self.num_scramble * 10
+        #return self.current_num_scramble * 10
+        return 100
 
     def is_solved(self):
         return self.cube.is_solved()
@@ -78,8 +78,7 @@ class RubiksCubeEnv(gymnasium.Env):
 
     def reset(self, **kwargs):
         self.current_num_scramble = random.choices(range(1, self.num_scramble + 1), weights=self.weights, k=1)[0]
-
-        #self.current_num_scramble = self.num_scramble
+        #self.current_num_scramble = random.randint(1, self.num_scramble)
 
         self.cube = RubikCube(self.cube_size)
         self.cube.scramble(self.current_num_scramble)
