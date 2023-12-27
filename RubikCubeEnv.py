@@ -1,11 +1,10 @@
-import math
 import random
 
 import gymnasium
 import numpy as np
 from stable_baselines3.common.env_checker import check_env
 
-from RubikCube import RubikCube, Face, SquareColour
+from RubikCube import RubikCube, Face
 
 # Define the action space dictionary globally
 TOTAL_FACES = 6
@@ -45,14 +44,6 @@ class RubiksCubeEnv(gymnasium.Env):
         # Create and scramble the Rubik's Cube
         self.cube = RubikCube(self.cube_size)
         self.scramble(self.current_num_scramble)
-
-    def set_num_scramble(self, num_scramble):
-        self.num_scramble = num_scramble
-        self.reward_range = (-1, self.num_scramble)
-        self.weights = [n**2 for n in range(1, self.num_scramble + 1)]
-
-    def get_num_scramble(self):
-        return self.num_scramble
 
     def get_max_steps(self):
         #return int(math.ceil(self.num_scramble * 2.5))
@@ -106,7 +97,7 @@ class RubiksCubeEnv(gymnasium.Env):
 
         # Calculate reward based on the number of correct squares
         done = self.cube.is_solved()
-        reward = 1 if done and self.current_num_steps <= self.num_scramble else -1
+        reward = 1 if done else -1
 
         # Update the episode reward
         self.episode_reward += reward

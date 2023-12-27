@@ -1,12 +1,63 @@
-import math
-import os
-import time
+import concurrent.futures
 
+import pandas as pd
 from matplotlib import pyplot as plt
-from stable_baselines3 import PPO
 
 from RubikCubeEnv import RubiksCubeEnv
 from UtilityFunctions import load_model_PPO, load_model_DQN
+
+
+def episode(model, num_scramble, id):
+    # Create the environment
+    env = RubiksCubeEnv(num_scramble=num_scramble)
+
+    # Solve the puzzle
+    done = False
+    obs = env.scramble(num_scramble)
+    while not done:
+        # Determine action and take step
+        action, _ = model.predict(obs, deterministic=True)
+        obs, _, done, _, _ = env.step(action)
+
+    # Check if the cube has been solved
+    done = env.is_solved()
+
+    # Return
+    return done
+
+
+def evaluate_model(model, model_name, num_episodes=1000):
+    evaluation_results = []
+
+    for num_scramble in range(1, 13 + 1):
+
+        # Focus on the first 3 scramble only
+        actual_num_episodes = num_episodes
+        if num_scramble > 3:
+            actual_num_episodes = 100
+
+        # Solve the puzzles
+        solved_percentage = 0
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Submit episodes as futures
+            futures = [executor.submit(episode, model, num_scramble, _) for _ in range(actual_num_episodes)]
+
+            # Wait for all futures to complete and get results
+            results = [future.result() for future in futures]
+
+            solved_count = sum(results)
+            solved_percentage = (solved_count / actual_num_episodes) * 100
+            evaluation_results.append({
+                'num_scramble': num_scramble,
+                'solved_percentage': solved_percentage
+            })
+
+        print(f"Scramble {num_scramble:<2d}: {solved_percentage}% solved")
+
+    # Create a DataFrame and save to CSV
+    df = pd.DataFrame(evaluation_results)
+    df.to_csv("./Plot/" + model_name + ".csv", index=False)
+    print(f"Evaluation results saved.")
 
 
 def test(model, env, plot_title):
