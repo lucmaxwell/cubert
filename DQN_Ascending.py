@@ -10,7 +10,7 @@ from torch import nn
 
 from Network import AscendingNetwork
 from RubikCubeEnv import RubiksCubeEnv
-from Model_Validation import evaluate_model
+from Model_Validation import evaluate_model, test
 
 
 # class AscendingNetwork(BaseFeaturesExtractor):
@@ -56,9 +56,9 @@ def make_env(num_scrambles):
     return _init
 
 
-NUM_ENVS = 5
-TOTAL_STEPS = 100_000
-MODEL_NAME = "dqn_ascending"
+NUM_ENVS = 4
+TOTAL_STEPS = 400_000
+MODEL_NAME = f"dqn_ascending_400000"
 
 NUM_SCRAMBLES = 1
 
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     model_log_path = os.path.join('Training', 'Logs\\' + MODEL_NAME)
 
     # Create the environment and vector for parallel environments
-    envs = SubprocVecEnv([make_env(env_id) for i in range(num_envs)])
+    env = RubiksCubeEnv(num_scramble=NUM_SCRAMBLES)
 
     # Define the policy kwargs with custom feature extractor
     policy_kwargs = dict(
@@ -85,11 +85,11 @@ if __name__ == '__main__':
     model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
     if os.path.isfile(model_file_path):
         print("Loading existing model...")
-        training_model = DQN.load(model_file_path, env=envs, verbose=2,
+        training_model = DQN.load(model_file_path, env=env, verbose=2,
                                   tensorboard_log=model_log_path, device="cuda")
     else:
         print("Creating a new model...")
-        training_model = DQN('MlpPolicy', env=envs, policy_kwargs=policy_kwargs, verbose=2,
+        training_model = DQN('MlpPolicy', env=env, policy_kwargs=policy_kwargs, verbose=2,
                              tensorboard_log=model_log_path, device="cuda")
 
     # Training
@@ -107,10 +107,11 @@ if __name__ == '__main__':
 
     # Evaluate
     start_time = time.time()
-    evaluate_model(training_model, MODEL_NAME)
+    #evaluate_model(training_model, MODEL_NAME)
+    test(training_model, MODEL_NAME)
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"Elapsed time: {elapsed_time} seconds")
 
     # Release resource
-    envs.close()
+    env.close()
