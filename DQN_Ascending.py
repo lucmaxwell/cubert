@@ -1,6 +1,7 @@
 import os
 import time
 
+import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from stable_baselines3 import DQN
@@ -11,14 +12,18 @@ from RubikCubeEnv import RubiksCubeEnv
 from Model_Validation import evaluate_model
 
 TOTAL_STEPS = 100_000
-MODEL_NAME = "dqn_ascending"
+MODEL_NAME = "dqn_ascending_ResidualBlock"
 
-NUM_SCRAMBLES = 4
+NUM_SCRAMBLES = 1
 
 
-class AscendingNetwork(BaseFeaturesExtractor):
+def calculate_conv_output_size(input_size, kernel_size, stride, padding):
+    return ((input_size + 2 * padding - kernel_size) // stride) + 1
+
+
+class Network(BaseFeaturesExtractor):
     def __init__(self, input_obs_space, features_dim, hidden_size=2048):
-        super(AscendingNetwork, self).__init__(input_obs_space, features_dim)
+        super(Network, self).__init__(input_obs_space, features_dim)
 
         # Define the convolutional network layers
         TOTAL_FACES = 6
@@ -37,42 +42,28 @@ class AscendingNetwork(BaseFeaturesExtractor):
 
         # Define the network layers
         cube_size = input_obs_space.shape[1]
-        conv_output_size = self.calculate_conv_output_size(cube_size, 3, 1, 1)
-        conv_output_size = self.calculate_conv_output_size(conv_output_size, 3, 1, 1)
+        conv_output_size = calculate_conv_output_size(cube_size, 3, 1, 1)
+        conv_output_size = calculate_conv_output_size(conv_output_size, 3, 1, 1)
         flattened_conv = conv_output_size * conv_output_size * last_conv_layer_dim
+        self.network = nn.Sequential(
+            nn.Linear(flattened_conv, hidden_size),
+            nn.BatchNorm1d(hidden_size),
+            nn.LeakyReLU(),
+            nn.Dropout(0.1),
 
-        self.lstm = nn.LSTM(input_size=flattened_conv, hidden_size=hidden_size, batch_first=True)
+            ResidualBlock(hidden_size),
 
-        self.residual_block = ResidualBlock(hidden_size)
-
-        self.fc = nn.Linear(hidden_size, features_dim)
-
-
-    def calculate_conv_output_size(self, input_size, kernel_size, stride, padding):
-        return ((input_size + 2 * padding - kernel_size) // stride) + 1
+            # Output layer
+            nn.Linear(hidden_size, features_dim)
+        )
 
     def forward(self, observations):
         # Convolution layer input
         conv_out = self.conv_layers(observations)
 
-        # Flatten the convolutional output
-        batch_size = conv_out.size(0)
-        conv_out_flat = conv_out.view(batch_size, -1)
-
-        # Reshape for LSTM - treat the entire set of features from convolutional layers as one sequence
-        lstm_in = conv_out_flat.unsqueeze(1)
-
-        # LSTM layer input
-        lstm_out, _ = self.lstm(lstm_in)
-        # Take the output for the last time step
-        lstm_out = lstm_out[:, -1, :]
-
-        # Apply residual block on LSTM output
-        res_out = self.residual_block(lstm_out)
-
-        # Fully connected layer input
-        output = self.fc(res_out)
-        return output
+        # Deep layers
+        conv_out = conv_out.view(conv_out.size(0), -1)
+        return self.network(conv_out)
 
 
 class ResidualBlock(nn.Module):
@@ -106,7 +97,7 @@ if __name__ == '__main__':
 
     # Define the policy kwargs with custom feature extractor
     policy_kwargs = dict(
-        features_extractor_class=AscendingNetwork,
+        features_extractor_class=Network,
         features_extractor_kwargs=dict(features_dim=env.action_space.n)
     )
 
@@ -142,7 +133,7 @@ if __name__ == '__main__':
 
         # Evaluate
         start_time = time.time()
-        num_scrambles, evaluation_results = evaluate_model(training_model, MODEL_NAME)
+        num_scrambles, evaluation_results = evaluate_model(training_model, NUM_SCRAMBLES)
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time} seconds")

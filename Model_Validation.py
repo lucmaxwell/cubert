@@ -26,14 +26,14 @@ def episode(model, num_scramble, id):
     return done
 
 
-def evaluate_model(model, model_name, num_episodes=1000):
+def evaluate_model(model, focus_scramble, num_episodes=1000):
     evaluation_results = []
     num_scrambles = range(1, 13 + 1)
     for num_scramble in num_scrambles:
 
         # De-focus on scramble
         actual_num_episodes = num_episodes
-        if num_scramble > 4:
+        if num_scramble > focus_scramble:
             actual_num_episodes = 100
 
         # Solve the puzzles
