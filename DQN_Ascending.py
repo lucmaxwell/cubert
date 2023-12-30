@@ -12,9 +12,9 @@ from RubikCubeEnv import RubiksCubeEnv
 from Model_Validation import evaluate_model
 
 TOTAL_STEPS = 100_000
-MODEL_NAME = "dqn_ascending_ResidualBlock"
+MODEL_NAME = "dqn_ascending_ResidualBlock_4096"
 
-NUM_SCRAMBLES = 1
+NUM_SCRAMBLES = 4
 
 
 def calculate_conv_output_size(input_size, kernel_size, stride, padding):
@@ -22,7 +22,7 @@ def calculate_conv_output_size(input_size, kernel_size, stride, padding):
 
 
 class Network(BaseFeaturesExtractor):
-    def __init__(self, input_obs_space, features_dim, hidden_size=2048):
+    def __init__(self, input_obs_space, features_dim, hidden_size=4096):
         super(Network, self).__init__(input_obs_space, features_dim)
 
         # Define the convolutional network layers
@@ -114,8 +114,10 @@ if __name__ == '__main__':
                              tensorboard_log=model_log_path, device="cuda")
 
     # Keep learning
+    run_count = 0
     solved_percentage = 0.0
     while solved_percentage < 100.0:
+        run_count += 1
         start_time = time.time()
 
         # Training
@@ -141,7 +143,7 @@ if __name__ == '__main__':
         # Create the plot
         plt.figure(figsize=(10, 6))
         plt.plot(num_scrambles, evaluation_results, marker='o')
-        plt.title(MODEL_NAME)
+        plt.title(f"{MODEL_NAME} scramble={NUM_SCRAMBLES} run_count={run_count}")
         plt.xlabel('Number of Scrambles')
         plt.ylabel('Solved Counts')
         plt.xticks(num_scrambles)
