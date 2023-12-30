@@ -1,19 +1,19 @@
 import os
 import time
 
-import numpy as np
 import torch
+from matplotlib import pyplot as plt
 from stable_baselines3 import DQN
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import nn
 
 from RubikCubeEnv import RubiksCubeEnv
-from Model_Validation import evaluate_model, test
+from Model_Validation import evaluate_model
 
 TOTAL_STEPS = 100_000
 MODEL_NAME = "dqn_ascending"
 
-NUM_SCRAMBLES = 3
+NUM_SCRAMBLES = 4
 
 
 class AscendingNetwork(BaseFeaturesExtractor):
@@ -47,15 +47,6 @@ class AscendingNetwork(BaseFeaturesExtractor):
 
         self.fc = nn.Linear(hidden_size, features_dim)
 
-        # self.network = nn.Sequential(
-        #
-        #     nn.LSTM(input_size=flattened_conv, hidden_size=hidden_size, batch_first=True),
-        #
-        #     ResidualBlock(hidden_size),
-        #
-        #     # Output layer
-        #     nn.Linear(hidden_size, features_dim)
-        # )
 
     def calculate_conv_output_size(self, input_size, kernel_size, stride, padding):
         return ((input_size + 2 * padding - kernel_size) // stride) + 1
@@ -103,17 +94,7 @@ class ResidualBlock(nn.Module):
         return x + self.fc(x)  # Add input to the output (residual connection)
 
 
-def make_env(num_scrambles):
-    def _init():
-        env = RubiksCubeEnv(num_scramble=num_scrambles)
-        return env
-
-    return _init
-
-
 if __name__ == '__main__':
-    start_time = time.time()
-
     print(torch.__version__)
     print(f"CUDA is available: {torch.cuda.is_available()}")
 
@@ -141,26 +122,51 @@ if __name__ == '__main__':
         training_model = DQN('MlpPolicy', env=env, policy_kwargs=policy_kwargs, verbose=2,
                              tensorboard_log=model_log_path, device="cuda")
 
-    # Training
-    training_model.learn(total_timesteps=TOTAL_STEPS)
+    # Keep learning
+    solved_percentage = 0.0
+    while solved_percentage < 100.0:
+        start_time = time.time()
 
-    # Save the model
-    model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
-    training_model.save(model_file_path)
-    print(f"Model {MODEL_NAME} saved. Path: {model_file_path}")
+        # Training
+        training_model.learn(total_timesteps=TOTAL_STEPS)
 
-    # End time and elapsed time
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"Elapsed time: {elapsed_time} seconds")
+        # Save the model
+        model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
+        training_model.save(model_file_path)
+        print(f"Model {MODEL_NAME} saved. Path: {model_file_path}")
 
-    # Evaluate
-    start_time = time.time()
-    # evaluate_model(training_model, MODEL_NAME)
-    test(training_model, MODEL_NAME)
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"Elapsed time: {elapsed_time} seconds")
+        # Elapsed time
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time: {elapsed_time} seconds")
+
+        # Evaluate
+        start_time = time.time()
+        num_scrambles, evaluation_results = evaluate_model(training_model, MODEL_NAME)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time: {elapsed_time} seconds")
+
+        # Create the plot
+        plt.figure(figsize=(10, 6))
+        plt.plot(num_scrambles, evaluation_results, marker='o')
+        plt.title(MODEL_NAME)
+        plt.xlabel('Number of Scrambles')
+        plt.ylabel('Solved Counts')
+        plt.xticks(num_scrambles)
+        plt.grid(True)
+
+        # Annotate each point with its value
+        for i, count in enumerate(evaluation_results):
+            plt.annotate(str(count), (num_scrambles[i], evaluation_results[i]), textcoords="offset points",
+                         xytext=(0, 10),
+                         ha='center')
+
+        # Show the plot
+        plt.show()
+
+        # Update the interested solved result
+        solved_percentage = evaluation_results[NUM_SCRAMBLES - 1]
 
     # Release resource
     env.close()

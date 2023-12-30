@@ -28,12 +28,12 @@ def episode(model, num_scramble, id):
 
 def evaluate_model(model, model_name, num_episodes=1000):
     evaluation_results = []
+    num_scrambles = range(1, 13 + 1)
+    for num_scramble in num_scrambles:
 
-    for num_scramble in range(1, 13 + 1):
-
-        # Focus on the first 3 scramble only
+        # De-focus on scramble
         actual_num_episodes = num_episodes
-        if num_scramble > 3:
+        if num_scramble > 4:
             actual_num_episodes = 100
 
         # Solve the puzzles
@@ -47,28 +47,23 @@ def evaluate_model(model, model_name, num_episodes=1000):
 
             solved_count = sum(results)
             solved_percentage = (solved_count / actual_num_episodes) * 100
-            evaluation_results.append({
-                'num_scramble': num_scramble,
-                'solved_percentage': solved_percentage
-            })
 
+        evaluation_results.append(solved_percentage)
         print(f"Scramble {num_scramble:<2d}: {solved_percentage}% solved")
 
-    # Create a DataFrame and save to CSV
-    df = pd.DataFrame(evaluation_results)
-    df.to_csv("./Plot/" + model_name + ".csv", index=False)
-    print(f"Evaluation results saved.")
+    # Return
+    return num_scrambles, evaluation_results
 
 
 def test(model, plot_title, num_episodes=1000):
     # Test the trained agent
     solved_count_list = []
-    num_scrambles =  range(1, 13 + 1)
+    num_scrambles = range(1, 13 + 1)
     for num_scramble in num_scrambles:
 
         # Focus on the first 3 scramble only
         actual_num_episodes = num_episodes
-        if num_scramble > 3:
+        if num_scramble > 4:
             actual_num_episodes = 100
 
         # Solve the puzzles
