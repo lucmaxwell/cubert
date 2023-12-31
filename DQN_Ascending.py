@@ -1,7 +1,7 @@
 import os
 import time
+import random
 
-import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from stable_baselines3 import DQN
@@ -9,12 +9,13 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import nn
 
 from RubikCubeEnv import RubiksCubeEnv
-from Model_Validation import evaluate_model
+from Model_Validation import evaluate_model, evaluate_scramble
 
-TOTAL_STEPS = 100_000
-MODEL_NAME = "dqn_LSTM_1024"
+NUM_EPISODES = 5
+STEP_PER_EPISODE = 80_000
+MODEL_NAME = "dqn_ResidualBlock_1024"
 
-NUM_SCRAMBLES = 2
+NUM_SCRAMBLES = 3
 
 
 def calculate_conv_output_size(input_size, kernel_size, stride, padding):
@@ -45,45 +46,31 @@ class Network(BaseFeaturesExtractor):
         conv_output_size = calculate_conv_output_size(cube_size, 3, 1, 1)
         conv_output_size = calculate_conv_output_size(conv_output_size, 3, 1, 1)
         flattened_conv = conv_output_size * conv_output_size * last_conv_layer_dim
-        self.lstm = nn.LSTM(input_size=flattened_conv, hidden_size=hidden_size, batch_first=True)
+        self.network = nn.Sequential(
+            nn.Linear(flattened_conv, hidden_size),
+            nn.BatchNorm1d(hidden_size),
+            nn.LeakyReLU(),
+            nn.Dropout(0.1),
 
-        self.residual_block = ResidualBlock(hidden_size)
+            ResidualBlock(hidden_size),
 
-        self.fc = nn.Linear(hidden_size, features_dim)
+            # Output layer
+            nn.Linear(hidden_size, features_dim)
+        )
 
     def forward(self, observations):
         # Convolution layer input
         conv_out = self.conv_layers(observations)
 
-        # Flatten the convolutional output
-        batch_size = conv_out.size(0)
-        conv_out_flat = conv_out.view(batch_size, -1)
-
-        # Reshape for LSTM - treat the entire set of features from convolutional layers as one sequence
-        lstm_in = conv_out_flat.unsqueeze(1)
-
-        # LSTM layer input
-        lstm_out, _ = self.lstm(lstm_in)
-        # Take the output for the last time step
-        lstm_out = lstm_out[:, -1, :]
-
-        # Apply residual block on LSTM output
-        res_out = self.residual_block(lstm_out)
-
-        # Fully connected layer input
-        output = self.fc(res_out)
-        return output
+        # Deep layers
+        conv_out = conv_out.view(conv_out.size(0), -1)
+        return self.network(conv_out)
 
 
 class ResidualBlock(nn.Module):
     def __init__(self, hidden_size):
         super(ResidualBlock, self).__init__()
         self.fc = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
-            nn.BatchNorm1d(hidden_size),
-            nn.LeakyReLU(),
-            nn.Dropout(0.1),
-
             nn.Linear(hidden_size, hidden_size),
             nn.BatchNorm1d(hidden_size),
             nn.LeakyReLU(),
@@ -132,6 +119,14 @@ if __name__ == '__main__':
         training_model = DQN('MlpPolicy', env=env, policy_kwargs=policy_kwargs, verbose=2,
                              tensorboard_log=model_log_path, device="cuda")
 
+    # Weight for choosing the number of scramble
+    # 1, 1, 2, 4, 8...
+    scramble_choose_weights = [1]
+    for _ in range(1, NUM_SCRAMBLES):
+        # The new weight is the sum of all previous weights
+        new_weight = sum(scramble_choose_weights)
+        scramble_choose_weights.append(new_weight)
+
     # Keep learning
     run_count = 0
     solved_percentage = 0.0
@@ -139,8 +134,15 @@ if __name__ == '__main__':
         run_count += 1
         start_time = time.time()
 
-        # Training
-        training_model.learn(total_timesteps=TOTAL_STEPS)
+        # Learning episode
+        for episode in range(NUM_EPISODES):
+            current_num_scramble = random.choices(range(1, NUM_SCRAMBLES + 1), weights=scramble_choose_weights, k=1)[0]
+
+            # Set the scramble of the cube
+            env.scramble(current_num_scramble)
+
+            # Training
+            training_model.learn(total_timesteps=STEP_PER_EPISODE)
 
         # Save the model
         model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
@@ -154,7 +156,7 @@ if __name__ == '__main__':
 
         # Evaluate
         start_time = time.time()
-        num_scrambles, evaluation_results = evaluate_model(training_model, NUM_SCRAMBLES)
+        num_scrambles, evaluation_results = evaluate_model(training_model)
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time} seconds")
@@ -177,8 +179,10 @@ if __name__ == '__main__':
         # Show the plot
         plt.show()
 
-        # Update the interested solved result
+        # 100% solve rate condition meet
         solved_percentage = evaluation_results[NUM_SCRAMBLES - 1]
+        if solved_percentage == 100.0:
+            solved_percentage = evaluate_scramble(training_model, NUM_SCRAMBLES, num_episodes=1000, multiple_attempts=True)
 
     # Release resource
     env.close()

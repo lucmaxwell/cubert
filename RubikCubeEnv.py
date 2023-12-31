@@ -38,12 +38,12 @@ class RubiksCubeEnv(gymnasium.Env):
         self.current_num_steps = 0
         self.episode_reward = 0
 
-        # Choosing number of scramble weight
-        self.weights = [n for n in range(1, self.num_scramble + 1)]
-
         # Create and scramble the Rubik's Cube
         self.cube = RubikCube(self.cube_size)
         self.scramble(self.current_num_scramble)
+
+        # Original cube state
+        self.original_obs = self._get_observation()
 
     def get_max_steps(self):
         #return int(math.ceil(self.num_scramble * 2.5))
@@ -62,17 +62,13 @@ class RubiksCubeEnv(gymnasium.Env):
         self.cube = RubikCube(self.cube_size)
         self.cube.scramble(self.current_num_scramble)
 
+        self.original_obs = self._get_observation()
+
         self.current_num_steps = 0
         self.episode_reward = 0
 
-        return self._get_observation()
-
     def reset(self, **kwargs):
-        self.current_num_scramble = random.choices(range(1, self.num_scramble + 1), weights=self.weights, k=1)[0]
-        #self.current_num_scramble = random.randint(1, self.num_scramble)
-
-        self.cube = RubikCube(self.cube_size)
-        self.cube.scramble(self.current_num_scramble)
+        self.cube.set_state_from_observation(self.original_obs)
 
         self.current_num_steps = 0
         self.episode_reward = 0
@@ -123,11 +119,6 @@ class RubiksCubeEnv(gymnasium.Env):
 
         return observation
 
-    def set_obs(self, obs):
-        self.reset()
-        self.cube.set_state_from_observation(obs)
-
-        return self._get_observation()
 
 if __name__ == '__main__':
     # Create an instance of the environment

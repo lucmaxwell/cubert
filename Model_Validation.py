@@ -7,20 +7,20 @@ from RubikCubeEnv import RubiksCubeEnv
 from UtilityFunctions import load_model_PPO, load_model_DQN
 
 
-def episode(model, num_scramble, focus):
+def episode(model, num_scramble, multiple_attempts=False):
     # Create the environment
     env = RubiksCubeEnv(num_scramble=num_scramble)
 
     # Solve the puzzle
     # Allow multiple attempts
-    original_obs = env.scramble(num_scramble)
+    env.scramble(num_scramble)
     done = False
     count = 0
     while count < 3 and not done:
         count += 1
 
         # Solve the cube
-        obs = env.set_obs(original_obs)
+        obs, _ = env.reset()
         while not done:
             # Determine action and take step
             action, _ = model.predict(obs, deterministic=True)
@@ -29,37 +29,36 @@ def episode(model, num_scramble, focus):
         # Check if the cube has been solved
         done = env.is_solved()
 
-        if not focus:
+        if not multiple_attempts:
             break
 
     # Return
     return done
 
 
-def evaluate_model(model, focus_scramble, num_episodes=1000):
+def evaluate_scramble(model, num_scramble, num_episodes=100, multiple_attempts=False):
+    # Solve the puzzles
+    solved_percentage = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Submit episodes as futures
+        futures = [executor.submit(episode, model, num_scramble, multiple_attempts=multiple_attempts) for _ in range(num_episodes)]
+
+        # Wait for all futures to complete and get results
+        results = [future.result() for future in futures]
+
+        solved_count = sum(results)
+        solved_percentage = (solved_count / num_episodes) * 100
+
+    # Return
+    return solved_percentage
+
+
+def evaluate_model(model):
     evaluation_results = []
     num_scrambles = range(1, 13 + 1)
     for num_scramble in num_scrambles:
-
-        # De-focus on scramble
-        focus = True
-        actual_num_episodes = num_episodes
-        if num_scramble != focus_scramble:
-            focus = False
-            actual_num_episodes = 100
-
         # Solve the puzzles
-        solved_percentage = 0
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            # Submit episodes as futures
-            futures = [executor.submit(episode, model, num_scramble, focus) for _ in range(actual_num_episodes)]
-
-            # Wait for all futures to complete and get results
-            results = [future.result() for future in futures]
-
-            solved_count = sum(results)
-            solved_percentage = (solved_count / actual_num_episodes) * 100
-
+        solved_percentage = evaluate_scramble(model, num_scramble)
         evaluation_results.append(solved_percentage)
         print(f"Scramble {num_scramble:<2d}: {solved_percentage}% solved")
 
