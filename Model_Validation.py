@@ -7,20 +7,30 @@ from RubikCubeEnv import RubiksCubeEnv
 from UtilityFunctions import load_model_PPO, load_model_DQN
 
 
-def episode(model, num_scramble, id):
+def episode(model, num_scramble, focus):
     # Create the environment
     env = RubiksCubeEnv(num_scramble=num_scramble)
 
     # Solve the puzzle
+    # Allow multiple attempts
+    original_obs = env.scramble(num_scramble)
     done = False
-    obs = env.scramble(num_scramble)
-    while not done:
-        # Determine action and take step
-        action, _ = model.predict(obs, deterministic=True)
-        obs, _, done, _, _ = env.step(action)
+    count = 0
+    while count < 3 and not done:
+        count += 1
 
-    # Check if the cube has been solved
-    done = env.is_solved()
+        # Solve the cube
+        obs = env.set_obs(original_obs)
+        while not done:
+            # Determine action and take step
+            action, _ = model.predict(obs, deterministic=True)
+            obs, _, done, _, _ = env.step(action)
+
+        # Check if the cube has been solved
+        done = env.is_solved()
+
+        if not focus:
+            break
 
     # Return
     return done
@@ -32,15 +42,17 @@ def evaluate_model(model, focus_scramble, num_episodes=1000):
     for num_scramble in num_scrambles:
 
         # De-focus on scramble
+        focus = True
         actual_num_episodes = num_episodes
-        if num_scramble > focus_scramble:
+        if num_scramble != focus_scramble:
+            focus = False
             actual_num_episodes = 100
 
         # Solve the puzzles
         solved_percentage = 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
             # Submit episodes as futures
-            futures = [executor.submit(episode, model, num_scramble, _) for _ in range(actual_num_episodes)]
+            futures = [executor.submit(episode, model, num_scramble, focus) for _ in range(actual_num_episodes)]
 
             # Wait for all futures to complete and get results
             results = [future.result() for future in futures]

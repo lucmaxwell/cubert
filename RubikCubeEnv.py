@@ -123,6 +123,11 @@ class RubiksCubeEnv(gymnasium.Env):
 
         return observation
 
+    def set_obs(self, obs):
+        self.reset()
+        self.cube.set_state_from_observation(obs)
+
+        return self._get_observation()
 
 if __name__ == '__main__':
     # Create an instance of the environment
