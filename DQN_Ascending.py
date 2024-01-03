@@ -9,13 +9,13 @@ from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import nn
 
 from RubikCubeEnv import RubiksCubeEnv
-from Model_Validation import evaluate_model, evaluate_scramble
+from Model_Validation import evaluate_model, evaluate_scramble, evaluate_scramble_1000
 
-NUM_EPISODES = 5
-STEP_PER_EPISODE = 80_000
-MODEL_NAME = "dqn_ResidualBlock_1024"
+MODEL_NAME = "dqn_ResidualBlock_2048"
 
 NUM_SCRAMBLES = 3
+
+NUM_STEPS = 100_000
 
 
 def calculate_conv_output_size(input_size, kernel_size, stride, padding):
@@ -23,7 +23,7 @@ def calculate_conv_output_size(input_size, kernel_size, stride, padding):
 
 
 class Network(BaseFeaturesExtractor):
-    def __init__(self, input_obs_space, features_dim, hidden_size=1024):
+    def __init__(self, input_obs_space, features_dim, hidden_size=2048):
         super(Network, self).__init__(input_obs_space, features_dim)
 
         # Define the convolutional network layers
@@ -85,6 +85,16 @@ class ResidualBlock(nn.Module):
             nn.BatchNorm1d(hidden_size),
             nn.LeakyReLU(),
             nn.Dropout(0.1),
+
+            nn.Linear(hidden_size, hidden_size),
+            nn.BatchNorm1d(hidden_size),
+            nn.LeakyReLU(),
+            nn.Dropout(0.1),
+
+            nn.Linear(hidden_size, hidden_size),
+            nn.BatchNorm1d(hidden_size),
+            nn.LeakyReLU(),
+            nn.Dropout(0.1),
         )
 
     def forward(self, x):
@@ -96,7 +106,10 @@ if __name__ == '__main__':
     print(f"CUDA is available: {torch.cuda.is_available()}")
 
     save_path = os.path.join('Training', 'Saved Models')
-    model_log_path = os.path.join('Training', 'Logs\\' + MODEL_NAME)
+
+    # Ensure the directory exists
+    plot_folder_name = 'training_plot'
+    os.makedirs(plot_folder_name, exist_ok=True)
 
     # Create the environment and vector for parallel environments
     env = RubiksCubeEnv(num_scramble=NUM_SCRAMBLES)
@@ -112,37 +125,27 @@ if __name__ == '__main__':
     model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
     if os.path.isfile(model_file_path):
         print("Loading existing model...")
-        training_model = DQN.load(model_file_path, env=env, verbose=2,
-                                  tensorboard_log=model_log_path, device="cuda")
+        training_model = DQN.load(model_file_path,
+                                  env=env,
+                                  verbose=0,
+                                  device="cuda")
     else:
         print("Creating a new model...")
-        training_model = DQN('MlpPolicy', env=env, policy_kwargs=policy_kwargs, verbose=2,
-                             tensorboard_log=model_log_path, device="cuda")
-
-    # Weight for choosing the number of scramble
-    # 1, 1, 2, 4, 8...
-    scramble_choose_weights = [1]
-    for _ in range(1, NUM_SCRAMBLES):
-        # The new weight is the sum of all previous weights
-        new_weight = sum(scramble_choose_weights)
-        scramble_choose_weights.append(new_weight)
+        training_model = DQN(policy='MlpPolicy',
+                             env=env,
+                             policy_kwargs=policy_kwargs,
+                             verbose=0,
+                             device="cuda")
 
     # Keep learning
     run_count = 0
-    solved_percentage = 0.0
-    while solved_percentage < 100.0:
+    done = False
+    while not done:
         run_count += 1
         start_time = time.time()
 
-        # Learning episode
-        for episode in range(NUM_EPISODES):
-            current_num_scramble = random.choices(range(1, NUM_SCRAMBLES + 1), weights=scramble_choose_weights, k=1)[0]
-
-            # Set the scramble of the cube
-            env.scramble(current_num_scramble)
-
-            # Training
-            training_model.learn(total_timesteps=STEP_PER_EPISODE)
+        # Training
+        training_model.learn(total_timesteps=NUM_STEPS)
 
         # Save the model
         model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
@@ -152,37 +155,34 @@ if __name__ == '__main__':
         # Elapsed time
         end_time = time.time()
         elapsed_time = end_time - start_time
-        print(f"Elapsed time: {elapsed_time} seconds")
-
-        # Evaluate
-        start_time = time.time()
-        num_scrambles, evaluation_results = evaluate_model(training_model)
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"Elapsed time: {elapsed_time} seconds")
-
-        # Create the plot
-        plt.figure(figsize=(10, 6))
-        plt.plot(num_scrambles, evaluation_results, marker='o')
-        plt.title(f"{MODEL_NAME} scramble={NUM_SCRAMBLES} run_count={run_count}")
-        plt.xlabel('Number of Scrambles')
-        plt.ylabel('Solved Counts')
-        plt.xticks(num_scrambles)
-        plt.grid(True)
-
-        # Annotate each point with its value
-        for i, count in enumerate(evaluation_results):
-            plt.annotate(str(count), (num_scrambles[i], evaluation_results[i]), textcoords="offset points",
-                         xytext=(0, 10),
-                         ha='center')
-
-        # Show the plot
-        plt.show()
+        print(f"Elapsed time {run_count}: {elapsed_time} seconds")
 
         # 100% solve rate condition meet
-        solved_percentage = evaluation_results[NUM_SCRAMBLES - 1]
-        if solved_percentage == 100.0:
-            solved_percentage = evaluate_scramble(training_model, NUM_SCRAMBLES, num_episodes=1000, multiple_attempts=True)
+        done, count, solved_percentage = evaluate_scramble_1000(training_model, NUM_SCRAMBLES)
+        print(f"{run_count} num_scramble={NUM_SCRAMBLES}: {count} {solved_percentage}%")
+
+    # Plot the model evaluation
+    num_scrambles, evaluation_results = evaluate_model(training_model)
+    plot_title = f"{MODEL_NAME} scramble={NUM_SCRAMBLES} run_count={run_count}"
+    plt.figure(figsize=(10, 6))
+    plt.plot(num_scrambles, evaluation_results, marker='o')
+    plt.title(plot_title)
+    plt.xlabel('Number of Scrambles')
+    plt.ylabel('Solved Counts')
+    plt.xticks(num_scrambles)
+    plt.grid(True)
+
+    # Annotate each point with its value
+    for i, count in enumerate(evaluation_results):
+        plt.annotate(str(count), (num_scrambles[i], evaluation_results[i]), textcoords="offset points",
+                     xytext=(0, 10),
+                     ha='center')
+
+    # Save the plot
+    plt.savefig(f'{plot_folder_name}/{plot_title}.png')
+
+    # Show the plot
+    plt.show()
 
     # Release resource
     env.close()

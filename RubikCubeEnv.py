@@ -35,6 +35,14 @@ class RubiksCubeEnv(gymnasium.Env):
         self.num_scramble = num_scramble
         self.current_num_scramble = num_scramble
 
+        # Weight for choosing the number of scramble
+        # 1, 1, 2, 4, 8...
+        self.weights = [1]
+        for _ in range(1, num_scramble):
+            # The new weight is the sum of all previous weights
+            new_weight = sum(self.weights)
+            self.weights.append(new_weight)
+
         self.current_num_steps = 0
         self.episode_reward = 0
 
@@ -42,8 +50,6 @@ class RubiksCubeEnv(gymnasium.Env):
         self.cube = RubikCube(self.cube_size)
         self.scramble(self.current_num_scramble)
 
-        # Original cube state
-        self.original_obs = self._get_observation()
 
     def get_max_steps(self):
         #return int(math.ceil(self.num_scramble * 2.5))
@@ -62,13 +68,16 @@ class RubiksCubeEnv(gymnasium.Env):
         self.cube = RubikCube(self.cube_size)
         self.cube.scramble(self.current_num_scramble)
 
-        self.original_obs = self._get_observation()
-
         self.current_num_steps = 0
         self.episode_reward = 0
 
+        return self._get_observation()
+
     def reset(self, **kwargs):
-        self.cube.set_state_from_observation(self.original_obs)
+        self.current_num_scramble = random.choices(range(1, self.num_scramble + 1), weights=self.weights, k=1)[0]
+
+        self.cube = RubikCube(self.cube_size)
+        self.cube.scramble(self.current_num_scramble)
 
         self.current_num_steps = 0
         self.episode_reward = 0
@@ -98,7 +107,7 @@ class RubiksCubeEnv(gymnasium.Env):
         # Update the episode reward
         self.episode_reward += reward
 
-        # New scramble
+        # Max number of steps have reached
         if self.current_num_steps >= self.get_max_steps():
             done = True
 
@@ -119,6 +128,10 @@ class RubiksCubeEnv(gymnasium.Env):
 
         return observation
 
+    def set_observation(self, obs):
+        self.cube.set_state_from_observation(obs)
+        self.current_num_steps = 0
+        self.episode_reward = 0
 
 if __name__ == '__main__':
     # Create an instance of the environment

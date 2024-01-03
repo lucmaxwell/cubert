@@ -11,16 +11,18 @@ def episode(model, num_scramble, multiple_attempts=False):
     # Create the environment
     env = RubiksCubeEnv(num_scramble=num_scramble)
 
+    # Scramble the cube
+    original_obs = env.scramble(num_scramble)
+
     # Solve the puzzle
     # Allow multiple attempts
-    env.scramble(num_scramble)
     done = False
     count = 0
     while count < 3 and not done:
         count += 1
 
         # Solve the cube
-        obs, _ = env.reset()
+        env.set_observation(original_obs)
         while not done:
             # Determine action and take step
             action, _ = model.predict(obs, deterministic=True)
@@ -51,6 +53,22 @@ def evaluate_scramble(model, num_scramble, num_episodes=100, multiple_attempts=F
 
     # Return
     return solved_percentage
+
+
+def evaluate_scramble_1000(model, num_scramble):
+    count = 0
+    solved = True
+    solved_percentage = 0.0
+    while count < 20 and solved:
+        count += 1
+
+        solved_percentage = evaluate_scramble(model, num_scramble, num_episodes=50, multiple_attempts=True)
+
+        if solved_percentage != 100.0:
+            solved = False
+
+    # Return
+    return solved, count, solved_percentage
 
 
 def evaluate_model(model):
