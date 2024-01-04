@@ -1,30 +1,59 @@
-import time
+import os
 
-from Model_Validation import test
-from UtilityFunctions import load_model_DQN, save_model
+import torch
+from stable_baselines3 import DQN
 
-TOTAL_STEPS = 100000
-MODEL_NAME = "dqn_training_gen_10"
+from Network import ResidualBlock_2Layers_2048, ResidualBlock_3Layers_2048, ResidualBlock_2Layers_4096
+from RubikCubeEnv import RubiksCubeEnv
+from Training_Utility_Functions import train_and_evaluate
+
+network_configuration = ResidualBlock_3Layers_2048
+
+NUM_SCRAMBLES = 1
+
+NUM_STEPS = 100_000
+
 
 if __name__ == '__main__':
-    start_time = time.time()
+    MODEL_NAME = "DQN_" + network_configuration.__name__
 
-    # Create a new model by default
-    training_model, env, callback = load_model_DQN(MODEL_NAME, num_scramble=5)
+    print(torch.__version__)
+    print(f"CUDA is available: {torch.cuda.is_available()}")
 
-    # Training
-    training_model.learn(total_timesteps=TOTAL_STEPS, callback=callback)
+    save_path = os.path.join('Training', 'Saved Models')
 
-    # Save the model
-    save_model(MODEL_NAME, training_model)
+    # Ensure the directory exists
+    plot_folder_name = 'training_plot'
+    os.makedirs(plot_folder_name, exist_ok=True)
 
-    # End time and elapsed time
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"Elapsed time: {elapsed_time} seconds")
+    # Create the environment and vector for parallel environments
+    env = RubiksCubeEnv(num_scramble=NUM_SCRAMBLES)
 
-    # Test
-    test(training_model, env, MODEL_NAME)
+    # Define the policy kwargs with custom feature extractor
+    policy_kwargs = dict(
+        features_extractor_class=network_configuration,
+        features_extractor_kwargs=dict(features_dim=env.action_space.n)
+    )
+
+    # Create a new model or load model if already existed
+    training_model = None
+    model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
+    if os.path.isfile(model_file_path):
+        print("Loading existing model...")
+        training_model = DQN.load(model_file_path,
+                                  env=env,
+                                  verbose=0,
+                                  device="cuda")
+    else:
+        print("Creating a new model...")
+        training_model = DQN(policy='MlpPolicy',
+                             env=env,
+                             policy_kwargs=policy_kwargs,
+                             verbose=0,
+                             device="cuda")
+
+    # Learn and evaluate
+    train_and_evaluate(training_model, save_path, MODEL_NAME, NUM_STEPS, NUM_SCRAMBLES, plot_folder_name)
 
     # Release resource
     env.close()
