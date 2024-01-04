@@ -1,7 +1,7 @@
 import os
 import time
 
-from Testing import test
+from Model_Validation import test
 from UtilityFunctions import load_model_PPO, save_model
 
 TOTAL_STEPS = 100000

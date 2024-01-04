@@ -1,0 +1,1 @@
+100% on 1, 2, 3 scrambles.
