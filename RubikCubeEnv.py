@@ -133,6 +133,9 @@ class RubiksCubeEnv(gymnasium.Env):
         self.current_num_steps = 0
         self.episode_reward = 0
 
+        return self._get_observation()
+
+
 if __name__ == '__main__':
     # Create an instance of the environment
     env = RubiksCubeEnv()

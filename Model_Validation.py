@@ -1,7 +1,9 @@
 import concurrent.futures
+import os
 
 import pandas as pd
 from matplotlib import pyplot as plt
+from stable_baselines3 import DQN
 
 from RubikCubeEnv import RubiksCubeEnv
 from UtilityFunctions import load_model_PPO, load_model_DQN
@@ -22,7 +24,7 @@ def episode(model, num_scramble, multiple_attempts=False):
         count += 1
 
         # Solve the cube
-        env.set_observation(original_obs)
+        obs = env.set_observation(original_obs)
         while not done:
             # Determine action and take step
             action, _ = model.predict(obs, deterministic=True)
@@ -43,7 +45,8 @@ def evaluate_scramble(model, num_scramble, num_episodes=100, multiple_attempts=F
     solved_percentage = 0
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Submit episodes as futures
-        futures = [executor.submit(episode, model, num_scramble, multiple_attempts=multiple_attempts) for _ in range(num_episodes)]
+        futures = [executor.submit(episode, model, num_scramble, multiple_attempts=multiple_attempts) for _ in
+                   range(num_episodes)]
 
         # Wait for all futures to complete and get results
         results = [future.result() for future in futures]
@@ -59,10 +62,10 @@ def evaluate_scramble_1000(model, num_scramble):
     count = 0
     solved = True
     solved_percentage = 0.0
-    while count < 20 and solved:
+    while count < 50 and solved:
         count += 1
 
-        solved_percentage = evaluate_scramble(model, num_scramble, num_episodes=50, multiple_attempts=True)
+        solved_percentage = evaluate_scramble(model, num_scramble, num_episodes=20, multiple_attempts=True)
 
         if solved_percentage != 100.0:
             solved = False
@@ -99,7 +102,7 @@ def test(model, plot_title, num_episodes=1000):
         solved_percentage = 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
             # Submit episodes as futures
-            futures = [executor.submit(episode, model, num_scramble, _) for _ in range(actual_num_episodes)]
+            futures = [executor.submit(episode, model, num_scramble, multiple_attempts=False) for _ in range(actual_num_episodes)]
 
             # Wait for all futures to complete and get results
             results = [future.result() for future in futures]
@@ -130,9 +133,16 @@ def test(model, plot_title, num_episodes=1000):
 
 
 if __name__ == '__main__':
-    MODEL_NAME = "dqn_training_gen_10"
+    MODEL_NAME = "dqn_ResidualBlock_ReducedLayer_2048"
+
+    env = RubiksCubeEnv()
 
     # Create a new model by default
-    test_model, environment, _ = load_model_DQN(MODEL_NAME, num_scramble=1)
+    save_path = os.path.join('Training', 'Saved Models')
+    model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
+    test_model = DQN.load(model_file_path,
+                          env=env,
+                          verbose=0,
+                          device="cuda")
 
-    test(test_model, environment, MODEL_NAME)
+    test(test_model, MODEL_NAME)
