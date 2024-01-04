@@ -1,3 +1,4 @@
+ifconfig
 http://172.26.111.101:6006/
 
 tensorboard --logdir ./logs/ --host 0.0.0.0
