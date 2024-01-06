@@ -62,10 +62,10 @@ def evaluate_scramble_1000(model, num_scramble):
     count = 0
     solved = True
     solved_percentage = 0.0
-    while count < 50 and solved:
+    while count < 100 and solved:
         count += 1
 
-        solved_percentage = evaluate_scramble(model, num_scramble, num_episodes=20, multiple_attempts=True)
+        solved_percentage = evaluate_scramble(model, num_scramble, num_episodes=10, multiple_attempts=True)
 
         if solved_percentage != 100.0:
             solved = False
@@ -133,16 +133,16 @@ def test(model, plot_title, num_episodes=1000):
 
 
 if __name__ == '__main__':
-    MODEL_NAME = "dqn_ResidualBlock_ReducedLayer_2048"
+    model_name = input("Model name: ")
 
     env = RubiksCubeEnv()
 
     # Create a new model by default
     save_path = os.path.join('Training', 'Saved Models')
-    model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
+    model_file_path = os.path.join(save_path, model_name + ".zip")
     test_model = DQN.load(model_file_path,
                           env=env,
                           verbose=0,
                           device="cuda")
 
-    test(test_model, MODEL_NAME)
+    test(test_model, model_name)

@@ -58,3 +58,36 @@ def plot_evaluation(training_model, MODEL_NAME, NUM_SCRAMBLES, run_count, plot_f
 
     # Show the plot
     plt.show()
+
+
+def train_and_evaluate_static_env(training_model, env, save_path, MODEL_NAME, NUM_EPISODES, NUM_SCRAMBLES, plot_folder_name):
+    # Initialize training variables
+    run_count = 0
+    done = False
+
+    # Start the training loop
+    while not done:
+        run_count += 1
+        start_time = time.time()
+
+        # Training
+        for _ in range(NUM_EPISODES):
+            env.scramble()
+            training_model.learn(total_timesteps=1_100)
+
+        # Save the model
+        model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
+        training_model.save(model_file_path)
+        print(f"Model {MODEL_NAME} saved. Path: {model_file_path}")
+
+        # Calculate elapsed time
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time {run_count}: {elapsed_time} seconds")
+
+        # Check if 100% solve rate condition is met
+        done, count, solved_percentage = evaluate_scramble_1000(training_model, NUM_SCRAMBLES)
+        print(f"{run_count} num_scramble={NUM_SCRAMBLES}: {count} {solved_percentage}%")
+
+    # Plot the model evaluation
+    plot_evaluation(training_model, MODEL_NAME, NUM_SCRAMBLES, run_count, plot_folder_name)
