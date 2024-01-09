@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from Model_Validation import evaluate_scramble_1000, evaluate_model
 
 
-def train_and_evaluate(training_model, save_path, MODEL_NAME, NUM_STEPS, NUM_SCRAMBLES, plot_folder_name):
+def train_and_evaluate(training_model, save_path, MODEL_NAME, NUM_STEPS, NUM_SCRAMBLES, plot_folder_name, num_run=None):
     # Initialize training variables
     run_count = 0
     done = False
@@ -31,6 +31,11 @@ def train_and_evaluate(training_model, save_path, MODEL_NAME, NUM_STEPS, NUM_SCR
         # Check if 100% solve rate condition is met
         done, count, solved_percentage = evaluate_scramble_1000(training_model, NUM_SCRAMBLES)
         print(f"{run_count} num_scramble={NUM_SCRAMBLES}: {count} {solved_percentage}%")
+
+        # End condition
+        if num_run is not None:
+            if not run_count < num_run:
+                done = True
 
     # Plot the model evaluation
     plot_evaluation(training_model, MODEL_NAME, NUM_SCRAMBLES, run_count, plot_folder_name)

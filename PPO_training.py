@@ -3,12 +3,12 @@ import os
 import torch
 from stable_baselines3 import PPO
 
-from Network import ResidualBlock_2Layers_4096, ResidualBlock_2Layers_2048
+from Network import ResidualBlock_2Layers_4096, ResidualBlock_2Layers_2048, LSTM_4Layers_1024
 from RubikCubeEnv import RubiksCubeEnv
 from Training_Utility_Functions import train_and_evaluate
 
 
-network_configuration = ResidualBlock_2Layers_2048
+network_configuration = LSTM_4Layers_1024
 
 NUM_SCRAMBLES = 1
 
