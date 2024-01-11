@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+from stable_baselines3 import DQN
+from stable_baselines3.common.buffers import ReplayBuffer
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from torch import nn
 
@@ -183,7 +185,7 @@ class ResidualBlock_2Layers_4096(ResidualBlock_Network):
                          features_dim,
                          num_layers=2,
                          hidden_size=4096,
-                         dropout=0.8)
+                         dropout=0.5)
 
 
 class ResidualBlock_3Layers_4096(ResidualBlock_Network):
@@ -192,10 +194,63 @@ class ResidualBlock_3Layers_4096(ResidualBlock_Network):
                          features_dim,
                          num_layers=3,
                          hidden_size=4096,
-                         dropout=0.8)
+                         dropout=0.5)
 
 
 
+
+
+class DoubleDQN(DQN):
+    def train(self, gradient_steps: int, batch_size: int = 100) -> None:
+        # Get replay buffer
+        replay_buffer: ReplayBuffer = self.replay_buffer
+        assert replay_buffer is not None, "No replay buffer was created for training"
+
+        for gradient_step in range(gradient_steps):
+            # Sample from replay buffer
+            replay_data = replay_buffer.sample(batch_size, env=self._vec_normalize_env)
+
+            # Follow DDQN update rule
+            with torch.no_grad():
+                # Compute the next Q-values using the target network
+                next_q_values = self.policy.q_net_target(replay_data.next_observations)
+
+                # use current model to select the action with maximal q value
+                max_actions = torch.argmax(self.q_net(replay_data.next_observations), dim=1)
+
+                # evaluate q value of that action using fixed target network
+                next_q_values = torch.gather(next_q_values, dim=1, index=max_actions.unsqueeze(-1))
+
+                # Compute the target Q values
+                target_q_values = replay_data.rewards + (1 - replay_data.dones) * self.gamma * next_q_values
+
+                print(f"Target q value: {target_q_values.shape}")
+
+                '''
+                 # Compute the next Q-values using the target network
+                next_q_values = self.policy.q_net_target(replay_data.next_observations)
+                
+                # Select action according to the policy network
+                next_actions = self.policy.q_net(replay_data.next_observations).argmax(dim=1)
+                next_q_values = torch.gather(next_q_values, dim=1, index=next_actions.unsqueeze(-1)).squeeze(-1)
+                
+                # Compute the target Q values
+                target_q_values = replay_data.rewards + (1 - replay_data.dones) * self.gamma * next_q_values
+                '''
+
+            # Optimize the policy network
+            self.policy.optimizer.zero_grad()
+            q_values = self.policy.q_net(replay_data.observations)
+
+            # Retrieve the Q-values for the actions from the replay buffer
+            action_q_values = torch.gather(q_values, dim=1, index=replay_data.actions).squeeze(-1)
+
+            # Calculate loss
+            loss = torch.nn.functional.mse_loss(action_q_values, target_q_values)
+            loss.backward()
+            self.policy.optimizer.step()
+
+            self._on_step()
 
 
 
