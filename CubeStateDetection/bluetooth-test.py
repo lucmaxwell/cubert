@@ -36,7 +36,7 @@ client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_R
 client.connect(("40:22:D8:F0:E6:1A", 1))
 client.setblocking(False)
 
-print("Connected?")
+print("Connected to ESP32")
 message = ''
 
 while True:
@@ -49,7 +49,7 @@ while True:
             message = ""
             
         else: 
-            message = letter
+            message += letter
             print(letter, end="")
 
     try:
@@ -62,11 +62,11 @@ while True:
         #     client.send(msg)
         #     client.send(b'\r')
 
-        if data == OK:
-            print("Recieved OK, taking image")
-            img = getImage(imageUrl)
-            cv.imwrite(outPath + 'test.png', img)
-            print("",end="")
+        # if data == OK:
+        #     print("Recieved OK, taking image")
+        #     img = getImage(imageUrl)
+        #     cv.imwrite(outPath + 'test.png', img)
+        #     print("",end="")
 
     except:
         print("",end="")
