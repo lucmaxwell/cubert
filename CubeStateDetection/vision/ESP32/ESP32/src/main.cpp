@@ -1,18 +1,19 @@
 #include <Arduino.h>
 #include "BluetoothSerial.h"
 
-#define y 0
-#define y_ 1
-#define b 10
-#define b_ 11
-#define x_ 20
-#define ack 999
+#define y 'y'
+#define yp 'Y'
+#define b 'b'
+#define bp 'B'
+#define xp 'X'
+#define ack 'a'
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
 #endif
 
 BluetoothSerial SerialBT;
+int8_t in;
 
 void setup() {
   Serial.begin(115200);
@@ -31,10 +32,17 @@ void loop() {
       SerialBT.write(Serial.read());
     }
     if (SerialBT.available()) {
-      Serial.write(SerialBT.read());
+      in = SerialBT.read();
+      Serial.write("Received: ");
+      Serial.write(in);
+      Serial.println("");
+
+      if(in == *"\r")
+      {
+        Serial.println("Received end of message signal");
+        SerialBT.write(ack);
+      }
     }
-    SerialBT.println("Testing");
   }
-  
   delay(100);
 }
