@@ -47,7 +47,7 @@ int8_t BluetoothIn;
 #define MIN_SPEED 0.000001  // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 int numStepsToGripOrUngrip     =     100;
-int gripStrength               =     375;
+int gripStrength               =     400;
 int moveArmSpeed               =      10;        // set the velocity (1-100) that we will raise or lower the arm
 int handOpenCloseSpeed         =      15;  // set the velocity (1-100) that we will open and close the ha
 int spinSpeed                  =     100;
@@ -106,6 +106,11 @@ void homeArmAndHand() {
   }
 }
 void moveArmTo(int destination) {
+  if(!gripperFunctional) 
+  {
+    return;
+  }
+
   String desiredLocation = "";
   Serial.print("Moving arm from ");
   Serial.print(armLocation);
@@ -190,8 +195,9 @@ void openHand() {
       return;
     articulateHand(OPEN);
     count++;
-    if (count > 50000){
+    if (count > 10000){
         gripperFunctional = false;
+        Serial.println("Hand could not reach end stop");
         break;
     }
   }
@@ -540,28 +546,31 @@ void loop() {
       switch (BluetoothIn)
       {
         case y:
-          clockwise(NULL);
+          spinBase(ccw, numDegreesToRotate, spinSpeed);
+          SerialBT.write(OK);
           break;
           
         case yp:
-          counterClockwise(NULL);
+          spinBase(cw, numDegreesToRotate, spinSpeed);
+          SerialBT.write(OK);
           break;
 
         case b:
-          clockwise(NULL);
+          rotateFace(ccw, numDegreesToRotate, spinSpeed);
+          SerialBT.write(OK);
           break;
 
         case bp:
-          counterClockwise(NULL);
+          rotateFace(cw, numDegreesToRotate, spinSpeed);
+          SerialBT.write(OK);
           break;
 
         case xp:
-          speeen(NULL);
+          flipCube();
           SerialBT.write(xp);
+          SerialBT.write(OK);
           break;
       }
-
-      SerialBT.write(OK);
     }
   }
   delay(10);
