@@ -68,6 +68,8 @@ String armLocation = "unknown state";
 #define closeHandButton 32
 #define spinBaseButton  27
 
+static bool gripperFunctional = true;
+
 void moveArm(int direction);
 void homeArmAndHand();
 void moveArmTo(int destination);
@@ -99,7 +101,9 @@ void homeArmAndHand() {
   Serial.println(desiredLocation);
 
   openHand();
+  if(gripperFunctional){
   moveArmTo(homePosition);
+  }
 }
 void moveArmTo(int destination) {
   String desiredLocation = "";
@@ -178,18 +182,25 @@ void closeHand() {
   handState = "closed"; 
 }  
 void openHand() {
+
   Serial.println("Opening hand");
+  int count = 0;
   while (1) {
     if (digitalRead(endstop_arm_openLimit_pin) == 0)
       return;
     articulateHand(OPEN);
+    count++;
+    if (count > 50000){
+        gripperFunctional = false;
+        break;
+    }
   }
   handState = "open";
   delay(interActionDelay); 
 }
 void spinBase(int my_direction, float deg, int v) {
   int stepDelay = getDelay(v);
-  if (armLocation != "top" && armLocation != "middle") {
+  if (armLocation != "top" && armLocation != "middle" && gripperFunctional) {
     moveArmTo(MIDDLE);
   }
 
