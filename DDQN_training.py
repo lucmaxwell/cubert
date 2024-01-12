@@ -9,9 +9,9 @@ from Network import ResidualBlock_2Layers_2048, ResidualBlock_3Layers_2048, \
 from RubikCubeEnv import RubiksCubeEnv
 from Training_Utility_Functions import train_and_evaluate
 
-network_configuration = ResidualBlock_3Layers_4096
+network_configuration = ResidualBlock_2Layers_4096
 
-NUM_SCRAMBLES = 1
+NUM_SCRAMBLES = 3
 
 NUM_STEPS = 100_000
 
@@ -33,12 +33,12 @@ if __name__ == '__main__':
     os.makedirs(plot_folder_name, exist_ok=True)
 
     # Create the environment and vector for parallel environments
-    envs = SubprocVecEnv([make_env(NUM_SCRAMBLES) for i in range(10)])
+    env = RubiksCubeEnv(num_scramble=NUM_SCRAMBLES)
 
     # Define the policy kwargs with custom feature extractor
     policy_kwargs = dict(
         features_extractor_class=network_configuration,
-        features_extractor_kwargs=dict(features_dim=envs.action_space.n)
+        features_extractor_kwargs=dict(features_dim=env.action_space.n)
     )
 
     # Create a new model or load model if already existed
@@ -47,13 +47,13 @@ if __name__ == '__main__':
     if os.path.isfile(model_file_path):
         print("Loading existing model...")
         training_model = DoubleDQN.load(model_file_path,
-                                  env=envs,
+                                  env=env,
                                   verbose=0,
                                   device="cuda")
     else:
         print("Creating a new model...")
         training_model = DoubleDQN(policy='MlpPolicy',
-                             env=envs,
+                             env=env,
                              policy_kwargs=policy_kwargs,
                              verbose=0,
                              device="cuda")
@@ -69,4 +69,4 @@ if __name__ == '__main__':
     )
 
     # Release resource
-    envs.close()
+    env.close()
