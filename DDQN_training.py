@@ -24,7 +24,7 @@ def make_env(num_scrambles):
 
 
 if __name__ == '__main__':
-    MODEL_NAME = "DDQN_" + network_configuration.__name__ + "_SubprocVecEnv"
+    MODEL_NAME = "DDQN_" + network_configuration.__name__
 
     save_path = os.path.join('Training', 'Saved Models')
 

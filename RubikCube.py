@@ -3,6 +3,7 @@ from enum import Enum
 import copy
 
 import numpy as np
+from scipy.stats import entropy
 
 
 class Face(Enum):
@@ -253,6 +254,15 @@ class RubikCube:
                 for j in range(self.size):
                     color_value = observation[face_index][i][j]
                     self.face_list[face].square_list[i][j].color = SquareColour(color_value)
+
+    def entropy(self):
+        # Calculate the entropy from the count of correct squares
+        total_num_squares = self.size**2 * 6
+        correct_squares = self.count_correct_squares()
+        p_correct_squares = correct_squares / total_num_squares
+
+        # Return the entropy
+        return entropy(p_correct_squares, base=2)
 
 
 if __name__ == '__main__':

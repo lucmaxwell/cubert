@@ -201,10 +201,6 @@ class ResidualBlock_3Layers_4096(ResidualBlock_Network):
 
 
 class DoubleDQN(DQN):
-    def __init__(self, *args, **kwargs):
-        # Initialize the learning rate scheduler
-        self.lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(self.policy.optimizer, gamma=0.99)
-
     def train(self, gradient_steps: int, batch_size: int = 100) -> None:
         # Ensure that replay buffer exists
         assert self.replay_buffer is not None, "No replay buffer was created for training"
@@ -257,9 +253,6 @@ class DoubleDQN(DQN):
             # Clip gradient norm
             torch.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
             self.policy.optimizer.step()
-
-            # Update learning rate according to schedule
-            self.lr_scheduler.step()
 
         self._n_updates += gradient_steps
 
