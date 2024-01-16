@@ -71,11 +71,10 @@ int8_t BluetoothIn;
 #define MIN_SPEED 0.000001  // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 int numStepsToGripOrUngrip      =     100;
-int gripStrength                =     400;
-int moveArmSpeed                =      30;        // set the velocity (1-100) that we will raise or lower the arm
-int handOpenCloseSpeed          =      30;  // set the velocity (1-100) that we will open and close the ha
+int gripStrength                =     450;
+int moveArmSpeed                =      50;        // set the velocity (1-100) that we will raise or lower the arm
+int handOpenCloseSpeed          =      50;  // set the velocity (1-100) that we will open and close the ha
 int spinSpeed                   =     120;
-int correctionSpinSpeed         =      20; 
 int interActionDelay            =      10;
 int cubeDropDistance            =     400;
 int numStepsFromBottomToMiddle  =     800;
@@ -212,11 +211,11 @@ void moveArmTo(int destination) {
         break;
       }
       else {
-        while (digitalRead(BOTTOM) == 1) {     
+        while (digitalRead(TOP) == 1) {     
           moveArm(UP);
         }
         delay(interActionDelay);
-        for(int i = 0; i < numStepsFromBottomToMiddle; i++){
+        for(int i = 0; i < numStepsFromTopToMiddle; i++){
               moveArm(DOWN);            
         }
       }
@@ -350,7 +349,7 @@ void articulateHand(int direction) {
   delayMicroseconds(stepDelay);}
 
 int  getDelay(int v) {
-  v = min(v, 120);
+  v = min(v, 200);
   double x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100;
   double delayDuration = pow(0.0003 * x, -1) / 10;
   return round(delayDuration);}
@@ -370,6 +369,7 @@ void flipCube() {
   moveArmTo(BOTTOM);
   closeHand();
   moveArmTo(TOP);
+  delay(50);
   dropCubeToBase();
   openHand();}
 
@@ -460,18 +460,7 @@ void rotateFace(int face, int singleOrDouble) {
 
 
 
-void scrambleBT(){
-  int lastMove = TOPCW;
-  for(int i = 0; i < 13; i++){ 
-    int randomNumberOfTurns = random(1,3);
-    int randomMove = random(1,11);
-    while(randomMove == lastMove){
-      randomMove = random(1,11);
-    }
-    rotateFace(randomMove, randomNumberOfTurns);
-    lastMove = randomMove;
-  }
-}
+
 void testCorrection(SerialCommands *sender){
   moveArmTo(MIDDLE);
   closeHand();
@@ -622,9 +611,9 @@ void zenMode(SerialCommands *sender){
   }
 
 void scramble(SerialCommands * sender) {
-  int lastMove = TOPCW;
-  Serial.println("How many scrambles would you like to perform?");
-  int numScrambles = getIntegerFromUser();
+  int lastMove = TOPCW;  
+  int numScrambles = 13;
+  float startTime = millis();
   for(int i = 0; i < numScrambles; i++){ 
     int randomNumberOfTurns = random(1,3);    
     int randomMove = random(1,13);
@@ -634,6 +623,8 @@ void scramble(SerialCommands * sender) {
     Serial.println(" turns.");
     lastMove = randomMove;
   }
+  float elapsed = millis() - startTime;
+  Serial.print("It took "); Serial.print(elapsed/1000);Serial.print(" seconds to perform "); Serial.print(numScrambles);Serial.println(" scrambles."); 
 }//initialize serialCommand functions
 
 SerialCommand setGripDistance_("t", setGripDistance);
@@ -750,8 +741,17 @@ void loop() {
       switch (BluetoothIn)
       {    
         case 's':
-          scrambleBT();
-          break;             
+          scramble(NULL);
+          break;
+        case 'z':
+          zenMode(NULL);
+          break;
+        case 'r':
+          speeen(NULL);
+          break;
+        case 't':
+          toggleSteppers(NULL);
+          break;     
       }
     }
   }
