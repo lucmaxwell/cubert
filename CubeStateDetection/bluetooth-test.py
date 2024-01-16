@@ -25,7 +25,7 @@ imageUrl = "http://192.168.4.1/capture"
 y = b'y'
 y_ = b'Y'
 b = b'b'
-b_ = b'B'
+b_ = b'B' 
 x_ = b'X'
 ACK = b'a'
 OK = b'k'
@@ -33,7 +33,8 @@ OK = b'k'
 messages = [y, y_, b, b_, x_]
 
 client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-client.connect(("40:22:D8:F0:E6:1A", 1))
+# client.connect(("40:22:D8:F0:E6:1A", 1))    # ESP32test
+client.connect(("40:22:D8:EB:2B:3A", 1))    # ESP32test2
 client.setblocking(False)
 
 print("Connected?")
@@ -44,12 +45,19 @@ while True:
         letter = msvcrt.getch().decode("utf-8")
         
         if letter == "\r":
-            client.send(message.encode("utf-8"))
-            print(f"\nSent '{message}'")
-            message = ""
+            print()
+            match message:
+                case "start":
+                    print(f"Starting imaging sequence")
+                    message = ""
+
+                case _:
+                    client.send(message.encode("utf-8"))
+                    print(f"Sent '{message}'")
+                    message = ""
             
         else: 
-            message = letter
+            message += letter
             print(letter, end="")
 
     try:

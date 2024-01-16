@@ -43,11 +43,11 @@ def xyzToHsv(x, y, z):
 # Parameters
 useUrl = False
 clearOutputDirectory = False
-image = "bruno.png"
+image = "test2 modified.jpg"
 mask = 'mask.png'
-edgeLength = 100
-edgeHeight =161
-numColours = 4
+edgeLength = 3
+edgeHeight =3
+numColours = 6
 
 useMask = False
 useAutoMask = False
