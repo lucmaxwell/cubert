@@ -759,6 +759,7 @@ void loop() {
           closeHand();
           spinBase(cw, true);
           openHand();
+          SerialBT.write(ACK);
           break;
 
         case 'B':
@@ -766,21 +767,23 @@ void loop() {
           closeHand();
           spinBase(ccw, true);
           openHand();
+          SerialBT.write(ACK);
           break;
 
         case 'y':
           spinBase(ccw, true);
+          SerialBT.write(ACK);
           break;
 
         case 'Y':
           spinBase(cw, true);
+          SerialBT.write(ACK);
           break;
 
         case 'X':
           flipCube();
+          SerialBT.write(ACK);
           break;
-
-
 
         default:
           if(BluetoothIn != '\r' && BluetoothIn != '\n')
