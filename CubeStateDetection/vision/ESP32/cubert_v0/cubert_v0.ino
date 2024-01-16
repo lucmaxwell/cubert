@@ -687,7 +687,7 @@ void setup() {
   digitalWrite(motors_en_pin, LOW); // enable steppers
 
   // Start bluetooth
-  SerialBT.begin("ESP32test"); //Bluetooth device name
+  SerialBT.begin("ESP32test2"); //Bluetooth device name
 
   Serial.println("Ready!");
   homeArmAndHand();
@@ -752,6 +752,43 @@ void loop() {
         case 't':
           toggleSteppers(NULL);
           break;     
+
+        // Cubing notation moves
+        case 'b':
+          moveArmTo(MIDDLE); 
+          closeHand();
+          spinBase(cw, true);
+          openHand();
+          break;
+
+        case 'B':
+          moveArmTo(MIDDLE); 
+          closeHand();
+          spinBase(ccw, true);
+          openHand();
+          break;
+
+        case 'y':
+          spinBase(ccw, true);
+          break;
+
+        case 'Y':
+          spinBase(cw, true);
+          break;
+
+        case 'X':
+          flipCube();
+          break;
+
+
+
+        default:
+          if(BluetoothIn != '\r' && BluetoothIn != '\n')
+          {
+            Serial.write("Received unknown bluetooth command: ");
+            Serial.write(BluetoothIn);
+            Serial.println();
+          }
       }
     }
   }

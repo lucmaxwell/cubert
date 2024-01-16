@@ -2,9 +2,9 @@
 #include <SerialCommands.h>
 #include "BluetoothSerial.h"
 
-//pin assignments
-#define motors_en_pin               5         // LOW: Driver enabled. HIGH: Driver disabled
-#define motors_base_step_pin        2  // Step on rising edge
+//motor/endstop/current sense pin assignments
+#define motors_en_pin               5      // LOW: Driver enabled. HIGH: Driver disabled
+#define motors_base_step_pin        2      // Step on rising edge
 #define motors_base_dir_pin        15
 #define motors_arm_left_dir_pin     0
 #define motors_arm_left_step_pin    4
@@ -13,27 +13,51 @@
 #define endstop_arm_openLimit_pin  18
 #define endstop_arm_upperLimit_pin 23
 #define endstop_arm_lowerLimit_pin 19
+#define currentSensor_pin          34
+
+//manual button pin assignments
+#define raiseArmButton  33
+#define lowerArmButton  26
+#define openHandButton  25
+#define closeHandButton 32
+#define spinBaseButton  27
+//
 
 // code clarification definitions
-#define cw        0
-#define ccw       1
-#define UP        1
-#define DOWN      0
-#define OPEN      1
-#define CLOSE     0
-#define MIDDLE  420
-#define BOTTOM   endstop_arm_lowerLimit_pin
-#define TOP      endstop_arm_upperLimit_pin
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define UNKNOWN         -1
+#define cw               0
+#define ccw              1
+#define UP               1
+#define DOWN             0
+#define OPEN             1
+#define CLOSE            0
+#define CLOSED           0
+#define OPENED           0
+#define MIDDLE         420
+#define DROPOFFHEIGHT   69
+#define BOTTOM          19
+#define TOP             23
+#define FRONTCW          1
+#define FRONTCCW         2
+#define REARCW           3
+#define REARCCW          4
+#define TOPCW            5
+#define TOPCCW           6
+#define LEFTCW           7
+#define LEFTCCW          8
+#define RIGHTCW          9
+#define RIGHTCCW        10
+#define BOTTOMCW        11
+#define BOTTOMCCW       12
+//////////////////////// ///////////////////////////////////////////////////////////////////////////////////
 // Bluetooth/cubing notation
-#define y 'y'
-#define yp 'Y'
-#define b 'b'
-#define bp 'B'
-#define xp 'X'
-#define ACK 'a'
-#define OK 'k'
+#define y    'y'
+#define yp   'Y'
+#define b    'b'
+#define bp   'B'
+#define xp   'X'
+#define ACK  'a'
+#define OK   'k'
 #define END '\r'
 
 BluetoothSerial SerialBT;
@@ -43,32 +67,34 @@ int8_t BluetoothIn;
 #error Bluetooth is not enabled, run `make menuconfig` to and enable it
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define MAX_SPEED 3         // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
+#define MAX_SPEED 3.3        // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 #define MIN_SPEED 0.000001  // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-int numStepsToGripOrUngrip     =     100;
-int gripStrength               =     375;
-int moveArmSpeed               =      10;        // set the velocity (1-100) that we will raise or lower the arm
-int handOpenCloseSpeed         =      15;  // set the velocity (1-100) that we will open and close the ha
-int spinSpeed                  =     100;
-int interActionDelay           =      10;
-int cubeDropDistance           =     400;
-int numStepsFromBottomToMiddle =     800;
-int numStepsFromTopToMiddle    =    1100;
-float numDegreesToRotate       =      93;
-int homePosition               =  MIDDLE;
+int numStepsToGripOrUngrip      =     100;
+int gripStrength                =     450;
+int moveArmSpeed                =      50;        // set the velocity (1-100) that we will raise or lower the arm
+int handOpenCloseSpeed          =      50;  // set the velocity (1-100) that we will open and close the ha
+int spinSpeed                   =     120;
+int interActionDelay            =      10;
+int cubeDropDistance            =     400;
+int numStepsFromBottomToMiddle  =     800;
+int numStepsFromTopToMiddle     =    1100;
+int numStepsFromDropoffToMiddle =     700;
+float cubeRotationError         =       4; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
+int homePosition                =  MIDDLE;
+int zenSpinSpeed                =      10;
+int zenArmSpeed                 =      10;
+int zenHandOpenCloseSpeed       =      10;
+int baseGearPlayCompensation    =      20; // I think that when we correct, the first few steps are used to
+                                           // start switching directions (ie, there is some play in the spin
+                                           //gear, causing error to build up every time we correct)
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-String handState   = "unknown state";
-String armLocation = "unknown state";
-
-//manual button pin assignments
-#define raiseArmButton  33
-#define lowerArmButton  26
-#define openHandButton  25
-#define closeHandButton 32
-#define spinBaseButton  27
-
+int handState    = UNKNOWN;
+int armLocation  = UNKNOWN;
 static bool gripperFunctional = true;
+
+
 
 void moveArm(int direction);
 void homeArmAndHand();
@@ -82,8 +108,7 @@ void articulateHand(int direction);
 char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
 void cmd_unrecognized(SerialCommands* sender, const char* cmd) {
-sender->GetSerial()->println("Unrecognized command");
-}
+sender->GetSerial()->println("Unrecognized command");}
 void homeArmAndHand() {
   String desiredLocation = "";
   Serial.print("Homing hand to ");
@@ -103,12 +128,29 @@ void homeArmAndHand() {
   openHand();
   if(gripperFunctional){
   moveArmTo(homePosition);
-  }
-}
+  }}
 void moveArmTo(int destination) {
+  if(!gripperFunctional) 
+  {
+    return;
+  }  
   String desiredLocation = "";
   Serial.print("Moving arm from ");
-  Serial.print(armLocation);
+  switch(armLocation){
+    case TOP:
+      Serial.print("top");
+      break;
+    case MIDDLE:
+      Serial.print("middle");
+      break;
+    case BOTTOM:
+      Serial.print("bottom");
+      break;
+    case UNKNOWN:
+      Serial.print("unknown location");
+      break;
+  }
+  
   Serial.print(" to ");
   switch (destination) {
     case TOP:
@@ -118,8 +160,8 @@ void moveArmTo(int destination) {
       desiredLocation = "bottom";
       break;
     case MIDDLE:
-    desiredLocation = "middle";
-    break;
+      desiredLocation = "middle";
+      break;
   }
   Serial.println(desiredLocation);
   switch (destination) {
@@ -130,7 +172,7 @@ void moveArmTo(int destination) {
           break;
         moveArm(DOWN);
       }
-      armLocation = "bottom";
+      armLocation = BOTTOM;
       break;
     /////////////////////////////////////////////////////////
     case TOP:
@@ -139,48 +181,57 @@ void moveArmTo(int destination) {
           break;
       moveArm(UP);
       }     
-      armLocation = "top";
+      armLocation = TOP;
       break;
     ///MIDDLE/////////////////////////////////////////////////////
     case MIDDLE:
-      if(armLocation.equals("middle")){
+      if(armLocation == MIDDLE){
         break;
       }
-      if(armLocation.equals("top")){          ;
+      if(armLocation == TOP){                    
           for(int i = 0; i < numStepsFromTopToMiddle; i++){
             moveArm(DOWN);
-            break;
           }
+          armLocation = MIDDLE;
+          break;
       }
-      else if (armLocation.equals("bottom")){
+      else if (armLocation == BOTTOM ){
           Serial.println(" from the bottom.");
           for(int i = 0; i < numStepsFromBottomToMiddle; i++){
-            moveArm(UP);
-            break;
+            moveArm(UP);          
           }
+          armLocation = MIDDLE;
+          break;
       } 
-      else {
-        while (digitalRead(BOTTOM) == 1) {     
+      else if (armLocation == DROPOFFHEIGHT){
+        for(int i = 0; i < numStepsFromDropoffToMiddle; i++){
           moveArm(DOWN);
         }
+        armLocation = MIDDLE;
+        break;
+      }
+      else {
+        while (digitalRead(TOP) == 1) {     
+          moveArm(UP);
+        }
         delay(interActionDelay);
-        for(int i = 0; i < numStepsFromBottomToMiddle; i++){
-              moveArm(UP);            
+        for(int i = 0; i < numStepsFromTopToMiddle; i++){
+              moveArm(DOWN);            
         }
       }
-      armLocation = "middle";
-    break;    
+      armLocation = MIDDLE;
+      break;    
+      
   }
     Serial.println("Arrived at destination.");
-    delay(interActionDelay);
-}
+    delay(interActionDelay);}
 void closeHand() {
+  Serial.println("Closing hand");
   for (int i = 0; i < gripStrength; i++) {
     articulateHand(CLOSE);
   }
   delay(interActionDelay);
-  handState = "closed"; 
-}  
+  handState = CLOSE; }  
 void openHand() {
 
   Serial.println("Opening hand");
@@ -190,39 +241,63 @@ void openHand() {
       return;
     articulateHand(OPEN);
     count++;
-    if (count > 50000){
+    if (count > 10000){
         gripperFunctional = false;
+        Serial.println("Hand could not reach end stop");
         break;
     }
   }
-  handState = "open";
-  delay(interActionDelay); 
-}
-void spinBase(int my_direction, float deg, int v) {
-  int stepDelay = getDelay(v);
-  if (armLocation != "top" && armLocation != "middle" && gripperFunctional) {
+  handState = OPENED;
+  delay(interActionDelay); }
+void spinBase(int my_direction, bool correctionEnabled) {
+  int stepDelay = getDelay(spinSpeed);
+  int degreesToRotate = 90;   
+
+  if(correctionEnabled){
+    degreesToRotate += cubeRotationError;
+  } 
+  
+  if (armLocation != TOP && armLocation != MIDDLE && gripperFunctional) {
+    openHand();
     moveArmTo(MIDDLE);
   }
 
   digitalWrite(motors_base_dir_pin, my_direction);  // set the direction
-  float steps = 19200 * deg / 360.0;
+  int steps = 19200 * degreesToRotate / 360;
   for (int i = 0; i < steps; i++) {
     digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
     delayMicroseconds(stepDelay);
   }
-  // correct for over/under rotation of the cube
-  digitalWrite(motors_base_dir_pin, !my_direction);  // set the direction
-  openHand();
-  float correction = deg - 90;
-  steps = 19200 * correction / 360.0;
-  for (int i = 0; i < steps; i++) {
-    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
-    delayMicroseconds(stepDelay);
+  delay(interActionDelay);
+  
+  if(correctionEnabled){
+    if(my_direction == cw){
+      my_direction = ccw;
+    }else{
+      my_direction = cw;
+    }  
+    // correct for over/under rotation of the cube
+    digitalWrite(motors_base_dir_pin, my_direction);  // set the direction
+    openHand();  
+
+    int steps = 19200 * cubeRotationError / 360.0;
+    for (int i = 0; i < steps; i++) {
+      digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+      delayMicroseconds(stepDelay);
+    }
+    delay(interActionDelay);
+  }  
+  }
+void spinBaseTwice(int my_direction, bool correctionEnabled){
+  int defaultInteractionDelay = interActionDelay;
+  interActionDelay = 0;
+  spinBase(my_direction, false);
+  interActionDelay = defaultInteractionDelay;
+  spinBase(my_direction, true);  
   }
 
-}
 void moveArm(int direction) {
-  armLocation = "undefined";
+  armLocation = UNKNOWN;
   //set the direction that the arm motors spin
   if (direction == UP) {
     // Serial.println("Going up?");
@@ -245,17 +320,16 @@ void moveArm(int direction) {
   digitalWrite(motors_arm_right_step_pin, !digitalRead(motors_arm_right_step_pin));  // Step right motor
   // delay(5);
   int stepDelay = getDelay(moveArmSpeed);
-  delayMicroseconds(stepDelay);
-}
+  delayMicroseconds(stepDelay);}
 void dropCubeToBase() {
   for (int i = 0; i < cubeDropDistance; i++) {
     moveArm(DOWN);
   }
   delay(interActionDelay);
-  armLocation = "unknown state"; // lol imagine forgetting to put this here xD
-}
+  armLocation = UNKNOWN; // lol imagine forgetting to put this here xD
+  armLocation = DROPOFFHEIGHT;}
 void articulateHand(int direction) {
-  handState = "undefined";
+  handState = UNKNOWN;
   //set the direction that the arm motors spin
   if (direction == OPEN) {
     // Serial.println("Opening");
@@ -272,141 +346,176 @@ void articulateHand(int direction) {
     digitalWrite(motors_arm_right_step_pin, !digitalRead(motors_arm_right_step_pin));  // Step right motor
   }
   int stepDelay = getDelay(handOpenCloseSpeed);
-  delayMicroseconds(stepDelay);
-}
-void clockwise(SerialCommands * sender) {
-  spinBase(cw, numDegreesToRotate, spinSpeed);
-}
-void counterClockwise(SerialCommands * sender) {
-  spinBase(ccw, numDegreesToRotate, spinSpeed);
-  sender->GetSerial()->println("Turning counter clockwise.");
-}
-int getIntegerFromUser() {
+  delayMicroseconds(stepDelay);}
+
+int  getDelay(int v) {
+  v = min(v, 200);
+  double x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100;
+  double delayDuration = pow(0.0003 * x, -1) / 10;
+  return round(delayDuration);}
+
+int  getIntegerFromUser() {
   Serial.println("Please enter a value:");
   while (!Serial.available()) {}  // wait until the user enters a value
   int value = Serial.parseInt();
   while (Serial.available()) {  // flush the serial input buffer
     int flush = Serial.read();
   }
-  return value;
-}
-void displayMe(SerialCommands * sender) {
-  while (!Serial.available()) {
-    spinBase(cw, 360, 1);
-    sender->GetSerial()->println("Keep rollin rollin rollin rollin...");
-  }
-}
-void fast(SerialCommands * sender) {
-  while (!Serial.available()) {
-    spinBase(cw, 360, 100);
-    sender->GetSerial()->println("Keep rollin rollin rollin rollin...");
-  }
-}
+  return value;}
+
 void flipCube() {
+  Serial.println("////// Flipping cube");
   openHand();
   moveArmTo(BOTTOM);
   closeHand();
   moveArmTo(TOP);
+  delay(50);
   dropCubeToBase();
+  openHand();}
+
+void rotateFace(int face, int singleOrDouble) {
+  int direction;   
   openHand();
-}
-void rotateFace(int dir, int deg, int v) {
+  switch(face){
+    case FRONTCW:
+      Serial.println("/////////////// Turning front face clockwise");
+      direction = cw;
+      flipCube();
+      break;
+    case FRONTCCW:
+      Serial.println("/////////////// Turning front face counterclockwise");
+      direction = ccw;
+      flipCube();
+      break;
+    case REARCW:
+      Serial.println("/////////////// Turning rear face clockwise");
+      direction = ccw;
+      spinBaseTwice(ccw, false);        
+      flipCube();
+      break;
+    case REARCCW:
+      Serial.println("/////////////// Turning rear face counterclockwise");
+      direction = cw;
+      spinBaseTwice(cw, false);        
+      flipCube();
+      break;
+    case RIGHTCW:
+      Serial.println("/////////////// Turning right face clockwise");
+      direction = ccw;
+      spinBase(ccw, false);        
+      flipCube();
+      break;
+    case RIGHTCCW:
+      Serial.println("/////////////// Turning right face counterclockwise");
+      direction = ccw;
+      spinBase(cw, false);        
+      flipCube();
+      break;
+    case LEFTCW:
+      Serial.println("/////////////// Turning left face clockwise");
+      direction = cw;
+      spinBase(cw, false);        
+      flipCube();
+      break;
+    case LEFTCCW:
+      Serial.println("/////////////// Turning left face counterclockwise");
+      direction = ccw;
+      spinBase(cw, false);        
+      flipCube();
+      break;
+    case TOPCW:
+      Serial.println("/////////////// Turning top face clockwise");
+      direction = cw;
+      flipCube();
+      flipCube();
+      break;
+    case TOPCCW:
+        Serial.println("/////////////// Turning top face counterclockwise");
+        direction = ccw;
+        flipCube();
+        flipCube();
+        break;
+    case BOTTOMCW:
+        Serial.println("/////////////// Turning bottom face clockwise");
+        direction = cw;
+        break;
+    case BOTTOMCCW:
+        Serial.println("/////////////// Turning bottom face counterclockwise");
+        direction = ccw;
+        break;
+  }
+  moveArmTo(MIDDLE); 
+  closeHand();
+  if(singleOrDouble == 2){
+    spinBaseTwice(direction, true);
+  }else{
+    spinBase(direction, true);
+  }
+
+  openHand();
+  armLocation = MIDDLE;
+  handState   = OPENED;
+  delay(interActionDelay);}
+
+
+
+
+
+void testCorrection(SerialCommands *sender){
   moveArmTo(MIDDLE);
   closeHand();
-  spinBase(dir, deg, v);
-  openHand();
-  armLocation = "middle";
-  handState = "open";
-  delay(interActionDelay);
-}
-void scramble(SerialCommands * sender) {
-  int numScrambles = 0;
-  if(armLocation.equals("unknown state"))
-    homeArmAndHand();
-  while(numScrambles < 13) {
-    int choice = random(0, 3);
-    int randomDirection = random(0, 2);
-    switch (choice) {
-      case 0:
-        Serial.println("//////////////////// Flipping cube");
-        flipCube();
-        break;
-      case 1:
-        Serial.println("//////////////////// Spinning base");
-        spinBase(randomDirection, numDegreesToRotate, spinSpeed);
-        Serial.println("spinning base");
-        break;
-      case 2:
-        Serial.println("//////////////////// rotating face of cube");
-        rotateFace(randomDirection, numDegreesToRotate, spinSpeed);
-        Serial.println("rotating base");
-        numScrambles++;
-        break;
-    }
-  }
-}
-void zenMode(SerialCommands * sender){
-
-  int defaultMoveArmSpeed        = moveArmSpeed;         // get the current speed settings
-  int defaultHandOpenCloseSpeed  = handOpenCloseSpeed;;  
-  int defaultSpinSpeed           = spinSpeed;
-
-  if(armLocation.equals("unknown state") || handState.equals("unknown state") ){
-    homeArmAndHand();
-  }
-
-  moveArmSpeed       =  5; //change these to make Cubert whisper quiet
-  handOpenCloseSpeed   =  1;
-  spinSpeed            = 20;
-
-  while(!Serial.available()) { // scramble until Yoshida stops being a poor lecturer (aka indefinitely)
-    int choice = random(0, 3);
-    int randomDirection = random(0, 2);
-    switch (choice) {
-      case 0:
-        Serial.println("//////////////////// Flipping cube");
-        flipCube();
-        break;
-      case 1:
-        Serial.println("//////////////////// Spinning base");
-        spinBase(randomDirection, numDegreesToRotate, spinSpeed);
-        Serial.println("spinning base");
-        break;
-      case 2:
-        Serial.println("//////////////////// rotating face of cube");
-        rotateFace(randomDirection, numDegreesToRotate, spinSpeed);
-        Serial.println("rotating base");       
-        break;
-    }
-  }
-  moveArmSpeed       = defaultMoveArmSpeed;        // set it back
-  handOpenCloseSpeed = defaultHandOpenCloseSpeed;  // set it back
-  spinSpeed          = defaultSpinSpeed;
-
-}
+  Serial.println("How many degrees to correct?");
+  cubeRotationError = getIntegerFromUser();
+  spinBase(cw, true);
+ }
 void testDistanceToMiddleFromTop(SerialCommands * sender) {
   int value = getIntegerFromUser();
   moveArmTo(TOP);
   for (int i = 0; i < value; i++) {
     moveArm(DOWN);
-  }
-}
+  }}
 void testDistanceToMiddleFromBottom(SerialCommands * sender) {
   int value = getIntegerFromUser();
   moveArmTo(BOTTOM);
   for (int i = 0; i < value; i++) {
     moveArm(UP);
-  }
-}
-void rotateFace(int direction, float degrees, int v) {
-  moveArmTo(MIDDLE);
-  closeHand();
-  spinBase(direction, degrees, v);
+  }}
+void setDistanceToMiddleFromCubeRelease(SerialCommands *sender){
   openHand();
-  armLocation = "middle";
-  handState = "open";
-}
-void testGripDistance(SerialCommands * sender) {
+  moveArmTo(TOP);
+  for(int i = 0; i < cubeDropDistance; i++){
+    moveArm(DOWN);
+  }
+  Serial.println("Please enter how many steps to travel from the dropoff location to the middle of the cube: ");
+  int numSteps = getIntegerFromUser();
+
+  for(int i = 0; i < numSteps; i++){
+    moveArm(DOWN);
+  }
+  Serial.println("Set distance from dropoff to middle");
+  numStepsFromDropoffToMiddle = numSteps; }
+void setInterActionDelay(SerialCommands *sender){
+  Serial.println("Please enter an inter-action delay (ms)");
+  interActionDelay = getIntegerFromUser();}
+void setScrambleAndSolveSpeed(SerialCommands *sender){
+  Serial.println("Please enter the cube spin speed (0 - 120):");
+  spinSpeed  = getIntegerFromUser();
+  Serial.print("Set cube spin speed to "); Serial.println(spinSpeed);
+
+  Serial.println("Please enter the arm move speed (0 - 100):");
+  moveArmSpeed   = getIntegerFromUser();  
+  Serial.print("Set arm speed to "); Serial.println(moveArmSpeed);
+
+  Serial.println("Please enter the hand open/close speed (0 - 100):");
+  handOpenCloseSpeed   = getIntegerFromUser();  
+  Serial.print("Set hand speed to "); Serial.println(handOpenCloseSpeed);}
+
+void setCubeError(SerialCommands *sender){
+  Serial.println("Please set the cube rotation error:");
+  int value = getIntegerFromUser();
+  cubeRotationError = value;}
+
+void setGripDistance(SerialCommands * sender) {
   while (digitalRead(endstop_arm_openLimit_pin) == 1) {
     articulateHand(OPEN);
   }
@@ -418,7 +527,29 @@ void testGripDistance(SerialCommands * sender) {
   for (int i = 0; i < numSteps; i++) {
     articulateHand(CLOSE);
   }
+  gripStrength = numSteps;
+  Serial.print("Set grip strength to ");
+  Serial.println(numSteps);
+  armLocation = UNKNOWN;
+  handState = UNKNOWN;}
+
+void setZenSpeeds(SerialCommands * sender){
+  Serial.println("Please enter the cube spin speed for zen mode (0 - 100):");
+  zenSpinSpeed  = getIntegerFromUser();
+  Serial.print("Set cube spin speed to "); Serial.println(zenSpinSpeed);
+
+  Serial.println("Please enter the arm move speed for zen mode (0 - 100):");
+  zenArmSpeed   = getIntegerFromUser();  
+  Serial.print("Set arm speed to "); Serial.println(zenArmSpeed);
+
+  Serial.println("Please enter the hand open/close speed for zen mode (0 - 100):");
+  zenHandOpenCloseSpeed   = getIntegerFromUser();  
+  Serial.print("Set arm speed to "); Serial.println(zenArmSpeed);}
+void toggleSteppers(SerialCommands *sender){
+  digitalWrite(motors_en_pin,!digitalRead(motors_en_pin));
+  Serial.println("Switched motors state (on/off)");
 }
+
 void speeen(SerialCommands * sender) {
   int startTime = 0;
   openHand();
@@ -434,35 +565,104 @@ void speeen(SerialCommands * sender) {
     Serial.print("Time to spin = ");
     Serial.print(elapsed, DEC);
     Serial.println(" ms.");
-  }
-}
+  }}
+void testMove(SerialCommands *sender){
+  Serial.println("\n\n\n\n\n\n\n\n\n");
+  Serial.println("Which move would you like to try? (1-10)");
+  Serial.println(" 1) Rotate front face clockwise");
+  Serial.println(" 2) Rotate front face counterclockwise");
+  Serial.println(" 3) Rotate rear face clockwise");
+  Serial.println(" 4) Rotate rear face counterclockwise");
+  Serial.println(" 5) Rotate top face clockwise");
+  Serial.println(" 6) Rotate top face counterclockwise");
+  Serial.println(" 7) Rotate left face clockwise");
+  Serial.println(" 8) Rotate left face counterclockwise");
+  Serial.println(" 9) Rotate right face clockwise");
+  Serial.println("10) Rotate right face counterclockwise");
+  Serial.println("11) Rotate bottom face clockwise");
+  Serial.println("12) Rotate bottom face counterclockwise");
 
-//initialize serialCommand functions
-//
-SerialCommand clockwise_("r", clockwise);
-SerialCommand scramble_("scramble", scramble);
-SerialCommand counterClockwise_("l", counterClockwise);
-SerialCommand displayMe_("d", displayMe);
-SerialCommand fast_("f", fast);
-SerialCommand testGripDistance_("t", testGripDistance);
-SerialCommand speeen_("s", speeen);
+  int moveNumber = getIntegerFromUser();
+  rotateFace(moveNumber, 1);}
+
+
+
+void zenMode(SerialCommands *sender){
+  int defaultSpinSpeed          = spinSpeed;
+  int defaultMoveArmSpeed       = moveArmSpeed;        // set the velocity (1-100) that we will raise or lower the arm
+  int defaultHandOpenCloseSpeed = handOpenCloseSpeed;
+  // change to nice slow speeds for zen mode
+  spinSpeed          = zenSpinSpeed;
+  moveArmSpeed       = zenArmSpeed;
+  handOpenCloseSpeed = zenHandOpenCloseSpeed;
+  int lastMove = TOPCW;
+  while(!Serial.available()){
+    int randomNumberOfTurns = random(1,2); //FLAG  
+    int randomMove = random(1,11);
+    rotateFace(randomMove, randomNumberOfTurns);  
+    lastMove = randomMove; //FLAG - this does not actualyl preven the previous move to be cancelled out due to the transformation that occurs to the cube when it is flipped ie topCW for move2
+    //isn't opped by topCCW on move 1
+  }
+
+  //revert to hardcoded default speeds
+  spinSpeed          = defaultSpinSpeed;
+  moveArmSpeed       = defaultMoveArmSpeed;
+  handOpenCloseSpeed = defaultHandOpenCloseSpeed;
+  }
+
+void scramble(SerialCommands * sender) {
+  int lastMove = TOPCW;  
+  int numScrambles = 13;
+  float startTime = millis();
+  for(int i = 0; i < numScrambles; i++){ 
+    int randomNumberOfTurns = random(1,3);    
+    int randomMove = random(1,13);
+    rotateFace(randomMove, randomNumberOfTurns); 
+    Serial.print("Performing ");
+    Serial.print(randomNumberOfTurns);
+    Serial.println(" turns.");
+    lastMove = randomMove;
+  }
+  float elapsed = millis() - startTime;
+  Serial.print("It took "); Serial.print(elapsed/1000);Serial.print(" seconds to perform "); Serial.print(numScrambles);Serial.println(" scrambles."); 
+}//initialize serialCommand functions
+
+SerialCommand setGripDistance_("t", setGripDistance);
 SerialCommand testDistanceToMiddleFromTop_("m", testDistanceToMiddleFromTop);
 SerialCommand testDistanceToMiddleFromBottom_("m2", testDistanceToMiddleFromBottom);
-SerialCommand zenMode_("zen", zenMode);
+SerialCommand setCubeError_("configCube", setCubeError);
+SerialCommand setDistanceToMiddleFromCubeRelease_("d2", setDistanceToMiddleFromCubeRelease);
+SerialCommand setZenSpeeds_("setZen", setZenSpeeds);
+SerialCommand testMove_("testMove", testMove);
+SerialCommand testCorrection_("testCorr", testCorrection);
+SerialCommand toggleSteppers_("tog", toggleSteppers);
+SerialCommand setInterActionDelay_("setD", setInterActionDelay);
+SerialCommand setScrambleAndSolveSpeed_("setSpeed", setScrambleAndSolveSpeed);
+
+SerialCommand speeen_("speeen", speeen);
+SerialCommand zenMode_("zen", zenMode); // zen mode will slowly and infinitely scramble until serial input is received (will finish current move)
+SerialCommand scramble_("scramble", scramble); // scramble will ask the user for a number of moves to scramble for and then perform that many random scrambles
+
 
 void setup() {
   Serial.begin(115200);
   serial_commands_.SetDefaultHandler(cmd_unrecognized);
-  serial_commands_.AddCommand(&clockwise_);
-  serial_commands_.AddCommand(&counterClockwise_);
-  serial_commands_.AddCommand(&displayMe_);
-  serial_commands_.AddCommand(&fast_);
-  serial_commands_.AddCommand(&testGripDistance_);
-  serial_commands_.AddCommand(&speeen_);
+
+  serial_commands_.AddCommand(&setGripDistance_);
   serial_commands_.AddCommand(&testDistanceToMiddleFromTop_);
   serial_commands_.AddCommand(&testDistanceToMiddleFromBottom_);
+  serial_commands_.AddCommand(&setDistanceToMiddleFromCubeRelease_);  
+  serial_commands_.AddCommand(&setCubeError_);
+  serial_commands_.AddCommand(&testMove_); 
+  serial_commands_.AddCommand(&setZenSpeeds_); 
+  serial_commands_.AddCommand(&toggleSteppers_); 
+  serial_commands_.AddCommand(&setInterActionDelay_);
+  serial_commands_.AddCommand(&setScrambleAndSolveSpeed_); 
+
+  serial_commands_.AddCommand(&speeen_);
   serial_commands_.AddCommand(&scramble_);
   serial_commands_.AddCommand(&zenMode_);
+  serial_commands_.AddCommand(&testCorrection_);
 
   // configure motor pins for esp32 wroom
   pinMode(motors_en_pin, OUTPUT);
@@ -482,15 +682,16 @@ void setup() {
   pinMode(endstop_arm_openLimit_pin, INPUT_PULLUP);
   pinMode(endstop_arm_upperLimit_pin, INPUT_PULLUP);
   pinMode(endstop_arm_lowerLimit_pin, INPUT_PULLUP);
-  digitalWrite(motors_en_pin, LOW);
+
+  
+  digitalWrite(motors_en_pin, LOW); // enable steppers
 
   // Start bluetooth
-  SerialBT.begin("ESP32test"); //Bluetooth device name
+  SerialBT.begin("ESP32test2"); //Bluetooth device name
 
   Serial.println("Ready!");
   homeArmAndHand();
 }
-
 void loop() {
   int raise = digitalRead(raiseArmButton);
   int lower = digitalRead(lowerArmButton);
@@ -515,7 +716,7 @@ void loop() {
   }
 
   if (spin == 0) {
-    spinBase(cw, numDegreesToRotate, spinSpeed);
+    spinBase(cw, false);   
   }
 
   serial_commands_.ReadSerial();
@@ -523,7 +724,7 @@ void loop() {
   // Handle bluetooth connection
   if(SerialBT.hasClient() == 0)
   {
-    Serial.println("No client connected");
+    // Serial.println("No client connected");
   }
   else
   {
@@ -538,38 +739,59 @@ void loop() {
       
       // Do command 
       switch (BluetoothIn)
-      {
-        case y:
-          clockwise(NULL);
+      {    
+        case 's':
+          scramble(NULL);
           break;
-          
-        case yp:
-          counterClockwise(NULL);
+        case 'z':
+          zenMode(NULL);
           break;
-
-        case b:
-          clockwise(NULL);
-          break;
-
-        case bp:
-          counterClockwise(NULL);
-          break;
-
-        case xp:
+        case 'r':
           speeen(NULL);
-          SerialBT.write(xp);
           break;
-      }
+        case 't':
+          toggleSteppers(NULL);
+          break;     
 
-      SerialBT.write(OK);
+        // Cubing notation moves
+        case 'b':
+          moveArmTo(MIDDLE); 
+          closeHand();
+          spinBase(cw, true);
+          openHand();
+          break;
+
+        case 'B':
+          moveArmTo(MIDDLE); 
+          closeHand();
+          spinBase(ccw, true);
+          openHand();
+          break;
+
+        case 'y':
+          spinBase(ccw, true);
+          break;
+
+        case 'Y':
+          spinBase(cw, true);
+          break;
+
+        case 'X':
+          flipCube();
+          break;
+
+
+
+        default:
+          if(BluetoothIn != '\r' && BluetoothIn != '\n')
+          {
+            Serial.write("Received unknown bluetooth command: ");
+            Serial.write(BluetoothIn);
+            Serial.println();
+          }
+      }
     }
   }
-  delay(10);
-}
 
-int getDelay(int v) {
-  v = min(v, 120);
-  double x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100;
-  double delayDuration = pow(0.0003 * x, -1) / 10;
-  return round(delayDuration);
+  delay(1);
 }
