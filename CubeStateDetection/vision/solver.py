@@ -64,10 +64,59 @@ def get3x3Solution(imageArray, verbose=False):
 
     return sv.solve(cubeString, 0, 2)
 
+def cubertify(solution, verbose=False):
+    # Get the correct face facing down
+    ORIENTATE = {
+        'D': "",
+        'F': "X",
+        'U': "XX",
+        'B': "YYX",
+        'L': "YX",
+        'R': "yX"
+    }
+
+    SPINS = {
+        '1': "b",
+        '2': "bb",
+        '3': "B"
+    }
+
+    RETURN = {
+        'D': "",
+        'F': "YYXYY",
+        'U': "XX",
+        'B': "YYX",
+        'L': "YYXY",
+        'R': "yyXy"
+    }
+
+    cuberty = ""
+    move = solution[0:3]
+    while move[0] != "(":
+
+        face = move[0]
+        spins = move[1]
+
+        cuberty += ORIENTATE[face]
+        cuberty += SPINS[spins]
+        cuberty += RETURN[face]
+
+        if(verbose):
+            print(f"{move}: {ORIENTATE[face]}{SPINS[spins]}{RETURN[face]}")
+        
+        solution = solution[3:]
+        move = solution[0:3]
+
+    return cuberty
+
 cubeArray = np.array(
     [[3, 5, 1, 1, 4, 4, 3, 5, 5, 5, 2, 0, 2, 2, 0, 4, 0, 2],
     [2, 2, 5, 4, 3, 0, 1, 5, 3, 4, 1, 2, 0, 4, 3, 1, 0, 3],
     [3, 0, 1, 5, 1, 0, 4, 5, 3, 0, 4, 2, 4, 3, 5, 1, 1, 2]])
 
 solution = get3x3Solution(cubeArray)
-print(solution)
+cuberty = cubertify(solution, True)
+
+print()
+print(f"Solution: {solution}")
+print(f"Cubert's solution: {cuberty}")
