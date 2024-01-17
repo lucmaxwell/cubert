@@ -10,12 +10,13 @@ import matplotlib.pyplot as plt
 import urllib.request
 import scipy.stats as stats
 import time
+from vision import getImage
 
-def getImage(url):
-    req = urllib.request.urlopen(url)
-    arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-    img = cv.imdecode(arr, -1) # 'Load it as it is'
-    return img
+# def getImage(url):
+#     req = urllib.request.urlopen(url)
+#     arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
+#     img = cv.imdecode(arr, -1) # 'Load it as it is'
+#     return img
 
 def getAllImages(url, client, useMask):
         # left is from left of image, top is from top of image, height = width
