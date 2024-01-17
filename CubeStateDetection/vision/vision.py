@@ -41,18 +41,18 @@ def xyzToHsv(x, y, z):
     return np.array([hue, sat, val]).T
 
 # Parameters
-useUrl = True
+useUrl = False
 clearOutputDirectory = False
-image = "test2 modified.jpg"
-mask = 'mask.png'
-edgeLength = 3
+image = "0testing.png"
+mask = '0testingMask.png'
+edgeLength = 18
 edgeHeight =3
 numColours = 6
 
 useMask = True
-useAutoMask = False
-maskMin = 50
-maskMax = 230
+useAutoMask = True
+maskMin = 125
+maskMax = 255
 
 # Kind of also parameters but not really
 basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"

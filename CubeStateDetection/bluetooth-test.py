@@ -9,6 +9,7 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import urllib.request
 import scipy.stats as stats
+import time
 
 def getImage(url):
     req = urllib.request.urlopen(url)
@@ -16,11 +17,64 @@ def getImage(url):
     img = cv.imdecode(arr, -1) # 'Load it as it is'
     return img
 
+def getAllImages(url, client, useMask):
+        # left is from left of image, top is from top of image, height = width
+        top = 102
+        left = 250
+        height = 339
+        width = height
+
+        if(useMask):
+            imageMask = cv.imread(maskPath)
+            imageMask = imageMask.astype(np.uint8)
+            imageMask[imageMask != 255] = 0
+            imageMask[imageMask == 255] = 255
+        
+        combinedImage = np.zeros((height, height * 6, 3), np.uint8)
+        combinedMask = np.zeros((height, height * 6, 3), np.uint8)
+
+        for i in range(6):
+            img = getImage(imageUrl)
+            img = img[top:top+height, left:left+width, :]
+
+            if i == 0 or i == 1 or i == 2:
+                client.send(x_)
+            elif i == 3:
+                client.send(y)
+                client.send(x_)
+                client.send(y_)
+            elif i == 4:
+                client.send(x_)
+                client.send(x_)
+
+            combinedImage[0:height, i*height:(i+1)*height, 0:3] = img
+            combinedMask[0:height, i*height:(i+1)*height, 0:3] = imageMask
+            time.sleep(5)
+
+        cv.imwrite(imagesPath + "0testing.png", combinedImage)
+        cv.imwrite(imagesPath + "0testingMask.png", combinedMask)
+
+# Parameters
+useUrl = True
+clearOutputDirectory = False
+image = "test2 modified.jpg"
+mask = 'mask.png'
+edgeLength = 3
+edgeHeight =3
+numColours = 6
+
+useMask = True
+useAutoMask = False
+maskMin = 50
+maskMax = 230
+
 # Kind of also parameters but not really
 basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
 imagesPath = basePath + "images/"
 outPath = basePath + "output/"
 imageUrl = "http://192.168.4.1/capture"
+cube = imagesPath + image
+maskPath = imagesPath + mask
 
 y = b'y'
 y_ = b'Y'
@@ -49,6 +103,7 @@ while True:
             match message:
                 case "start":
                     print(f"Starting imaging sequence")
+                    test = getAllImages(imageUrl, client, True)
                     message = ""
 
                 case _:
