@@ -13,12 +13,6 @@ import time
 import vision
 import solver
 
-# def getImage(url):
-#     req = urllib.request.urlopen(url)
-#     arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-#     img = cv.imdecode(arr, -1) # 'Load it as it is'
-#     return img
-
 def getAllImages(url, client, imageName, maskName, useMask):
         # left is from left of image, top is from top of image, height = width
         top = 102
@@ -35,23 +29,43 @@ def getAllImages(url, client, imageName, maskName, useMask):
         combinedImage = np.zeros((height, height * 6, 3), np.uint8)
         combinedMask = np.zeros((height, height * 6, 3), np.uint8)
 
+        client.setblocking(True)
+
         for i in range(6):
             img = vision.getImage(imageUrl)
             img = img[top:top+height, left:left+width, :]
 
             if i == 0 or i == 1 or i == 2:
                 client.send(x_)
+                expectedAcks = 1
             elif i == 3:
                 client.send(y)
                 client.send(x_)
                 client.send(y_)
+                expectedAcks = 3
             elif i == 4:
                 client.send(x_)
                 client.send(x_)
+                expectedAcks = 2
+            else:
+                expectedAcks = 0
 
             combinedImage[0:height, i*height:(i+1)*height, 0:3] = img
             combinedMask[0:height, i*height:(i+1)*height, 0:3] = imageMask
-            time.sleep(5)
+            # time.sleep(0.1)
+            
+            data = ''
+            ackCount = 0
+            while ackCount < expectedAcks:
+                data = client.recv(1)
+                if(data == b'a'):
+                    ackCount += 1
+                    print(f'ack {ackCount}/{expectedAcks} received')
+
+            print("Cube rotated, waiting 2 seconds")
+            time.sleep(2)
+
+        client.setblocking(False)
 
         cv.imwrite(imagesPath + imageName, combinedImage)
         cv.imwrite(imagesPath + maskName, combinedMask)
@@ -60,7 +74,7 @@ def getAllImages(url, client, imageName, maskName, useMask):
 useUrl = True
 clearOutputDirectory = False
 image = "test2 modified.jpg"
-mask = 'mask.png'
+mask = 'mask2.png'
 edgeLength = 3
 edgeHeight =3
 numColours = 6
@@ -99,7 +113,7 @@ message = ''
 while True:
     if msvcrt.kbhit():
         letter = msvcrt.getch().decode("utf-8")
-        
+
         if letter == "\r":
             print()
             match message:
@@ -109,26 +123,32 @@ while True:
                     imageName = "0testing.png"
                     maskName = "0testingMask.png"
 
+                    # Take images
                     print("Taking images")
                     test = getAllImages(imageUrl, client, imageName, maskName, True)
                     print("Images taken")
+                    
+                    # Find cube state
                     print("Finding cube state")
                     cubeState = vision.getCubeState(imageName, maskName, True)
                     print("Got cube state")
                     print(cubeState)
                     print()
 
+                    # Find cube solution
                     print("Finding solution")
                     solution = solver.get3x3Solution(cubeState)
                     print("Found solution")
                     print(solution)
                     print()
 
+                    # Translate solution
                     print("Translating to cubertish")
                     cubertSolution = solver.cubertify(solution)
                     print("Translated to cubertish")
                     print(cubertSolution)
 
+                    # Send instructions
                     print("Sending instructions")
                     client.send(cubertSolution.encode("utf-8"))
                     print("Instructions sent")
@@ -155,7 +175,7 @@ while True:
 
         if data == OK:
             print("Recieved OK, taking image")
-            img = getImage(imageUrl)
+            img = vision.getImage(imageUrl)
             cv.imwrite(outPath + 'test.png', img)
             print("",end="")
 
