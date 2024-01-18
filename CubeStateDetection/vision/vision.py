@@ -52,8 +52,8 @@ def getCubeState(image, mask, writeOutput=False):
     useCentreCorrection = True
     useMask = True
     useAutoMask = True
-    maskMin = 125
-    maskMax = 255
+    maskMin = 0
+    maskMax = 300
 
     # Kind of also parameters but not really
     basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
@@ -105,8 +105,8 @@ def getCubeState(image, mask, writeOutput=False):
 
     # Mask out the darkest and lightest pixels from the image
     if(useAutoMask):
-        imageMask[hsv[:, :, 2] < maskMin] = np.array([0, 0, 0])
-        imageMask[hsv[:, :, 2] > maskMax] = np.array([0, 0, 0])
+        imageMask[hsv[:, :, 2] <= maskMin] = np.array([0, 0, 0])
+        imageMask[hsv[:, :, 2] >= maskMax] = np.array([0, 0, 0])
 
     inlineMask = imageMask.reshape(height*width, 3) != 0
     maskedPixels = (imageMask[:, :, 0] == 0)
