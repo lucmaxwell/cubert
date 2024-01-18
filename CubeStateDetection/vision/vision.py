@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import urllib.request
 import scipy.stats as stats
 
-def writeImages(colours):
+def writeImages(colours, outPath):
     for i in range(colours.shape[0]):
         cv.imwrite(outPath + f'{i}.png', colours[i])
     return
@@ -40,39 +40,38 @@ def xyzToHsv(x, y, z):
     
     return np.array([hue, sat, val]).T
 
-# Parameters
-useUrl = False
-clearOutputDirectory = False
-image = "0testing.png"
-mask = '0testingMask.png'
-edgeLength = 18
-edgeHeight =3
-numColours = 6
+def getCubeState(image, mask, writeOutput=False): 
+    # Parameters
+    useUrl = False
+    clearOutputDirectory = False
+    edgeLength = 18
+    edgeHeight =3
+    numColours = 6
 
-useMask = True
-useAutoMask = True
-maskMin = 125
-maskMax = 255
+    # writeOutput = False
+    useCentreCorrection = True
+    useMask = True
+    useAutoMask = True
+    maskMin = 125
+    maskMax = 255
 
-# Kind of also parameters but not really
-basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
-imagesPath = basePath + "images/"
-outPath = basePath + "output/"
-imageUrl = "http://192.168.4.1/capture"
-cube = imagesPath + image
-maskPath = imagesPath + mask
+    # Kind of also parameters but not really
+    basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
+    imagesPath = basePath + "images/"
+    outPath = basePath + "output/"
+    imageUrl = "http://192.168.4.1/capture"
+    cube = imagesPath + image
+    maskPath = imagesPath + mask
 
-# Create/clean output folder
-if not os.path.exists(outPath):
-   os.makedirs(outPath)
+    # Create/clean output folder
+    if not os.path.exists(outPath):
+        os.makedirs(outPath)
 
-if clearOutputDirectory:
-    files = glob.glob(outPath + '*')
-    for f in files:
-        os.remove(f)
+    if clearOutputDirectory:
+        files = glob.glob(outPath + '*')
+        for f in files:
+            os.remove(f)
 
-# Change to while for real time processing
-if True:
     # Read in the cube
     if(useUrl):
         img = getImage(imageUrl)
@@ -141,17 +140,24 @@ if True:
     for i in range(0, numColours):
         colours[i] = (labels == i).astype(np.uint8) * 255
         colours[i][maskedPixels] = 0
-    writeImages(colours)
+
+    if writeOutput:
+        writeImages(colours, outPath)
 
     # Solve the cube
     solution = np.zeros((edgeHeight, edgeLength))
     outImage = np.zeros((edgeHeight, edgeLength, 3), dtype='uint8')
     regionsImage = np.zeros((height, width, 3), dtype='uint8')
 
+    # Centre correction requires some tracking
+    if useCentreCorrection:
+        centreCounts = np.zeros((6, 6), dtype=np.int32)
+        centreIndicies = np.array([1, 4, 7, 10, 13, 16])
+
     for i in range(edgeHeight):
         for j in range(edgeLength):
 
-            # Mask off one of the 9 squares on the cube face
+            # Mask off one of the squares on the cube face
             mask = np.zeros((height, width), dtype='uint8')
             mask[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = 255
 
@@ -161,6 +167,12 @@ if True:
             # Find the colour that has the most pixels in that area
             id = stats.mode(labels[mask == 255]).mode
 
+            # Track the centre stats for centre correction
+            if(i == 1 and j in centreIndicies and useCentreCorrection):
+                index = (np.where(centreIndicies == j))[0][0]
+                for k in range(6):
+                    centreCounts[index, k] = (labels[mask == 255] == k).sum()
+
             solution[i][j] = id
             print(f"({i}, {j}): {id}")
             
@@ -168,13 +180,37 @@ if True:
             regionsImage[mask != 0] = [255/edgeHeight * i, 255/edgeLength * j, 255]
             outImage[i, j] = colours_pred[id]
 
+    # Apply the centre correction
+    if(useCentreCorrection):
+        results = np.full(6, -1, dtype=np.int16)
+        for i in range(6):
+            winner = results[0] # There is no do-while loop in python so instead do this to make the while condition always fail
+
+            while winner in results:
+                highest = np.unravel_index(centreCounts.argmax(), centreCounts.shape)
+                centreCounts[highest] = -1
+                centreNum = highest[0]
+                winner = highest[1]
+
+            results[i] = winner
+            centreCounts[highest[0]] = [-1, -1, -1, -1, -1, -1]
+            solution[1][1 + 3*centreNum] = winner
+            outImage[1, 1 + 3*centreNum] = colours_pred[winner]
+
     # Write results
-    print(solution)
-    cv.imwrite(outPath + 'output.png', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
-    cv.imwrite(outPath + 'input.png', img)
-    cv.imwrite(outPath + 'mask.png', imageMask * 255)
-    cv.imwrite(outPath + 'masked.png', img * imageMask)
-    cv.imwrite(outPath + 'maskedRegions.png', regionsImage)
+    if writeOutput:
+        cv.imwrite(outPath + 'output.png', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
+        cv.imwrite(outPath + 'input.png', img)
+        cv.imwrite(outPath + 'mask.png', imageMask * 255)
+        cv.imwrite(outPath + 'masked.png', img * imageMask)
+        cv.imwrite(outPath + 'maskedRegions.png', regionsImage)
+
+    return solution
+
+image = "0testing.png"
+mask = '0testingMask.png'
+solution = getCubeState(image, mask, True)
+print(solution)
 
 # Plot the colours
 # figure = plt.figure()
