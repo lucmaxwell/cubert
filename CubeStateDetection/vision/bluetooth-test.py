@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import urllib.request
 import scipy.stats as stats
 import time
-from vision import getImage
+import vision
+import solver
 
 # def getImage(url):
 #     req = urllib.request.urlopen(url)
@@ -18,7 +19,7 @@ from vision import getImage
 #     img = cv.imdecode(arr, -1) # 'Load it as it is'
 #     return img
 
-def getAllImages(url, client, useMask):
+def getAllImages(url, client, imageName, maskName, useMask):
         # left is from left of image, top is from top of image, height = width
         top = 102
         left = 250
@@ -35,7 +36,7 @@ def getAllImages(url, client, useMask):
         combinedMask = np.zeros((height, height * 6, 3), np.uint8)
 
         for i in range(6):
-            img = getImage(imageUrl)
+            img = vision.getImage(imageUrl)
             img = img[top:top+height, left:left+width, :]
 
             if i == 0 or i == 1 or i == 2:
@@ -52,8 +53,8 @@ def getAllImages(url, client, useMask):
             combinedMask[0:height, i*height:(i+1)*height, 0:3] = imageMask
             time.sleep(5)
 
-        cv.imwrite(imagesPath + "0testing.png", combinedImage)
-        cv.imwrite(imagesPath + "0testingMask.png", combinedMask)
+        cv.imwrite(imagesPath + imageName, combinedImage)
+        cv.imwrite(imagesPath + maskName, combinedMask)
 
 # Parameters
 useUrl = True
@@ -104,7 +105,16 @@ while True:
             match message:
                 case "start":
                     print(f"Starting imaging sequence")
-                    test = getAllImages(imageUrl, client, True)
+                    
+                    imageName = "0testing.png"
+                    maskName = "0testingMask.png"
+
+                    test = getAllImages(imageUrl, client, imageName, maskName, True)
+                    cubeState = vision.getCubeState(imageName, maskName, True)
+                    solution = solver.get3x3Solution(cubeState)
+                    cubertSolution = solver.cubertify(solution)
+
+                    client.send(cubertSolution)
                     message = ""
 
                 case _:
