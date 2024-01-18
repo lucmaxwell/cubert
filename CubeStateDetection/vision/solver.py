@@ -81,15 +81,62 @@ def cubertify(solution, verbose=False):
         '3': "B"
     }
 
-    RETURN = {
-        'D': "",
-        'F': "YYXYY",
-        'U': "XX",
-        'B': "YYX",
-        'L': "YYXY",
-        'R': "yyXy"
-    }
+    TRANSFORM = {
+        'D': {
+            'd': "D",
+            'f': "F",
+            'u': "U",
+            'b': "B",
+            'l': "L",
+            'r': "R"
+        },
 
+        'F': {
+            'd': "B",
+            'f': "D",
+            'u': "F",
+            'b': "U",
+            'l': "L",
+            'r': "R"
+        },
+
+        'U': {
+            'd': "U",
+            'f': "B",
+            'u': "D",
+            'b': "F",
+            'l': "L",
+            'r': "R"
+        },
+
+        'B': {
+            'd': "B",
+            'f': "U",
+            'u': "F",
+            'b': "D",
+            'l': "R",
+            'r': "L"
+        },
+
+        'L': {
+            'd': "B",
+            'f': "R",
+            'u': "F",
+            'b': "L",
+            'l': "D",
+            'r': "U"
+        },
+
+        'R': {
+            'd': "B",
+            'f': "L",
+            'u': "F",
+            'b': "R",
+            'l': "U",
+            'r': "D"
+        }
+    }
+    
     cuberty = ""
     move = solution[0:3]
     while move[0] != "(":
@@ -99,12 +146,15 @@ def cubertify(solution, verbose=False):
 
         cuberty += ORIENTATE[face]
         cuberty += SPINS[spins]
-        cuberty += RETURN[face]
 
         if(verbose):
-            print(f"{move}: {ORIENTATE[face]}{SPINS[spins]}{RETURN[face]}")
+            print(f"{move}: {ORIENTATE[face]}{SPINS[spins]}")
         
         solution = solution[3:]
+        solution = solution.lower()
+        for key, value in TRANSFORM[face].items():
+            solution = solution.replace(key, value)
+
         move = solution[0:3]
 
     return cuberty
