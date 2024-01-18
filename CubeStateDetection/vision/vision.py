@@ -145,7 +145,7 @@ def getCubeState(image, mask, writeOutput=False):
         writeImages(colours, outPath)
 
     # Solve the cube
-    solution = np.zeros((edgeHeight, edgeLength))
+    solution = np.zeros((edgeHeight, edgeLength), dtype=np.uint8)
     outImage = np.zeros((edgeHeight, edgeLength, 3), dtype='uint8')
     regionsImage = np.zeros((height, width, 3), dtype='uint8')
 
@@ -207,10 +207,10 @@ def getCubeState(image, mask, writeOutput=False):
 
     return solution
 
-image = "0testing.png"
-mask = '0testingMask.png'
-solution = getCubeState(image, mask, True)
-print(solution)
+# image = "0testing.png"
+# mask = '0testingMask.png'
+# solution = getCubeState(image, mask, True)
+# print(solution)
 
 # Plot the colours
 # figure = plt.figure()

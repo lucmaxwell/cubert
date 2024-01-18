@@ -109,14 +109,14 @@ def cubertify(solution, verbose=False):
 
     return cuberty
 
-cubeArray = np.array(
-    [[3, 5, 1, 1, 4, 4, 3, 5, 5, 5, 2, 0, 2, 2, 0, 4, 0, 2],
-    [2, 2, 5, 4, 3, 0, 1, 5, 3, 4, 1, 2, 0, 4, 3, 1, 0, 3],
-    [3, 0, 1, 5, 1, 0, 4, 5, 3, 0, 4, 2, 4, 3, 5, 1, 1, 2]])
+# cubeArray = np.array(
+#     [[3, 5, 1, 1, 4, 4, 3, 5, 5, 5, 2, 0, 2, 2, 0, 4, 0, 2],
+#     [2, 2, 5, 4, 3, 0, 1, 5, 3, 4, 1, 2, 0, 4, 3, 1, 0, 3],
+#     [3, 0, 1, 5, 1, 0, 4, 5, 3, 0, 4, 2, 4, 3, 5, 1, 1, 2]])
 
-solution = get3x3Solution(cubeArray)
-cuberty = cubertify(solution, True)
+# solution = get3x3Solution(cubeArray)
+# cuberty = cubertify(solution, True)
 
-print()
-print(f"Solution: {solution}")
-print(f"Cubert's solution: {cuberty}")
+# print()
+# print(f"Solution: {solution}")
+# print(f"Cubert's solution: {cuberty}")

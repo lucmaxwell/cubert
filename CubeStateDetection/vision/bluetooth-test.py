@@ -93,7 +93,7 @@ client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_R
 client.connect(("40:22:D8:EB:2B:3A", 1))    # ESP32test2
 client.setblocking(False)
 
-print("Connected?")
+print("Connected to ESP32 through bluetooth")
 message = ''
 
 while True:
@@ -109,12 +109,29 @@ while True:
                     imageName = "0testing.png"
                     maskName = "0testingMask.png"
 
+                    print("Taking images")
                     test = getAllImages(imageUrl, client, imageName, maskName, True)
+                    print("Images taken")
+                    print("Finding cube state")
                     cubeState = vision.getCubeState(imageName, maskName, True)
-                    solution = solver.get3x3Solution(cubeState)
-                    cubertSolution = solver.cubertify(solution)
+                    print("Got cube state")
+                    print(cubeState)
+                    print()
 
-                    client.send(cubertSolution)
+                    print("Finding solution")
+                    solution = solver.get3x3Solution(cubeState)
+                    print("Found solution")
+                    print(solution)
+                    print()
+
+                    print("Translating to cubertish")
+                    cubertSolution = solver.cubertify(solution)
+                    print("Translated to cubertish")
+                    print(cubertSolution)
+
+                    print("Sending instructions")
+                    client.send(cubertSolution.encode("utf-8"))
+                    print("Instructions sent")
                     message = ""
 
                 case _:
