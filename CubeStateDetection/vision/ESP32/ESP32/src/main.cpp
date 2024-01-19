@@ -170,7 +170,7 @@ void homeLight(){
   float maxCurrent;
   float tempCurrent;
   int lightRingPos = 0;
-  const float SAMPLE_NUM = 19200;  // number of times to sample the current
+  const float SAMPLE_NUM = 1280;  // number of times to sample the current
 
   int stepDelay = getDelay(25);
 
@@ -179,6 +179,11 @@ void homeLight(){
   lightRingINA.powerSave(false);
 
   maxCurrent = lightRingINA.getCurrent_mA();
+
+  Serial.printf("Max Current: %f,\tCurrent Measured: %f\r\n", maxCurrent, maxCurrent);
+  Serial.printf("Light Position: %d,\t\tCurrent Position: %d\r\n", lightRingPos, 0);
+
+  digitalWrite(motors_base_dir_pin, cw);  // set the direction
 
   for(int i = 1; i < SAMPLE_NUM; i++){
     tempCurrent = lightRingINA.getCurrent_mA();
@@ -198,8 +203,22 @@ void homeLight(){
     Serial.printf("Light Position: %d,\t\tCurrent Position: %d\r\n", lightRingPos, i);
   }
 
-  if(lightRingPos < SAMPLE_NUM-1){
+  if(lightRingPos < SAMPLE_NUM/2){
+    digitalWrite(motors_base_dir_pin, cw);
     for(int i = 0; i <= lightRingPos; i++){
+        // spin base
+        for (int i = 0; i < stepsPerSample; i++) {
+          digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+          delayMicroseconds(stepDelay);
+        }
+    }
+  }
+  else if (lightRingPos < SAMPLE_NUM - 1){ // needs some better math
+    digitalWrite(motors_base_dir_pin, ccw);  // set the direction
+
+    // Serial.println("Difference %d", SAMPLE_NUM - lightRingPos);
+
+    for(int i = 0; i < SAMPLE_NUM - lightRingPos; i++){
         // spin base
         for (int i = 0; i < stepsPerSample; i++) {
           digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
@@ -210,6 +229,85 @@ void homeLight(){
 
   lightRingINA.powerSave(true);
 }
+void homeLightv2(){
+  float tempCurrent;
+  // const float thresh = 100;
+  const int SAMPLE_NUM = 256*5;  // number of times to sample the current should be a factor of motor steps
+
+  float samples[SAMPLE_NUM];
+
+  int stepDelay = getDelay(25);
+
+  int stepsPerSample = 19200 / SAMPLE_NUM;
+
+  float gaussian[3] = {1/4, 2/4, 1/4};
+
+  lightRingINA.powerSave(false);
+
+  digitalWrite(motors_base_dir_pin, cw);  // set the direction
+
+  for(int i = 0; i < SAMPLE_NUM; i++){
+
+     samples[i] = 0;
+
+    for(int j = 0; j < 5; j++){
+      tempCurrent = lightRingINA.getCurrent_mA();
+
+      samples[i] += tempCurrent;
+
+      delayMicroseconds(100);
+    }
+
+    samples[i] /= 5;
+
+    // tempCurrent = lightRingINA.getCurrent_mA();
+
+    // spin base
+    for (int i = 0; i < stepsPerSample; i++) {
+      digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+      delayMicroseconds(stepDelay);
+    }
+
+    // samples[i] = tempCurrent;
+
+    // Serial.printf("Max Current: %f,\tCurrent Measured: %f\r\n", maxCurrent, tempCurrent);
+    // Serial.printf("Light Position: %d,\t\tCurrent Position: %d\r\n", lightRingPos, i);
+  }
+
+  Serial.print("[");
+
+  for(int i = 0; i < SAMPLE_NUM; i++){
+    Serial.printf("%f ", samples[i]);
+  }
+
+  Serial.println("]");
+
+
+
+  // if(lightRingPos < SAMPLE_NUM/2-1){
+  //   digitalWrite(motors_base_dir_pin, cw);  // set the direction
+  //   for(int i = 0; i <= lightRingPos; i++){
+  //       // spin base
+  //       for (int i = 0; i < stepsPerSample; i++) {
+  //         digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+  //         delayMicroseconds(stepDelay);
+  //       }
+  //   }
+  // }
+  // else if (lightRingPos < SAMPLE_NUM - 1){
+  //   digitalWrite(motors_base_dir_pin, ccw);  // set the direction
+  //   for(int i = 0; i < lightRingPos; i++){
+  //       // spin base
+  //       for (int i = 0; i < stepsPerSample; i++) {
+  //         digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+  //         delayMicroseconds(stepDelay);
+  //       }
+  //   }
+  // }
+
+  lightRingINA.powerSave(true);
+}
+
 void moveArmTo(int destination) {
   if(!gripperFunctional) 
   {
@@ -543,7 +641,19 @@ void rotateFace(int face, int singleOrDouble) {
   handState   = OPENED;
   delay(interActionDelay);}
 
+void readCurrent(){
+  lightRingINA.powerSave(false);
 
+  float avg = 0;
+
+  for(int i = 0; i < 1000; i++){
+    avg += lightRingINA.getCurrent_mA();
+  }
+
+  avg /= 1000;
+
+  Serial.printf("Current is %fmA\r\n", avg);
+}
 
 void testCorrection(SerialCommands *sender){
   moveArmTo(MIDDLE);
@@ -774,6 +884,7 @@ void setup() {
   homeArmAndHand();
   // centreLight();
   homeLight();
+  // toggleSteppers(NULL);
 }
 void loop() {
   int raise = digitalRead(raiseArmButton);
@@ -878,6 +989,8 @@ void loop() {
       }
     }
   }
+
+  // readCurrent();
 
   delay(1);
 }
