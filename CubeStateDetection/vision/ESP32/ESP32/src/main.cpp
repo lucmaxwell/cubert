@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <SerialCommands.h>
 #include "BluetoothSerial.h"
+#include <Adafruit_INA219.h>
 
 //motor/endstop/current sense pin assignments
 #define motors_en_pin               5      // LOW: Driver enabled. HIGH: Driver disabled
@@ -63,6 +64,9 @@
 BluetoothSerial SerialBT;
 int8_t BluetoothIn;
 
+Adafruit_INA219 lightRingINA; // current sensor
+
+
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth is not enabled, run `make menuconfig` to and enable it
 #endif
@@ -104,6 +108,7 @@ void openHand();
 int getDelay(int v);
 int getIntegerFromUser();
 void articulateHand(int direction);
+void spinBase(int,bool);
 
 char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
@@ -129,6 +134,82 @@ void homeArmAndHand() {
   if(gripperFunctional){
   moveArmTo(homePosition);
   }}
+void centreLight(){
+  float maxCurrent;
+  float tempCurrent;
+  int spinCount = 0;
+
+  lightRingINA.powerSave(false);
+
+  maxCurrent = lightRingINA.getCurrent_mA();
+
+  for(int i = 1; i < 4; i++){
+    spinBase(cw, false);
+
+    tempCurrent = lightRingINA.getCurrent_mA();
+
+    if(tempCurrent > maxCurrent){
+      maxCurrent = tempCurrent;
+      spinCount = i;
+    }
+
+    Serial.printf("Max Current: %f,\tCurrent Measured: %f\r\n", maxCurrent, tempCurrent);
+    Serial.printf("Light Position: %d,\t\tCurrent Position: %d\r\n", spinCount, i);
+
+  }
+
+  if(spinCount < 3){
+    for(int i = 0; i <= spinCount; i++){
+      spinBase(cw,false);
+    }
+  }
+
+  lightRingINA.powerSave(true);
+}
+void homeLight(){
+  float maxCurrent;
+  float tempCurrent;
+  int lightRingPos = 0;
+  const float SAMPLE_NUM = 19200;  // number of times to sample the current
+
+  int stepDelay = getDelay(25);
+
+  float stepsPerSample = 19200 / SAMPLE_NUM;
+
+  lightRingINA.powerSave(false);
+
+  maxCurrent = lightRingINA.getCurrent_mA();
+
+  for(int i = 1; i < SAMPLE_NUM; i++){
+    tempCurrent = lightRingINA.getCurrent_mA();
+
+    // spin base
+    for (int i = 0; i < stepsPerSample; i++) {
+      digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+      delayMicroseconds(stepDelay);
+    }
+
+    if(tempCurrent > maxCurrent){
+      maxCurrent = tempCurrent;
+      lightRingPos = i;
+    }
+
+    Serial.printf("Max Current: %f,\tCurrent Measured: %f\r\n", maxCurrent, tempCurrent);
+    Serial.printf("Light Position: %d,\t\tCurrent Position: %d\r\n", lightRingPos, i);
+  }
+
+  if(lightRingPos < SAMPLE_NUM-1){
+    for(int i = 0; i <= lightRingPos; i++){
+        // spin base
+        for (int i = 0; i < stepsPerSample; i++) {
+          digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+          delayMicroseconds(stepDelay);
+        }
+    }
+  }
+
+  lightRingINA.powerSave(true);
+}
 void moveArmTo(int destination) {
   if(!gripperFunctional) 
   {
@@ -689,8 +770,14 @@ void setup() {
   // Start bluetooth
   SerialBT.begin("ESP32test2"); //Bluetooth device name
 
+  if (! lightRingINA.begin()) {
+    Serial.println("Failed to find Light Ring Curret sensor");
+  }
+
   Serial.println("Ready!");
   homeArmAndHand();
+  // centreLight();
+  homeLight();
 }
 void loop() {
   int raise = digitalRead(raiseArmButton);
