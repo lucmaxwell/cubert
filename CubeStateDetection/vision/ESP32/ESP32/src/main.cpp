@@ -307,6 +307,107 @@ void homeLightv2(){
 
   lightRingINA.powerSave(true);
 }
+void smallScan(){
+  const int STEPS_LR = 19200/360*12;
+
+  float stepDelay = getDelay(100);
+
+  float lightPos = 0;
+  float currVal = 0;
+
+  float samples[2*STEPS_LR + 1];
+
+  int totalSampoles = 1;
+
+  lightRingINA.powerSave(false);
+
+  delay(500);
+
+  for(int j = 0; j < 5; j++){
+    currVal += lightRingINA.getCurrent_mA();
+    delayMicroseconds(200);
+  }
+
+  currVal /= 5;
+
+  samples[STEPS_LR] = currVal;
+
+  digitalWrite(motors_base_dir_pin, cw);
+
+  for(int i = 0; i < STEPS_LR; i++){
+    // spin base
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+    delayMicroseconds(stepDelay);
+  }
+
+  digitalWrite(motors_base_dir_pin, ccw);
+
+  for(int i = 0; i < STEPS_LR; i++){
+    // reset value
+    currVal = 0;
+
+    // spin base
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+    delayMicroseconds(10);
+
+    for(int j = 0; j < 5; j++){
+      currVal += lightRingINA.getCurrent_mA();
+      delayMicroseconds(200);
+    }
+
+    currVal /= 5;
+
+    samples[i] = currVal;
+
+    // lightPos = 
+  }
+
+  // digitalWrite(motors_base_dir_pin, ccw);
+
+  // for(int i = 0; i < STEPS_LR; i++){
+  //   // spin base
+  //   digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+  //   delayMicroseconds(stepDelay);
+  // }
+
+  // for(int i = 0; i < STEPS_LR; i++){
+  //   // reset value
+  //   currVal = 0;
+
+  //   // spin base
+  //   digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+  //   delayMicroseconds(10);
+
+  //   for(int j = 0; j < 5; j++){
+  //     currVal += lightRingINA.getCurrent_mA();
+  //     delayMicroseconds(200);
+  //   }
+
+  //   currVal /= 5;
+
+  //   samples[STEPS_LR+i+1] = currVal;
+
+  //   // lightPos = 
+  // }
+
+  digitalWrite(motors_base_dir_pin, cw);
+
+  for(int i = 0; i < STEPS_LR; i++){
+    // spin base
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
+    delayMicroseconds(stepDelay);
+  }
+
+  Serial.print("[");
+
+  for(int i = 0; i < 2*STEPS_LR+1; i++){
+    Serial.printf("%f ", samples[i]);
+  }
+
+  Serial.println("]");
+
+  lightRingINA.powerSave(true);
+}
 
 void moveArmTo(int destination) {
   if(!gripperFunctional) 
@@ -884,6 +985,7 @@ void setup() {
   homeArmAndHand();
   // centreLight();
   homeLight();
+  // smallScan();
   // toggleSteppers(NULL);
 }
 void loop() {
