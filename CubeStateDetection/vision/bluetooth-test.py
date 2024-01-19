@@ -63,7 +63,8 @@ def getAllImages(url, client, imageName, maskName, useMask):
                     print(f'ack {ackCount}/{expectedAcks} received')
 
             print("Cube rotated, waiting 2 seconds")
-            time.sleep(2)
+            if(i != 5):
+                time.sleep(2)
 
         client.setblocking(False)
 
@@ -117,7 +118,7 @@ while True:
         if letter == "\r":
             print()
             match message:
-                case "start":
+                case "solve":
                     print(f"Starting imaging sequence")
                     
                     imageName = "0testing.png"
@@ -165,7 +166,7 @@ while True:
 
     try:
         data = client.recv(1)
-        print(f"Received: {data}")
+        # print(f"Received: {data}")
 
         # if data == ACK:
         #     msg = random.choice(messages)

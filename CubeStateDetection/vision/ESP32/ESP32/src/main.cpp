@@ -72,17 +72,17 @@ Adafruit_INA219 lightRingINA; // current sensor
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define MAX_SPEED 3.3        // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
-#define MIN_SPEED 0.000001  // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
+#define MIN_SPEED 0.000001   // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 int numStepsToGripOrUngrip      =     100;
-int gripStrength                =     450;
-int moveArmSpeed                =      50;        // set the velocity (1-100) that we will raise or lower the arm
-int handOpenCloseSpeed          =      50;  // set the velocity (1-100) that we will open and close the ha
-int spinSpeed                   =     120;
+int gripStrength                =     600;
+int moveArmSpeed                =      60;        // set the velocity (1-100) that we will raise or lower the arm
+int handOpenCloseSpeed          =      60;  // set the velocity (1-100) that we will open and close the ha
+int spinSpeed                   =     100;
 int interActionDelay            =      10;
-int cubeDropDistance            =     400;
+int cubeDropDistance            =     600;
 int numStepsFromBottomToMiddle  =     800;
-int numStepsFromTopToMiddle     =    1100;
+int numStepsFromTopToMiddle     =    1200;
 int numStepsFromDropoffToMiddle =     700;
 float cubeRotationError         =       4; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
 int homePosition                =  MIDDLE;
@@ -376,7 +376,14 @@ void spinBaseTwice(int my_direction, bool correctionEnabled){
   interActionDelay = defaultInteractionDelay;
   spinBase(my_direction, true);  
   }
-
+float getFloatFromUser(){
+  Serial.println("Please enter a value:");
+  while (!Serial.available()) {}  // wait until the user enters a value
+  float value = Serial.parseFloat();
+  while (Serial.available()) {  // flush the serial input buffer
+    int flush = Serial.read();
+  }
+  return value;}
 void moveArm(int direction) {
   armLocation = UNKNOWN;
   //set the direction that the arm motors spin
@@ -434,7 +441,6 @@ int  getDelay(int v) {
   double x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100;
   double delayDuration = pow(0.0003 * x, -1) / 10;
   return round(delayDuration);}
-
 int  getIntegerFromUser() {
   Serial.println("Please enter a value:");
   while (!Serial.available()) {}  // wait until the user enters a value
@@ -443,7 +449,6 @@ int  getIntegerFromUser() {
     int flush = Serial.read();
   }
   return value;}
-
 void flipCube() {
   Serial.println("////// Flipping cube");
   openHand();
@@ -540,8 +545,6 @@ void rotateFace(int face, int singleOrDouble) {
 
 
 
-
-
 void testCorrection(SerialCommands *sender){
   moveArmTo(MIDDLE);
   closeHand();
@@ -590,12 +593,10 @@ void setScrambleAndSolveSpeed(SerialCommands *sender){
   Serial.println("Please enter the hand open/close speed (0 - 100):");
   handOpenCloseSpeed   = getIntegerFromUser();  
   Serial.print("Set hand speed to "); Serial.println(handOpenCloseSpeed);}
-
 void setCubeError(SerialCommands *sender){
   Serial.println("Please set the cube rotation error:");
-  int value = getIntegerFromUser();
+  float value = getFloatFromUser();
   cubeRotationError = value;}
-
 void setGripDistance(SerialCommands * sender) {
   while (digitalRead(endstop_arm_openLimit_pin) == 1) {
     articulateHand(OPEN);
@@ -613,7 +614,6 @@ void setGripDistance(SerialCommands * sender) {
   Serial.println(numSteps);
   armLocation = UNKNOWN;
   handState = UNKNOWN;}
-
 void setZenSpeeds(SerialCommands * sender){
   Serial.println("Please enter the cube spin speed for zen mode (0 - 100):");
   zenSpinSpeed  = getIntegerFromUser();
@@ -665,9 +665,6 @@ void testMove(SerialCommands *sender){
 
   int moveNumber = getIntegerFromUser();
   rotateFace(moveNumber, 1);}
-
-
-
 void zenMode(SerialCommands *sender){
   int defaultSpinSpeed          = spinSpeed;
   int defaultMoveArmSpeed       = moveArmSpeed;        // set the velocity (1-100) that we will raise or lower the arm
@@ -690,7 +687,6 @@ void zenMode(SerialCommands *sender){
   moveArmSpeed       = defaultMoveArmSpeed;
   handOpenCloseSpeed = defaultHandOpenCloseSpeed;
   }
-
 void scramble(SerialCommands * sender) {
   int lastMove = TOPCW;  
   int numScrambles = 13;
@@ -858,12 +854,12 @@ void loop() {
           break;
 
         case 'y':
-          spinBase(ccw, true);
+          spinBase(ccw, false);
           SerialBT.write(ACK);
           break;
 
         case 'Y':
-          spinBase(cw, true);
+          spinBase(cw, false);
           SerialBT.write(ACK);
           break;
 
