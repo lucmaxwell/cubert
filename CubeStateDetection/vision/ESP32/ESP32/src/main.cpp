@@ -180,8 +180,8 @@ void homeLight(){
 
   maxCurrent = lightRingINA.getCurrent_mA();
 
-  Serial.printf("Max Current: %f,\tCurrent Measured: %f\r\n", maxCurrent, maxCurrent);
-  Serial.printf("Light Position: %d,\t\tCurrent Position: %d\r\n", lightRingPos, 0);
+  // Serial.printf("Max Current: %f,\tCurrent Measured: %f\r\n", maxCurrent, maxCurrent);
+  // Serial.printf("Light Position: %d,\t\tCurrent Position: %d\r\n", lightRingPos, 0);
 
   digitalWrite(motors_base_dir_pin, cw);  // set the direction
 
@@ -315,6 +315,8 @@ void smallScan(){
   float lightPos = 0;
   float currVal = 0;
 
+  int stepDelta = 0;
+
   float samples[2*STEPS_LR + 1];
 
   int totalSampoles = 1;
@@ -334,17 +336,21 @@ void smallScan(){
 
   digitalWrite(motors_base_dir_pin, cw);
 
+  // move to end of scan area
   for(int i = 0; i < STEPS_LR; i++){
     // spin base
     digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
     delayMicroseconds(stepDelay);
+    stepDelta--;
   }
 
   digitalWrite(motors_base_dir_pin, ccw);
 
-  for(int i = 0; i < STEPS_LR; i++){
+  // scan for best loation
+  for(int i = 0; i < STEPS_LR*2+1; i++){
     // reset value
     currVal = 0;
+    stepDelta++;
 
     // spin base
     digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
@@ -358,53 +364,28 @@ void smallScan(){
     currVal /= 5;
 
     samples[i] = currVal;
-
-    // lightPos = 
   }
 
-  // digitalWrite(motors_base_dir_pin, ccw);
-
-  // for(int i = 0; i < STEPS_LR; i++){
-  //   // spin base
-  //   digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
-  //   delayMicroseconds(stepDelay);
-  // }
-
-  // for(int i = 0; i < STEPS_LR; i++){
-  //   // reset value
-  //   currVal = 0;
-
-  //   // spin base
-  //   digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
-  //   delayMicroseconds(10);
-
-  //   for(int j = 0; j < 5; j++){
-  //     currVal += lightRingINA.getCurrent_mA();
-  //     delayMicroseconds(200);
-  //   }
-
-  //   currVal /= 5;
-
-  //   samples[STEPS_LR+i+1] = currVal;
-
-  //   // lightPos = 
-  // }
-
+  // reset location
   digitalWrite(motors_base_dir_pin, cw);
 
-  for(int i = 0; i < STEPS_LR; i++){
+  for(int i = 0; i < STEPS_LR+1; i++){
     // spin base
     digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
     delayMicroseconds(stepDelay);
+    stepDelta--;
   }
 
-  Serial.print("[");
+  // print data (remove later)
+  // Serial.print("[");
 
-  for(int i = 0; i < 2*STEPS_LR+1; i++){
-    Serial.printf("%f ", samples[i]);
-  }
+  // for(int i = 0; i < 2*STEPS_LR+1; i++){
+  //   Serial.printf("%f ", samples[i]);
+  // }
 
-  Serial.println("]");
+  // Serial.println("]");
+
+  Serial.println(stepDelta);
 
   lightRingINA.powerSave(true);
 }
@@ -985,7 +966,7 @@ void setup() {
   homeArmAndHand();
   // centreLight();
   homeLight();
-  // smallScan();
+  smallScan();
   // toggleSteppers(NULL);
 }
 void loop() {
