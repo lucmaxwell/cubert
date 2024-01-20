@@ -305,10 +305,7 @@ def getCubeState(image, mask, writeOutput=False, useOriginalAlgorithm=False):
 
                     # Remove all of this colour at this position if there's been too many
                     if(counts[colour] >= maxCount):
-                        # print("Printing pixel counts")
-                        # print(pixelCounts[position == 1, colour])
                         pixelCounts[position == 1, colour] = np.full(maxCount * 6, -1)
-                        # print(pixelCounts[position == 1, colour])
                 
                 pixelCounts[y, x] = [-1, -1, -1, -1, -1, -1]
                 solution[y, x] = colour
