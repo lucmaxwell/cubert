@@ -109,7 +109,7 @@ class RubiksCubeRobot:
 
 if __name__ == '__main__':
     # GPIO pins
-    BUTTON_PIN = 22
+    BUTTON_PIN = 17
     LIGHT_PIN = 27
 
     # Setup GPIO pins
