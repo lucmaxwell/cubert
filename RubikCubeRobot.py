@@ -154,9 +154,6 @@ class RubiksCubeRobot:
             elif pressed_count == 1 and hold_time >= 2:
                 print("1 pressed 2 hold")
 
-            time.sleep(1)
-
-
 
 if __name__ == '__main__':
     # GPIO pins
