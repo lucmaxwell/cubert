@@ -104,6 +104,7 @@ class RubiksCubeRobot:
         # Get the button pressed
         if self.button.pressed():
             print("Button pressed!")
+            time.sleep(1)
 
 
 if __name__ == '__main__':
