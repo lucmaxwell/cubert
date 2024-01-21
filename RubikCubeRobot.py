@@ -2,8 +2,10 @@ import time
 
 import RPi.GPIO as GPIO
 
+from CubertArm import CubertArm, ArmDirection
 from RubikCube import RubikCube, Face
-from Button import Button
+from Button import CubertButton
+from Motor import CubertMotor
 
 from enum import Enum
 
@@ -16,46 +18,63 @@ class RobotAction(Enum):
     SPIN_CUBE_COUNTERCLOCKWISE = 4
 
 
-class RubiksCubeRobot:
-    def __init__(self, BUTTON_PIN, LIGHT_PIN):
-        self.LIGHT_PIN = LIGHT_PIN
+class ArmPosition(Enum):
+    BOTTOM = 0
+    MIDDLE = 1
+    TOP = 2
+    DROP_OFF = 3
 
-        # Initialize the button
-        self.button = Button(BUTTON_PIN, GPIO.LOW)
+
+
+
+
+class RubiksCubeRobot:
+    # Constants
+    # DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING
+    MAX_SPEED = 3.3
+    MIN_SPEED = 0.000001
+
+    def __init__(self, motors_en_pin, base_motor_pin_list, left_motor_pin_list, right_motor_pin_list, endstop_arm_upper_pin, endstop_arm_lower_pin, manual_button_pin_list, command_button_pin):
+        # Initialize
+        self.base_motor = CubertMotor(motors_en_pin, base_motor_pin_list)
+        self.arm = CubertArm(motors_en_pin, left_motor_pin_list, right_motor_pin_list, endstop_arm_upper_pin, endstop_arm_lower_pin)
+        self.manual_buttons = [CubertButton(pin, GPIO.LOW) for pin in manual_button_pin_list]
+        self.command_button = CubertButton(command_button_pin, GPIO.LOW)
 
         # Initialize the cube's state
         self.cube = RubikCube(3)
         self.action_instruction_list = []
 
     def ai_solve(self):
-        # Create the environment
-        env = RubiksCubeEnv(num_scramble=num_scramble)
-
-        # Scramble the cube
-        original_obs = env.scramble(num_scramble)
-
-        # Solve the puzzle
-        # Allow multiple attempts
-        done = False
-        count = 0
-        while count < 3 and not done:
-            count += 1
-
-            # Solve the cube
-            obs = env.set_observation(original_obs)
-            while not done:
-                # Determine action and take step
-                action, _ = model.predict(obs, deterministic=True)
-                obs, _, done, _, _ = env.step(action)
-
-            # Check if the cube has been solved
-            done = env.is_solved()
-
-            if not multiple_attempts:
-                break
-
-        # Return
-        return done
+        # # Create the environment
+        # env = RubiksCubeEnv(num_scramble=num_scramble)
+        #
+        # # Scramble the cube
+        # original_obs = env.scramble(num_scramble)
+        #
+        # # Solve the puzzle
+        # # Allow multiple attempts
+        # done = False
+        # count = 0
+        # while count < 3 and not done:
+        #     count += 1
+        #
+        #     # Solve the cube
+        #     obs = env.set_observation(original_obs)
+        #     while not done:
+        #         # Determine action and take step
+        #         action, _ = model.predict(obs, deterministic=True)
+        #         obs, _, done, _, _ = env.step(action)
+        #
+        #     # Check if the cube has been solved
+        #     done = env.is_solved()
+        #
+        #     if not multiple_attempts:
+        #         break
+        #
+        # # Return
+        # return done
+        pass
 
     def fake_ai_solve(self):
         pass
@@ -91,12 +110,54 @@ class RubiksCubeRobot:
     def get_robot_intructions(self, solve_instruction_list):
         return []
 
-    def blink_led(self, times, duration=0.5):
-        for _ in range(times):
-            GPIO.output(self.LIGHT_PIN, GPIO.HIGH)
-            time.sleep(duration)
-            GPIO.output(self.LIGHT_PIN, GPIO.LOW)
-            time.sleep(duration)
+    # def spin_base(self, action_direction, correction_enabled=False):
+    #     step_delay = self.get_delay(self.spin_speed)
+    #     degrees_to_rotate = 90
+    #
+    #     if self.arm_location != 'TOP' and self.arm_location != 'MIDDLE' and self.gripper_functional:
+    #         self.open_hand()
+    #         self.move_arm_to('MIDDLE')
+    #
+    #     GPIO.output(self.motors_base_dir_pin, GPIO.HIGH if my_direction == 'cw' else GPIO.LOW)
+    #     steps = int(19200 * degrees_to_rotate / 360)
+    #     for _ in range(steps):
+    #         GPIO.output(self.motors_base_step_pin, GPIO.HIGH)
+    #         time.sleep(step_delay / 1000000.0)  # Convert microseconds to seconds
+    #         GPIO.output(self.motors_base_step_pin, GPIO.LOW)
+    #         time.sleep(step_delay / 1000000.0)
+    #
+    #     time.sleep(self.inter_action_delay)
+    #
+    #     if correction_enabled:
+    #         my_direction = 'ccw' if my_direction == 'cw' else 'cw'
+    #         GPIO.output(self.motors_base_dir_pin, GPIO.HIGH if my_direction == 'cw' else GPIO.LOW)
+    #         self.open_hand()
+    #
+    #         steps = int(19200 * self.cube_rotation_error / 360.0)
+    #         for _ in range(steps):
+    #             GPIO.output(self.motors_base_step_pin, GPIO.HIGH)
+    #             time.sleep(step_delay / 1000000.0)
+    #             GPIO.output(self.motors_base_step_pin, GPIO.LOW)
+    #             time.sleep(step_delay / 1000000.0)
+    #
+    #         time.sleep(self.inter_action_delay)
+
+    def move_arm(self, arm_direction):
+        self.arm.move(arm_direction)
+
+    def action(self, action):
+        # if action == RobotAction.SPIN_BASE_CLOCKWISE:
+        #     self.spin_base(clockwise=True)
+        # elif action == RobotAction.SPIN_BASE_COUNTERCLOCKWISE:
+        #     self.spin_base(clockwise=False)
+        # elif action == RobotAction.GRIP_AND_FLIP:
+        #     self.grip_and_flip()
+        # elif action == RobotAction.SPIN_CUBE_CLOCKWISE:
+        #     self.spin_cube(clockwise=True)
+        # elif action == RobotAction.SPIN_CUBE_COUNTERCLOCKWISE:
+        #     self.spin_cube(clockwise=False)
+        pass
+
 
     def doStuffs(self):
         # Get the button pressed
@@ -149,22 +210,76 @@ class RubiksCubeRobot:
             elif pressed_count == 1 and hold_time >= 2:
                 print("1 pressed 2 hold")
 
+    def test(self):
+        if self.manual_buttons[0].pressed():
+            self.arm.move(ArmDirection.UP)
+        if self.manual_buttons[1].pressed():
+            self.arm.move(ArmDirection.DOWN)
+
 
 if __name__ == '__main__':
+    # Motor and endstop/current sense pin assignments
+    motors_en_pin = 5  # GPIO number for motor enable pin
+    motors_base_step_pin = 2  # GPIO number for base step pin
+    motors_base_dir_pin = 15  # GPIO number for base direction pin
+    motors_arm_left_dir_pin = 0  # GPIO number for arm left direction pin
+    motors_arm_left_step_pin = 4  # GPIO number for arm left step pin
+    motors_arm_right_dir_pin = 16  # GPIO number for arm right direction pin
+    motors_arm_right_step_pin = 17  # GPIO number for arm right step pin
+
+    endstop_hand_openLimit_pin = 18  # GPIO number for arm open limit endstop
+
+    endstop_arm_upperLimit_pin = 23  # GPIO number for arm upper limit endstop
+    endstop_arm_lowerLimit_pin = 19  # GPIO number for arm lower limit endstop
+
+    # Manual button pins
+    raiseArmButton = 33  # GPIO number for raise arm button
+    lowerArmButton = 26  # GPIO number for lower arm button
+    openHandButton = 25  # GPIO number for open hand button
+    closeHandButton = 32  # GPIO number for close hand button
+    spinBaseButton = 27  # GPIO number for spin base button
+
+    # Pin list
+    base_motor_pin_list = [motors_base_step_pin, motors_base_dir_pin]
+    left_motor_pin_list = [motors_arm_left_step_pin, motors_arm_left_dir_pin]
+    right_motor_pin_list = [motors_arm_right_step_pin, motors_arm_right_dir_pin]
+    manual_button_pin_list = [raiseArmButton, lowerArmButton, openHandButton, closeHandButton, spinBaseButton]
+
     # GPIO pins
     BUTTON_PIN = 17
-    LIGHT_PIN = 27
+
+    # GPIO mode
+    GPIO.setmode(GPIO.BCM)
 
     # Setup GPIO pins
-    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(motors_en_pin, GPIO.OUT)
+    GPIO.setup(motors_base_step_pin, GPIO.OUT)
+    GPIO.setup(motors_base_dir_pin, GPIO.OUT)
+    GPIO.setup(motors_arm_left_dir_pin, GPIO.OUT)
+    GPIO.setup(motors_arm_left_step_pin, GPIO.OUT)
+    GPIO.setup(motors_arm_right_dir_pin, GPIO.OUT)
+    GPIO.setup(motors_arm_right_step_pin, GPIO.OUT)
+    GPIO.setup(endstop_hand_openLimit_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(endstop_arm_upperLimit_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(endstop_arm_lowerLimit_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+    # Setup GPIO manual control button pins
+    GPIO.setup(raiseArmButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(lowerArmButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(openHandButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(closeHandButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(spinBaseButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+    # Setup GPIO command button
     GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     # Run
     try:
         print("Running cubert...")
-        robot = RubiksCubeRobot(BUTTON_PIN, LIGHT_PIN)
+        robot = RubiksCubeRobot(motor_pin_list, endstop_pin_list, manual_button_pin_list, BUTTON_PIN)
         while True:
-            robot.doStuffs()
+            # robot.doStuffs()
+            robot.test()
     except KeyboardInterrupt:
         pass
     finally:
