@@ -112,8 +112,6 @@ class RubiksCubeRobot:
                 # Button released
                 if not self.button.pressed():
 
-                    print("Button released")
-
                     # Start the countdown
                     reading_start_time = time.time()
 
@@ -123,8 +121,6 @@ class RubiksCubeRobot:
                 # Button pressed
                 else:
 
-                    print("Button pressed")
-
                     # Start the countdown
                     reading_start_time = time.time()
 
@@ -133,6 +129,9 @@ class RubiksCubeRobot:
 
                 # Update the reading time
                 reading_time = time.time()
+
+            print(f"Exit while loop {pressed_count} {hold_time}")
+
 
             # Solve
             if pressed_count == 1:
