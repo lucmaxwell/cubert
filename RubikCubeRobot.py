@@ -113,7 +113,7 @@ if __name__ == '__main__':
     LIGHT_PIN = 27
 
     # Setup GPIO pins
-    GPIO.setmode(GPIO.BOARD)
+    GPIO.setmode(GPIO.BCM)
     GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     # Run
