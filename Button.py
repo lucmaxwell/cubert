@@ -39,11 +39,3 @@ class Button:
     def pressed_for(self, ms):
         # Check if the button is pressed and has been in that state for the specified time
         return self.pressed() and (time.time() - self.last_debounce_time) > ms / 1000
-
-    def hold_time(self):
-        pressed_and_hold_time = 0
-        if self.pressed():
-            pressed_and_hold_time = time.time() - self.last_debounce_time
-
-        # Return
-        return pressed_and_hold_time
