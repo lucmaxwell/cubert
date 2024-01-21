@@ -3,7 +3,6 @@ import numpy as np
 import os
 import glob
 from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
 import urllib.request
 import scipy.stats as stats
 
@@ -40,28 +39,48 @@ def xyzToHsv(x, y, z):
     
     return np.array([hue, sat, val]).T
 
-def getCubeState(image, mask, writeOutput=False, useOriginalAlgorithm=False): 
+def getBlankMask(height, width=-1):
+    if(width == -1):
+        width = height
+    return np.full((height, width), 1, dtype=np.uint8)
+
+def loadMask(maskPath):
+    imageMask = cv.imread(maskPath)
+    imageMask = imageMask.astype(np.uint8)
+    imageMask[imageMask != 255] = 0
+    imageMask[imageMask == 255] = 1
+    return imageMask
+
+def getAutoMask(rgbCube, min, max):
+    hsvCube = cv.cvtColor(rgbCube, cv.COLOR_BGR2HSV)
+    autoMask = np.full(hsvCube.shape, 1, dtype=np.uint8)
+
+    autoMask[hsvCube[:, :, 2] <= min] = np.array([0, 0, 0])
+    autoMask[hsvCube[:, :, 2] >= max] = np.array([0, 0, 0])
+
+    return autoMask
+
+def loadCube(imagePath):
+    return cv.imread(imagePath)
+    
+def crop(image, y, x, height, width=-1):
+    if(width == -1):
+        width = height
+    
+    return image[y:y+height, x:x+width, :]
+
+def getCubeState(rgbCube, mask, cubeletsVertical, cubeletsHorizontal, writeOutput=False, useOriginalAlgorithm=False, facesInImage=6): 
     # Parameters
-    useUrl = False
     clearOutputDirectory = False
-    edgeLength = 18
-    edgeHeight =3
+    edgeLength = cubeletsHorizontal
+    edgeHeight = cubeletsVertical
     numColours = 6
 
-    # writeOutput = False
     useCentreCorrection = True
-    useMask = True
-    useAutoMask = True
-    maskMin = 0
-    maskMax = 300
 
     # Kind of also parameters but not really
     basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
-    imagesPath = basePath + "images/"
     outPath = basePath + "output/"
-    imageUrl = "http://192.168.4.1/capture"
-    cube = imagesPath + image
-    maskPath = imagesPath + mask
 
     # Create/clean output folder
     if not os.path.exists(outPath):
@@ -72,48 +91,21 @@ def getCubeState(image, mask, writeOutput=False, useOriginalAlgorithm=False):
         for f in files:
             os.remove(f)
 
-    # Read in the cube
-    if(useUrl):
-        img = getImage(imageUrl)
-        
-        # 239 from left, 113 from top, 324x324
-        top = 102
-        left = 250
-        height = 339
-        width = height
+    rgbCube = rgbCube.astype(np.uint8)
+    hsv = cv.cvtColor(rgbCube, cv.COLOR_BGR2HSV)
+    rgb = cv.cvtColor(rgbCube, cv.COLOR_BGR2RGB)
 
-        img = img[top:top+height, left:left+width, :]
-    else:
-        img = cv.imread(cube)
+    height = rgbCube.shape[0]
+    width = rgbCube.shape[1]
 
-    img = img.astype(np.uint8)
-    hsv = cv.cvtColor(img, cv.COLOR_BGR2HSV)
-    rgb = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-
-    height = img.shape[0]
-    width = img.shape[1]
-
-    # Load the mask
-    if(useMask):
-        imageMask = cv.imread(maskPath)
-        imageMask = imageMask.astype(np.uint8)
-        imageMask[imageMask != 255] = 0
-        imageMask[imageMask == 255] = 1
-    else:
-        imageMask = np.copy(img)
-        imageMask[:, :, :] = np.array([1,1,1])
-
-    # Mask out the darkest and lightest pixels from the image
-    if(useAutoMask):
-        imageMask[hsv[:, :, 2] <= maskMin] = np.array([0, 0, 0])
-        imageMask[hsv[:, :, 2] >= maskMax] = np.array([0, 0, 0])
+    imageMask = mask
 
     inlineMask = imageMask.reshape(height*width, 3) != 0
     maskedPixels = (imageMask[:, :, 0] == 0)
 
     # Make lists for clustering
     inlineHsv = hsv.reshape(height*width, 3).astype(np.int32)
-    inlineRgb = rgb.reshape(height*width, 3) / 255
+    # inlineRgb = rgb.reshape(height*width, 3) / 255
 
     # HSV cylinderical to cartesian coordinates transformation
     hue = np.copy(inlineHsv[:, 0]) * np.pi / 180 * 2 # For some reason OpenCV's hue values only go from 0 to 180 so we need to multiply by 2 to get the range 0 to 360
@@ -202,14 +194,6 @@ def getCubeState(image, mask, writeOutput=False, useOriginalAlgorithm=False):
                 solution[1][1 + 3*centreNum] = winner
                 outImage[1, 1 + 3*centreNum] = colours_pred[winner]
 
-        # Write results
-        if writeOutput:
-            cv.imwrite(outPath + 'output.png', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
-            cv.imwrite(outPath + 'input.png', img)
-            cv.imwrite(outPath + 'mask.png', imageMask * 255)
-            cv.imwrite(outPath + 'masked.png', img * imageMask)
-            cv.imwrite(outPath + 'maskedRegions.png', regionsImage)
-
     #############################################
     # Vision V2
     #############################################
@@ -220,8 +204,8 @@ def getCubeState(image, mask, writeOutput=False, useOriginalAlgorithm=False):
         outImage = np.zeros((edgeHeight, edgeLength, 3), dtype='uint8')
         regionsImage = np.zeros((height, width, 3), dtype='uint8')
 
-        # Get the pixel count of all 6 colours for each cubelet
-        pixelCounts = np.zeros((edgeHeight, edgeLength, 6), dtype=np.int32)
+        # Get the pixel count of all numColours colours for each cubelet
+        pixelCounts = np.zeros((edgeHeight, edgeLength, numColours), dtype=np.int32)
         for i in range(edgeHeight):
             for j in range(edgeLength):
 
@@ -233,19 +217,19 @@ def getCubeState(image, mask, writeOutput=False, useOriginalAlgorithm=False):
                 mask[maskedPixels] = 0
 
                 # Track the centre stats for centre correction
-                for k in range(6):
+                for k in range(numColours):
                     pixelCounts[i, j, k] = (labels[mask == 255] == k).sum()
         
         # Total number of centres, corners, and edges on each face of the cube
         maxCentres = 1
         maxCorners = 4
-        maxEdges = edgeHeight * (edgeLength // 6) - maxCentres - maxCorners
+        maxEdges = edgeHeight * (edgeLength // facesInImage) - maxCentres - maxCorners
 
         # These arrays contain the number of cubelets left to be assigned
         # When they reach 0 there are no more cubelets of that colour in that position remaining
-        centreCounts = np.full(6, 0,dtype=np.int32)
-        edgeCounts = np.full(6, 0, dtype=np.int32)
-        cornerCounts = np.full(6, 0, dtype=np.int32)
+        centreCounts = np.zeros(numColours,dtype=np.int32)
+        edgeCounts = np.zeros(numColours, dtype=np.int32)
+        cornerCounts = np.zeros(numColours, dtype=np.int32)
 
         centres = np.zeros((edgeHeight, edgeLength), dtype=np.uint32)
         edges = np.zeros((edgeHeight, edgeLength), dtype=np.uint32)
@@ -305,29 +289,19 @@ def getCubeState(image, mask, writeOutput=False, useOriginalAlgorithm=False):
 
                     # Remove all of this colour at this position if there's been too many
                     if(counts[colour] >= maxCount):
-                        pixelCounts[position == 1, colour] = np.full(maxCount * 6, -1)
+                        pixelCounts[position == 1, colour] = np.full(maxCount * facesInImage, -1)
                 
-                pixelCounts[y, x] = [-1, -1, -1, -1, -1, -1]
+                # Remove this cubelet's pixel counts, save this cubelet's colour
+                pixelCounts[y, x] = np.full(numColours, -1)
                 solution[y, x] = colour
                 outImage[y, x] = colours_pred[colour]                
 
-        # Write results
-        if writeOutput:
-            cv.imwrite(outPath + '2output.png', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
-            cv.imwrite(outPath + '2input.png', img)
-            cv.imwrite(outPath + '2mask.png', imageMask * 255)
-            cv.imwrite(outPath + '2masked.png', img * imageMask)
-            cv.imwrite(outPath + '2maskedRegions.png', regionsImage)
+    # Write results
+    if writeOutput:
+        cv.imwrite(outPath + 'output.png', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
+        cv.imwrite(outPath + 'input.png', rgbCube)
+        cv.imwrite(outPath + 'mask.png', imageMask * 255)
+        cv.imwrite(outPath + 'masked.png', rgbCube * imageMask)
+        cv.imwrite(outPath + 'maskedRegions.png', regionsImage)
 
     return solution
-
-# image = "brunoTest.png"
-# mask = 'maskasdf.png'
-# solution = getCubeState(image, mask, True, useOriginalAlgorithm=True)
-# print(solution)
-
-# Plot the colours
-# figure = plt.figure()
-# axis = figure.add_subplot(1,1,1,projection='3d')
-# axis.scatter(inlineMasked[:, 0], inlineMasked[:, 1], inlineMasked[:, 2], c=inlineRgb[inlineMask].reshape((inlineMasked.size//3, 3)))
-# plt.show()/
