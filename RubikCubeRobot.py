@@ -115,6 +115,9 @@ class RubiksCubeRobot:
             while reading_time - reading_start_time < BUFFER_TIME:
                 # Button pressed
                 if self.button.pressed():
+
+                    print("Button is pressed")
+
                     last_button_state = True
 
                     # Reset the countdown
