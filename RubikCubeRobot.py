@@ -1,6 +1,6 @@
 import time
 
-import GPIO
+import RPi.GPIO as GPIO
 
 from RubikCube import RubikCube, Face
 from Button import Button
