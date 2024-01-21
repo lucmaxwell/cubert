@@ -16,34 +16,14 @@ class RobotAction(Enum):
     SPIN_CUBE_COUNTERCLOCKWISE = 4
 
 
-def get_moves_to_face(target_face):
-    # The robot grib location indicate the bottom
-
-    # The front face will be the bottom where the camera is looking at the cube
-    # Already the front face, no action
-    instructions = []
-    if target_face == Face.Back:
-        instructions.append(RobotAction.GRIP_AND_FLIP)
-        instructions.append(RobotAction.GRIP_AND_FLIP)
-    elif target_face == Face.Right:
-        _rotate_cube_y_clockwise()
-    elif target_face == Face.Left:
-        _rotate_cube_y_counter_clockwise()
-    elif target_face == Face.Top:
-        _rotate_cube_x_clockwise()
-    elif target_face == Face.Bottom:
-        _rotate_cube_x_counter_clockwise()
-
-    # Return
-    return instructions
-
-
 class RubiksCubeRobot:
-    BUTTON_PIN = 17
+    def __init__(self, BUTTON_PIN, LIGHT_PIN):
+        self.LIGHT_PIN = LIGHT_PIN
 
-    def __init__(self):
         # Initialize the button
-        self.button = Button(self.BUTTON_PIN, GPIO.HIGH)
+        self.button = Button(BUTTON_PIN, GPIO.HIGH)
+
+
 
         # Initialize the cube's state
         self.cube = RubikCube(3)
@@ -113,6 +93,13 @@ class RubiksCubeRobot:
     def get_robot_intructions(self, solve_instruction_list):
         return []
 
+    def blink_led(self, times, duration=0.5):
+        for _ in range(times):
+            GPIO.output(self.LIGHT_PIN, GPIO.HIGH)
+            time.sleep(duration)
+            GPIO.output(self.LIGHT_PIN, GPIO.LOW)
+            time.sleep(duration)
+            
     def doStuffs(self):
         # Get the button pressed
         if self.button.pressed():
@@ -161,9 +148,20 @@ class RubiksCubeRobot:
 
 
 if __name__ == '__main__':
+    # GPIO pins
+    BUTTON_PIN = 22
+    LIGHT_PIN = 27
+
     # Setup GPIO pins
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     # Run
-    robot = RubiksCubeRobot()
-    while True:
-        robot.doStuffs()
+    try:
+        robot = RubiksCubeRobot(BUTTON_PIN, LIGHT_PIN)
+        while True:
+            robot.doStuffs()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        GPIO.cleanup()
