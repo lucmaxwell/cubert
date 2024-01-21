@@ -21,7 +21,7 @@ class RubiksCubeRobot:
         self.LIGHT_PIN = LIGHT_PIN
 
         # Initialize the button
-        self.button = Button(BUTTON_PIN, GPIO.HIGH)
+        self.button = Button(BUTTON_PIN, GPIO.LOW)
 
 
 
