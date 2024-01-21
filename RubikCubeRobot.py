@@ -108,30 +108,29 @@ class RubiksCubeRobot:
             pressed_count = 0
 
             # Count the number of pressed or hold time
-            last_button_state = self.button.pressed()
+            last_button_state = True
             BUFFER_TIME = 0.5
             reading_start_time = time.time()
             reading_time = time.time()
             while reading_time - reading_start_time < BUFFER_TIME:
-                current_button_state = self.button.pressed()
-
-                # Button released
-                if not current_button_state:
-                    # Register the press and release
-                    if current_button_state != last_button_state:
-                        pressed_count += 1
-                        last_button_state = current_button_state
-
-                        # Start the countdown
-                        reading_start_time = time.time()
-
                 # Button pressed
-                else:
+                if self.button.pressed():
+                    last_button_state = True
+
                     # Reset the countdown
                     reading_start_time = time.time()
 
                     # Register the hold time
                     hold_time = self.button.hold_time()
+                    
+                # Button released
+                else:
+                    if last_button_state:
+                        pressed_count += 1
+                        last_button_state = False
+
+                        # Start the countdown
+                        reading_start_time = time.time()
 
                 # Update the reading time
                 reading_time = time.time()
