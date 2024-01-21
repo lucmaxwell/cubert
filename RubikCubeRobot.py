@@ -99,52 +99,11 @@ class RubiksCubeRobot:
             time.sleep(duration)
             GPIO.output(self.LIGHT_PIN, GPIO.LOW)
             time.sleep(duration)
-            
+
     def doStuffs(self):
         # Get the button pressed
         if self.button.pressed():
-            hold_time = self.button.hold_time()
-            pressed_count = 0
-
-            # Count the number of pressed or hold time
-            BUFFER_TIME = 0.05
-            reading_start_time = time.time()
-            reading_time = time.time()
-            while reading_time - reading_start_time < BUFFER_TIME:
-                # Button released
-                if not self.button.pressed():
-                    # Start the countdown
-                    reading_start_time = time.time()
-
-                    # Register a press and release
-                    pressed_count += 1
-
-                # Button pressed
-                else:
-                    # Start the countdown
-                    reading_start_time = time.time()
-
-                    # Register the pressed time
-                    hold_time = self.button.hold_time()
-
-                # Update the reading time
-                reading_time = time.time()
-
-            # Solve
-            if pressed_count == 1:
-                pass
-            # Remember scrambled
-            elif pressed_count == 2:
-                pass
-            # Solve to remember scrambled
-            elif pressed_count == 3:
-                pass
-            # Turn off base light
-            elif pressed_count == 1 and 1 <= hold_time < 2:
-                pass
-            # Play victory song
-            elif hold_time >= 2:
-                pass
+            print("Button pressed!")
 
 
 if __name__ == '__main__':
@@ -158,6 +117,7 @@ if __name__ == '__main__':
 
     # Run
     try:
+        print("Running cubert...")
         robot = RubiksCubeRobot(BUTTON_PIN, LIGHT_PIN)
         while True:
             robot.doStuffs()
