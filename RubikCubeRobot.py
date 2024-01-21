@@ -101,6 +101,9 @@ class RubiksCubeRobot:
     def doStuffs(self):
         # Get the button pressed
         if self.button.pressed():
+
+            print("Start button press sequence.")
+
             hold_time = self.button.hold_time()
             pressed_count = 0
 
