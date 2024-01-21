@@ -276,7 +276,7 @@ if __name__ == '__main__':
     # Run
     try:
         print("Running cubert...")
-        robot = RubiksCubeRobot(motor_pin_list, endstop_pin_list, manual_button_pin_list, BUTTON_PIN)
+        robot = RubiksCubeRobot(motors_en_pin, base_motor_pin_list, left_motor_pin_list, right_motor_pin_list, endstop_arm_upperLimit_pin, endstop_arm_lowerLimit_pin, manual_button_pin_list, BUTTON_PIN)
         while True:
             # robot.doStuffs()
             robot.test()
