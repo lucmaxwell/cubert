@@ -104,7 +104,7 @@ class RubiksCubeRobot:
 
             print("Start button press sequence.")
 
-            hold_time = self.button.hold_time()
+            hold_time = 0
             pressed_count = 0
 
             # Count the number of pressed or hold time
