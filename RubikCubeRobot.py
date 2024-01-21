@@ -23,8 +23,6 @@ class RubiksCubeRobot:
         # Initialize the button
         self.button = Button(BUTTON_PIN, GPIO.LOW)
 
-
-
         # Initialize the cube's state
         self.cube = RubikCube(3)
         self.action_instruction_list = []
@@ -103,8 +101,48 @@ class RubiksCubeRobot:
     def doStuffs(self):
         # Get the button pressed
         if self.button.pressed():
-            print("Button pressed!")
-            time.sleep(1)
+            hold_time = self.button.hold_time()
+            pressed_count = 0
+
+            # Count the number of pressed or hold time
+            BUFFER_TIME = 0.05
+            reading_start_time = time.time()
+            reading_time = time.time()
+            while reading_time - reading_start_time < BUFFER_TIME:
+                # Button released
+                if not self.button.pressed():
+                    # Start the countdown
+                    reading_start_time = time.time()
+
+                    # Register a press and release
+                    pressed_count += 1
+
+                # Button pressed
+                else:
+                    # Start the countdown
+                    reading_start_time = time.time()
+
+                    # Register the pressed time
+                    hold_time = self.button.hold_time()
+
+                # Update the reading time
+                reading_time = time.time()
+
+            # Solve
+            if pressed_count == 1:
+                print("1 pressed")
+            # Remember scrambled
+            elif pressed_count == 2:
+                print("2 pressed")
+            # Solve to remember scrambled
+            elif pressed_count == 3:
+                print("3 pressed")
+            # Turn off base light
+            elif pressed_count == 1 and 1 <= hold_time < 2:
+                print("1 pressed 1 hold")
+            # Play victory song
+            elif pressed_count == 1 and hold_time >= 2:
+                print("1 pressed 2 hold")
 
 
 if __name__ == '__main__':
