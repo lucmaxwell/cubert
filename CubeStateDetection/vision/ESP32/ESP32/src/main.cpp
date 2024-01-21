@@ -66,6 +66,11 @@ int8_t BluetoothIn;
 
 Adafruit_INA219 lightRingINA; // current sensor
 
+typedef struct{
+  float*  data;
+  int   length;
+}Array;
+
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth is not enabled, run `make menuconfig` to and enable it
@@ -388,6 +393,68 @@ void smallScan(){
   Serial.println(stepDelta);
 
   lightRingINA.powerSave(true);
+}
+
+Array* movingMedian(float* samples, int length, int windowSize){
+  int arrLength = length / windowSize;
+
+  float median;
+
+  Array* arr = (Array *)malloc(sizeof(Array));
+
+  arr->length = arrLength;
+  arr->data   = (float *)malloc(arrLength*sizeof(float));
+
+  // actually average oops... I'll fix this later
+  for(int i = 0; i < arr->length; i++){
+    // reset median
+    median = 0;
+    for(int j = i*windowSize; j < (i+1)*windowSize; j++){
+      median += samples[j];
+    }
+    median /= windowSize;
+
+    arr->data[i] = median;
+  }
+
+  return arr;
+}
+
+int findLightRing(float* samples, int length){
+  Array* arr = movingMedian(samples, length, 5);
+
+  const float TOL = 0.5;
+
+  int streakStart = 0;
+  int tempStart = 1;
+  int streakLen = 0;
+  int tempLen = 1;
+
+  int lightPos;
+
+  for(int i = 1; i < arr->length; i++){
+    if(abs(arr->data[i] - arr->data[i-1]) < TOL){
+      tempLen++;
+    }
+    else{
+      if(tempLen > streakLen){
+        streakLen = tempLen;
+        streakStart = tempStart;
+      }
+
+      tempStart = i;
+      tempLen = 1;
+    }
+  }
+
+  if(tempLen > streakLen){
+    streakLen = tempLen;
+    streakStart = tempStart;
+  }
+
+  lightPos = 5*(2*streakStart/length + 1);
+
+  return lightPos;
 }
 
 void moveArmTo(int destination) {
