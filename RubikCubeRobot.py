@@ -101,9 +101,6 @@ class RubiksCubeRobot:
     def doStuffs(self):
         # Get the button pressed
         if self.button.pressed():
-
-            print("Start button press sequence.")
-
             hold_time = 0
             pressed_count = 0
 
@@ -124,8 +121,6 @@ class RubiksCubeRobot:
                     # Register the hold time
                     hold_time = reading_time - hold_time_start
 
-                    print(f"Button is pressed {hold_time}")
-                    
                 # Button released
                 else:
                     if last_button_state:
@@ -138,16 +133,14 @@ class RubiksCubeRobot:
                 # Update the reading time
                 reading_time = time.time()
 
-            print(f"Exit while loop {pressed_count} {hold_time}")
-
             # Solve
-            if pressed_count == 1:
+            if pressed_count == 1 and hold_time < 1:
                 print("1 pressed")
             # Remember scrambled
-            elif pressed_count == 2:
+            elif pressed_count == 2 and hold_time < 1:
                 print("2 pressed")
             # Solve to remember scrambled
-            elif pressed_count == 3:
+            elif pressed_count == 3 and hold_time < 1:
                 print("3 pressed")
             # Turn off base light
             elif pressed_count == 1 and 1 <= hold_time < 2:
