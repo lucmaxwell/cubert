@@ -111,6 +111,9 @@ class RubiksCubeRobot:
             while reading_time - reading_start_time < BUFFER_TIME:
                 # Button released
                 if not self.button.pressed():
+
+                    print("Button released")
+
                     # Start the countdown
                     reading_start_time = time.time()
 
@@ -119,6 +122,9 @@ class RubiksCubeRobot:
 
                 # Button pressed
                 else:
+
+                    print("Button pressed")
+
                     # Start the countdown
                     reading_start_time = time.time()
 
@@ -143,6 +149,9 @@ class RubiksCubeRobot:
             # Play victory song
             elif pressed_count == 1 and hold_time >= 2:
                 print("1 pressed 2 hold")
+
+            time.sleep(1)
+
 
 
 if __name__ == '__main__':
