@@ -21,7 +21,7 @@ class RubiksCubeRobot:
         self.LIGHT_PIN = LIGHT_PIN
 
         # Initialize the button
-        self.button = Button(BUTTON_PIN, GPIO.LOW)
+        self.button = Button(BUTTON_PIN, GPIO.HIGH)
 
 
 
@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
     # Setup GPIO pins
     GPIO.setmode(GPIO.BOARD)
-    GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     # Run
     try:
