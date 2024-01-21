@@ -11,7 +11,7 @@ def hello_world():
     return 'Hello World!'
 
 
-# Bluetooth connection with the robot
+# Bluetooth's connection with the robot
 ROBOT_BLUETOOTH_ADDRESS = "40:22:D8:F0:E6:1A"
 ROBOT_BLUETOOTH_PORT = 1
 robot_client = None
@@ -31,7 +31,7 @@ def bluetooth_setup():
 threading.Thread(target=lambda: bluetooth_setup()).start()
 
 
-# Listening to the rubik cube state from robot
+# Listening to the Rubik's Cube state from robot
 def listen_for_cube_state():
     global robot_client
     if robot_client:
