@@ -2,6 +2,8 @@
 #include <SerialCommands.h>
 #include "BluetoothSerial.h"
 #include <Adafruit_INA219.h>
+#include <vector>
+#include <algorithm>
 
 //motor/endstop/current sense pin assignments
 #define motors_en_pin               5      // LOW: Driver enabled. HIGH: Driver disabled
@@ -66,11 +68,6 @@ int8_t BluetoothIn;
 
 Adafruit_INA219 lightRingINA; // current sensor
 
-typedef struct{
-  float*  data;
-  int   length;
-}Array;
-
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth is not enabled, run `make menuconfig` to and enable it
@@ -80,7 +77,7 @@ typedef struct{
 #define MIN_SPEED 0.000001   // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 int numStepsToGripOrUngrip      =     100;
-int gripStrength                =     600;
+int gripStrength                =     350;
 int moveArmSpeed                =      60;        // set the velocity (1-100) that we will raise or lower the arm
 int handOpenCloseSpeed          =      60;  // set the velocity (1-100) that we will open and close the ha
 int spinSpeed                   =     100;
@@ -103,6 +100,8 @@ int handState    = UNKNOWN;
 int armLocation  = UNKNOWN;
 static bool gripperFunctional = true;
 
+#define SMALL_SCAN 1
+
 
 
 void moveArm(int direction);
@@ -114,6 +113,7 @@ int getDelay(int v);
 int getIntegerFromUser();
 void articulateHand(int direction);
 void spinBase(int,bool);
+int findLightRing(std::vector<float> samples, int length, int windowSize);
 
 char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
@@ -204,8 +204,8 @@ void homeLight(){
       lightRingPos = i;
     }
 
-    Serial.printf("Max Current: %f,\tCurrent Measured: %f\r\n", maxCurrent, tempCurrent);
-    Serial.printf("Light Position: %d,\t\tCurrent Position: %d\r\n", lightRingPos, i);
+    // Serial.printf("Max Current: %f,\tCurrent Measured: %f\r\n", maxCurrent, tempCurrent);
+    // Serial.printf("Light Position: %d,\t\tCurrent Position: %d\r\n", lightRingPos, i);
   }
 
   if(lightRingPos < SAMPLE_NUM/2){
@@ -322,9 +322,16 @@ void smallScan(){
 
   int stepDelta = 0;
 
-  float samples[2*STEPS_LR + 1];
+  // float samples[2*STEPS_LR + 1];
 
-  int totalSampoles = 1;
+  const int windowSize = 5;
+
+  std::vector<float> samples;
+  std::vector<float> temp;
+
+  int homeSteps = 0;
+
+  int totalSamples = 1;
 
   lightRingINA.powerSave(false);
 
@@ -337,7 +344,7 @@ void smallScan(){
 
   currVal /= 5;
 
-  samples[STEPS_LR] = currVal;
+  temp.push_back(currVal);
 
   digitalWrite(motors_base_dir_pin, cw);
 
@@ -368,13 +375,27 @@ void smallScan(){
 
     currVal /= 5;
 
-    samples[i] = currVal;
+    temp.push_back(currVal);
+
+    if(temp.size() >= windowSize){
+      std::sort (temp.begin(), temp.end());
+
+      Serial.println(temp[temp.size()/2]);
+
+      samples.push_back(temp[temp.size()/2]);
+
+      temp.clear();
+    }
   }
 
   // reset location
   digitalWrite(motors_base_dir_pin, cw);
 
-  for(int i = 0; i < STEPS_LR+1; i++){
+  homeSteps = findLightRing(samples, 2*STEPS_LR+1, windowSize);
+
+  Serial.printf("\r\nHome Steps: %d\r\n", homeSteps);
+
+  for(int i = 0; i < homeSteps+1; i++){
     // spin base
     digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
     delayMicroseconds(stepDelay);
@@ -390,11 +411,14 @@ void smallScan(){
 
   // Serial.println("]");
 
-  Serial.println(stepDelta);
+  // Serial.println(stepDelta);
+  // Serial.printf("STEPS_LR: %d\r\n", (STEPS_LR*2+1)/windowSize);
+  // Serial.printf("Sample NUM: %d\r\n", samples.size());
 
   lightRingINA.powerSave(true);
 }
 
+/*
 Array* movingMedian(float* samples, int length, int windowSize){
   int arrLength = length / windowSize;
 
@@ -419,40 +443,56 @@ Array* movingMedian(float* samples, int length, int windowSize){
 
   return arr;
 }
+*/
 
-int findLightRing(float* samples, int length){
-  Array* arr = movingMedian(samples, length, 5);
+int findLightRing(std::vector<float> samples, int length, int windowSize){
+  // Array* arr = movingMedian(samples, length, 5);
 
-  const float TOL = 0.5;
+  const float TOL = 3;
 
   int streakStart = 0;
   int tempStart = 1;
   int streakLen = 0;
   int tempLen = 1;
 
+  int maxPos = 0;;
+  float max = samples[0];
+
   int lightPos;
 
-  for(int i = 1; i < arr->length; i++){
-    if(abs(arr->data[i] - arr->data[i-1]) < TOL){
-      tempLen++;
-    }
-    else{
-      if(tempLen > streakLen){
-        streakLen = tempLen;
-        streakStart = tempStart;
-      }
+  for(int i = 1; i < samples.size(); i++){
+    // if(abs(samples[i] - samples[i-1]) < TOL){
+    //   tempLen++;
+    // }
+    // else{
+    //   if(tempLen > streakLen){
+    //     streakLen = tempLen;
+    //     streakStart = tempStart;
+    //   }
 
-      tempStart = i;
-      tempLen = 1;
+    //   tempStart = i;
+    //   tempLen = 1;
+    // }
+
+    if(samples[i] > max){
+      maxPos = i;
+      max = samples[i];
     }
+
   }
 
-  if(tempLen > streakLen){
-    streakLen = tempLen;
-    streakStart = tempStart;
-  }
+  // if(tempLen > streakLen){
+  //   streakLen = tempLen;
+  //   streakStart = tempStart;
+  // }
 
-  lightPos = 5*(2*streakStart/length + 1);
+  // lightPos = 5*(2*streakStart/length + 1);
+  // lightPos = length - windowSize*(streakStart - 1 + streakLen/2);
+  lightPos = (samples.size() - maxPos)*5;
+
+  // Serial.printf("Streak Start: %d, Streak Length: %d\r\n\r\n", streakStart, streakLen);
+
+  Serial.printf("Light Posisition: %f\r\n", lightPos);
 
   return lightPos;
 }
@@ -795,11 +835,11 @@ void readCurrent(){
 
   float avg = 0;
 
-  for(int i = 0; i < 1000; i++){
+  for(int i = 0; i < 5; i++){
     avg += lightRingINA.getCurrent_mA();
   }
 
-  avg /= 1000;
+  avg /= 5;
 
   Serial.printf("Current is %fmA\r\n", avg);
 }
@@ -1033,7 +1073,7 @@ void setup() {
   homeArmAndHand();
   // centreLight();
   homeLight();
-  smallScan();
+  for(int i = 0; i < SMALL_SCAN; i++)  smallScan();
   // toggleSteppers(NULL);
 }
 void loop() {
