@@ -12,10 +12,6 @@ class CubertButton:
         self.last_reading_state = not self.active_state
         self.last_debounce_time = 0
 
-        # Setup the GPIO pin
-        # GPIO.setmode(GPIO.BCM)
-        # GPIO.setup(self.pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN if active_state else GPIO.PUD_UP)
-
     def read_button(self):
         # Read the state of the button
         reading_state = GPIO.input(self.pin)
