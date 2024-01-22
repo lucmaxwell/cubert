@@ -102,7 +102,7 @@ def solve(imageUrl, maskPath="", loadFromDisk=False, writeImages=False):
     
     # Find cube state
     print("Finding cube state")
-    cubeState = vision.getCubeState(cube, mask, 3, 18, True)
+    cubeState, outImage = vision.getCubeState(cube, mask, 3, 18, True)
     print("Got cube state")
     print(cubeState)
     print()
