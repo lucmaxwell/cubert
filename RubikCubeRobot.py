@@ -3,6 +3,7 @@ import time
 import RPi.GPIO as GPIO
 
 from CubertArm import CubertArm, ArmDirection
+from CubertVision import CubertVision
 from RubikCube import RubikCube, Face
 from Button import CubertButton
 from Motor import CubertMotor
@@ -40,6 +41,9 @@ class RubiksCubeRobot:
         self.arm = CubertArm(motors_en_pin, left_motor_pin_list, right_motor_pin_list, endstop_arm_upper_pin, endstop_arm_lower_pin)
         self.manual_buttons = [CubertButton(pin, GPIO.LOW) for pin in manual_button_pin_list]
         self.command_button = CubertButton(command_button_pin, GPIO.LOW)
+
+        # Vision
+        self.vision = CubertVision()
 
         # Initialize the cube's state
         self.cube = RubikCube(3)
@@ -211,6 +215,11 @@ class RubiksCubeRobot:
                 print("1 pressed 2 hold")
 
     def test(self):
+
+        # Custom
+        if self.command_button.pressed():
+            self.vision.capture()
+
         if self.manual_buttons[0].pressed():
             self.arm.move(ArmDirection.UP)
         if self.manual_buttons[1].pressed():
