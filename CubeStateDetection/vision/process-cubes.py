@@ -18,15 +18,15 @@ while(os.path.exists(cubeFolder + name)):
     num += 1
     name = f"cube{num}.png"
 
-combinedMask = vision.loadMask(maskPath)
+mask = vision.loadMask(maskPath)
 
 for i in range(num):
     cubePath = cubeFolder + f"cube{i}.png"
     cube = vision.loadCube(cubePath)
     # autoMask = vision.getAutoMask(cube, 75, 512)
     # combinedMask = mask * autoMask
-    
+    combinedMask = mask
 
     solution, outImage = vision.getCubeState(cube, combinedMask, 3, 18, True)
-    cv.imwrite(cubeFolder + f"solution{i}.png", outImage)
+    cv.imwrite(cubeFolder + f"solution{i}.jpg", outImage)
     print(f"{i}: done")
