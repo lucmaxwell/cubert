@@ -1,14 +1,8 @@
 import socket
 import msvcrt
-# import random
 import cv2 as cv
 import numpy as np
 import os
-# import glob
-# from sklearn.cluster import KMeans
-# import matplotlib.pyplot as plt
-# import urllib.request
-# import scipy.stats as stats
 import time
 import vision
 import solver
@@ -27,65 +21,63 @@ imageUrl = "http://192.168.4.1/capture"
 mask = 'mask2.png'
 maskPath = imagesPath + mask
 
-def getAllImages(imageUrl, client, maskPath=""):
-        # left is from left of image, top is from top of image, height = width
-        top = 102
-        left = 250
-        height = 339
+def getAllImages(imageUrl, client, maskPath="", writeConsole=False):
+    # left is from left of image, top is from top of image, height = width
+    top = 102
+    left = 250
+    height = 339
 
-        if(maskPath != ""):
-            imageMask = vision.loadMask(maskPath)
+    if(maskPath != ""):
+        imageMask = vision.loadMask(maskPath)
+    else:
+        imageMask = vision.getBlankMask(height)
+
+    combinedImage = np.zeros((height, height * 6, 3), np.uint8)
+    combinedMask = np.zeros((height, height * 6, 3), np.uint8)
+
+    for i in range(6):
+        img = vision.getImage(imageUrl)
+        img = vision.crop(img, top, left, height)
+
+        if i == 0 or i == 1 or i == 2:
+            client.send(x_)
+            expectedAcks = 1
+        elif i == 3:
+            client.send(y)
+            client.send(x_)
+            client.send(y_)
+            expectedAcks = 3
+        elif i == 4:
+            client.send(x_)
+            client.send(x_)
+            expectedAcks = 2
         else:
-            imageMask = vision.getBlankMask(height)
+            expectedAcks = 0
 
-        combinedImage = np.zeros((height, height * 6, 3), np.uint8)
-        combinedMask = np.zeros((height, height * 6, 3), np.uint8)
+        combinedImage[0:height, i*height:(i+1)*height, 0:3] = img
+        combinedMask[0:height, i*height:(i+1)*height, 0:3] = imageMask
+        
+        waitForAcks(client, expectedAcks, writeConsole)
 
-        client.setblocking(True)
-
-        for i in range(6):
-            img = vision.getImage(imageUrl)
-            img = vision.crop(img, top, left, height)
-
-            if i == 0 or i == 1 or i == 2:
-                client.send(x_)
-                expectedAcks = 1
-            elif i == 3:
-                client.send(y)
-                client.send(x_)
-                client.send(y_)
-                expectedAcks = 3
-            elif i == 4:
-                client.send(x_)
-                client.send(x_)
-                expectedAcks = 2
-            else:
-                expectedAcks = 0
-
-            combinedImage[0:height, i*height:(i+1)*height, 0:3] = img
-            combinedMask[0:height, i*height:(i+1)*height, 0:3] = imageMask
-            
-            data = ''
-            ackCount = 0
-            while ackCount < expectedAcks:
-                data = client.recv(1)
-                if(data == b'a'):
-                    ackCount += 1
-                    print(f'ack {ackCount}/{expectedAcks} received')
-
+        if(writeConsole):
             print("Cube rotated, waiting 2 seconds for camera to stabilize")
-            if(i != 5):
-                time.sleep(2)
 
-        client.setblocking(False)
+        if(i != 5):
+            time.sleep(2)
 
-        return combinedImage, combinedMask
+    return combinedImage, combinedMask
 
-def send(client, message):
-    client.send(message.encode("utf-8"))
-    print(f"Sent '{message}'")
+def send(client, message, writeConsole=True):
+    try:
+        message = message.encode("utf-8")
+    except:
+        print("", end='')
 
-def solve(maskPath="", loadFromDisk=False, writeImages=False):
+    client.send(message)
+    if(writeConsole):
+        print(f"Sent: {message}")
+
+def solve(imageUrl, maskPath="", loadFromDisk=False, writeImages=False):
     
     imageName = "0testing.png"
     maskName = "0testingMask.png"
@@ -95,7 +87,7 @@ def solve(maskPath="", loadFromDisk=False, writeImages=False):
     # Take images
     print("Taking images")
     if( not loadFromDisk):
-        cube, mask = getAllImages(imageUrl, client, maskPath)
+        cube, mask = getAllImages(imageUrl, client, maskPath, True)
     else:
         cube = vision.loadCube(imagesPath + imageName)
         mask = vision.loadMask(imagesPath + maskName)
@@ -139,6 +131,67 @@ def solve(maskPath="", loadFromDisk=False, writeImages=False):
     send(client, cubertSolution)
     print("Instructions sent")
 
+def captureCube(imageUrl, client, cubesFolder):
+    cube, mask = getAllImages(imageUrl, client)
+    num = 0
+    name = f"cube{num}.png"
+    while(os.path.exists(cubesFolder + name)):
+        num += 1
+        name = f"cube{num}.png"
+    cv.imwrite(cubesFolder + name, cube)
+
+def enableLights(imageUrl, client, writeConsole=False):
+
+    expectedAcks = 1
+
+    lights = np.zeros(4)
+
+    # Find the orientation with the highest lightness
+    for i in range(4):
+        img = vision.getImage(imageUrl)
+        average = np.average(img)
+        lights[i] = average
+        send(client, y, writeConsole)
+
+        waitForAcks(client, expectedAcks, writeConsole)
+
+        if(i < 4):
+            time.sleep(0.25)
+
+    # Spin to the lightest side
+    spin = lights.argmax()
+    if(spin == 1):
+        send(client, y, writeConsole)
+    elif(spin == 2):
+        send(client, y, writeConsole)
+        send(client, y, writeConsole)
+    elif(spin == 3):
+        send(client, y_, writeConsole)
+
+def waitForAcks(client, expectedAcks, writeConsole=False):
+    emptySocket(client)
+    client.setblocking(True)
+
+    ackCount = 0
+    while ackCount < expectedAcks:
+        data = client.recv(1)
+        if(data == ACK):
+            ackCount += 1
+            if(writeConsole):
+                print(f'ack {ackCount}/{expectedAcks} received')
+
+    client.setblocking(False)
+
+def emptySocket(client, writeConsole=False):
+    data = ""
+    try:
+        while True:
+            data += client.recv(1)
+    except:
+        if(writeConsole):
+            print(f"Emptied socket: {data}")
+
+
 client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 # client.connect(("40:22:D8:F0:E6:1A", 1))    # ESP32test
 client.connect(("40:22:D8:EB:2B:3A", 1))    # ESP32test2
@@ -155,15 +208,47 @@ while True:
             print()
             match message:
                 case "solve":
-                    solve(maskPath)
+                    solve(imageUrl, maskPath)
 
                 case "disk":
-                    solve(maskPath, True, True)
+                    solve(imageUrl, maskPath, True, True)
+
+                case "cap":
+                    captureCube(imageUrl, client, imagesPath + "cubes/")
+
+                case "data":
+                    letter = ""
+                    num = 1
+                    while letter != "\r":
+                        print(f"{num}: Waiting for scramble")
+                        send(client, "s", False)
+                        waitForAcks(client, 1, True)
+                        print(f"{num}: Cube scrambled")
+                        time.sleep(2)
+
+                        print(f"{num}: enabling lights")
+                        enableLights(imageUrl, client)
+                        print(f"{num}: enabled lights")
+                        time.sleep(2)
+
+                        print(f"{num}: capturing cube")
+                        captureCube(imageUrl, client, imagesPath + "cubes/")
+                        print(f"{num}: cube captured")
+                        time.sleep(1)
+
+                        num += 1
+
+                        if msvcrt.kbhit():
+                            letter = msvcrt.getch().decode("utf-8")
+                        
+                case "l":
+                    enableLights(imageUrl, client)
 
                 case _:
-                    send(client, message)
-                    message = ""
-            
+                    if message != "":
+                        send(client, message)
+            print(f"\n{message}: Command completed, ready for next command")
+            message = ""
         else: 
             message += letter
             print(letter, end="")

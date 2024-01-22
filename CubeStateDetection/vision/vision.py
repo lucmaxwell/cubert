@@ -42,7 +42,7 @@ def xyzToHsv(x, y, z):
 def getBlankMask(height, width=-1):
     if(width == -1):
         width = height
-    return np.full((height, width), 1, dtype=np.uint8)
+    return np.full((height, width, 3), 1, dtype=np.uint8)
 
 def loadMask(maskPath):
     imageMask = cv.imread(maskPath)
