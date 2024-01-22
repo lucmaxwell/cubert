@@ -201,7 +201,12 @@ def getCubeState(rgbCube, mask, cubeletsVertical, cubeletsHorizontal, writeOutpu
     else:
         # Solve the cube
         solution = np.zeros((edgeHeight, edgeLength), dtype=np.uint8)
-        outImage = np.zeros((edgeHeight, edgeLength, 3), dtype='uint8')
+        # outImage = np.zeros((edgeHeight, edgeLength, 3), dtype='uint8')
+
+        outOffset = hsv.shape[0]
+        outImage = np.zeros((hsv.shape[0] * 2, hsv.shape[1], hsv.shape[2]), dtype='uint8')
+        outImage[0:outOffset, 0:] = hsv
+
         regionsImage = np.zeros((height, width, 3), dtype='uint8')
 
         # Get the pixel count of all numColours colours for each cubelet
@@ -294,7 +299,8 @@ def getCubeState(rgbCube, mask, cubeletsVertical, cubeletsHorizontal, writeOutpu
                 # Remove this cubelet's pixel counts, save this cubelet's colour
                 pixelCounts[y, x] = np.full(numColours, -1)
                 solution[y, x] = colour
-                outImage[y, x] = colours_pred[colour]                
+                # outImage[y, x] = colours_pred[colour]                
+                outImage[outOffset + y*(hsv.shape[0] // cubeletsVertical):outOffset + (y+1)*(hsv.shape[0] // cubeletsVertical), x * (hsv.shape[1] // cubeletsHorizontal): (x+1) * (hsv.shape[1] // cubeletsHorizontal)] = colours_pred[colour]                
 
     # Write results
     if writeOutput:
@@ -304,4 +310,5 @@ def getCubeState(rgbCube, mask, cubeletsVertical, cubeletsHorizontal, writeOutpu
         cv.imwrite(outPath + 'masked.png', rgbCube * imageMask)
         cv.imwrite(outPath + 'maskedRegions.png', regionsImage)
 
-    return solution
+    outImage = cv.cvtColor(outImage, cv.COLOR_HSV2BGR)
+    return solution, outImage
