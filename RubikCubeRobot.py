@@ -265,9 +265,11 @@ class RubiksCubeRobot:
         #     self.vision.capture()
 
         if self.manual_buttons[0].pressed():
-            self.arm.move(ArmDirection.UP, self.arm_speed)
+            print("Hand up.")
+            #self.arm.move(ArmDirection.UP, self.arm_speed)
         if self.manual_buttons[1].pressed():
-            self.arm.move(ArmDirection.DOWN, self.arm_speed)
+            print("Hand down.")
+            #self.arm.move(ArmDirection.DOWN, self.arm_speed)
 
         if self.command_button.pressed():
             print("Command button is pressed!")
