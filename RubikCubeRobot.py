@@ -163,7 +163,14 @@ class RubiksCubeRobot:
     #
     #         time.sleep(self.inter_action_delay)
 
-    def spin_base(self, direction):
+    def spin_cube(self, direction):
+        # Move arm to the middle
+        self.arm.move_arm_to(ArmPosition.MIDDLE, self.arm_speed)
+
+        # Grip the cube
+        self.arm.close_hand(self.hand_open_close_speed)
+
+        # Spin the base
         # With respect to the cube face
         # Then it means that the motor has to spin to opposite because of the gear
         if direction == MotorSpin.CLOCKWISE:
@@ -195,9 +202,9 @@ class RubiksCubeRobot:
         elif action == RobotAction.GRIP_AND_FLIP:
             self.grip_and_flip()
         elif action == RobotAction.SPIN_CUBE_CLOCKWISE:
-            self.spin_cube(clockwise=True)
+            self.spin_cube(MotorSpin.CLOCKWISE)
         elif action == RobotAction.SPIN_CUBE_COUNTERCLOCKWISE:
-            self.spin_cube(clockwise=False)
+            self.spin_cube(MotorSpin.COUNTER_CLOCKWISE)
 
 
     def doStuffs(self):
@@ -268,20 +275,20 @@ if __name__ == '__main__':
     motors_en_pin = 5  # GPIO number for motor enable pin
     motors_base_step_pin = 2  # GPIO number for base step pin
     motors_base_dir_pin = 15  # GPIO number for base direction pin
-    motors_arm_left_dir_pin = 0  # GPIO number for arm left direction pin
-    motors_arm_left_step_pin = 4  # GPIO number for arm left step pin
+    motors_arm_left_dir_pin = 25  # GPIO number for arm left direction pin
+    motors_arm_left_step_pin = 12  # GPIO number for arm left step pin
     motors_arm_right_dir_pin = 16  # GPIO number for arm right direction pin
     motors_arm_right_step_pin = 17  # GPIO number for arm right step pin
 
     # End stop for arm
     end_stop_hand_open_pin = 18  # GPIO number for arm open limit end stop
-    end_stop_arm_upperLimit_pin = 23  # GPIO number for arm upper limit end stop
+    end_stop_arm_upperLimit_pin = 26  # GPIO number for arm upper limit end stop
     end_stop_arm_lowerLimit_pin = 19  # GPIO number for arm lower limit end stop
 
     # Manual button pins
-    raiseArmButton = 33  # GPIO number for raise arm button
-    lowerArmButton = 26  # GPIO number for lower arm button
-    openHandButton = 25  # GPIO number for open hand button
+    raiseArmButton = 23  # GPIO number for raise arm button
+    lowerArmButton = 24  # GPIO number for lower arm button
+    openHandButton = 28  # GPIO number for open hand button
     closeHandButton = 32  # GPIO number for close hand button
     spinBaseButton = 27  # GPIO number for spin base button
 
