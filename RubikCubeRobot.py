@@ -33,7 +33,7 @@ class RubiksCubeRobot:
     MAX_SPEED = 3.3
     MIN_SPEED = 0.000001
 
-    def __init__(self, motors_en_pin, base_motor_pin_list, left_motor_pin_list, right_motor_pin_list, end_stop_arm_pin_list, manual_button_pin_list, command_button_pin):
+    def __init__(self, command_button_pin):
         # Parameters
         self.zen_mode = False
         self.arm_speed = ARM_SPEED
@@ -269,6 +269,9 @@ class RubiksCubeRobot:
         if self.manual_buttons[1].pressed():
             self.arm.move(ArmDirection.DOWN, self.arm_speed)
 
+        if self.command_button.pressed():
+            print("Command button is pressed!")
+
 
 if __name__ == '__main__':
     # Motor pins
@@ -330,9 +333,7 @@ if __name__ == '__main__':
     # Run
     try:
         print("Running cubert...")
-        robot = RubiksCubeRobot(
-            motors_en_pin, base_motor_pin_list, left_motor_pin_list, right_motor_pin_list, end_stop_arm_pin_list,
-            manual_button_pin_list, BUTTON_PIN)
+        robot = RubiksCubeRobot(BUTTON_PIN)
         while True:
             # robot.doStuffs()
             robot.test()
