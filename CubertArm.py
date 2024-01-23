@@ -43,6 +43,8 @@ class CubertArm:
         self.end_stop_arm_lower_limit = CubertButton(end_stop_arm_pin_list[1], GPIO.LOW)
         self.end_stop_hand_open_limit = CubertButton(end_stop_arm_pin_list[2], GPIO.LOW)
 
+        self.arm_position = ArmPosition.MIDDLE
+
         # # Ensure that the hand is open
         # self.open_hand(60)
         #
