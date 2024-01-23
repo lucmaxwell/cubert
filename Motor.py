@@ -34,8 +34,7 @@ class CubertMotor:
 
     def step(self, steps, direction, move_speed, correction_enable=False):
         # Write the spin direction
-        GPIO.output(self.dir_pin, GPIO.LOW)
-        #GPIO.LOW if direction == MotorSpin.CLOCKWISE else GPIO.HIGH
+        GPIO.output(self.dir_pin, GPIO.LOW if direction == MotorSpin.CLOCKWISE else GPIO.HIGH)
 
         # Calculate the delay time of the pulse
         stepDelay = get_step_delay(move_speed)
