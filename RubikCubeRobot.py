@@ -270,7 +270,7 @@ class RubiksCubeRobot:
             self.arm.move(ArmDirection.DOWN, self.arm_speed)
 
          if self.command_button.pressed():
-                    print("Command button is pressed!")
+            print("Command button is pressed!")
 
 
 if __name__ == '__main__':
