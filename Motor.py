@@ -66,7 +66,7 @@ if __name__ == '__main__':
     print("Running motor...")
     try:
         while True:
-            motor.step(1, MotorSpin.CLOCKWISE, 60)
+            motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
     except KeyboardInterrupt:
         pass
     finally:
