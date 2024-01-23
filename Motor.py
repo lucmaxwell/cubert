@@ -64,5 +64,10 @@ if __name__ == '__main__':
 
     # Spin
     print("Running motor...")
-    while True:
-        motor.step(1, MotorSpin.CLOCKWISE, 60)
+    try:
+        while True:
+            motor.step(1, MotorSpin.CLOCKWISE, 60)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        GPIO.cleanup()
