@@ -22,9 +22,9 @@ def get_step_delay(velocity):
 
 class CubertMotor:
     def __init__(self, enable_pin, pin_list):
+        self.enable_pin = enable_pin
         self.step_pin = pin_list[0]
         self.dir_pin = pin_list[1]
-        self.enable_pin = enable_pin
 
     def enable(self):
         GPIO.output(self.enable_pin, GPIO.LOW)
@@ -45,3 +45,23 @@ class CubertMotor:
             time.sleep(stepDelay)
             GPIO.output(self.step_pin, GPIO.LOW)
             time.sleep(stepDelay)
+
+
+if __name__ == '__main__':
+    motor_en_pin = 5
+    motor_step_pin = 27
+    motor_dir_pin = 22
+
+    # GPIO
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(motor_en_pin, GPIO.OUT)
+    GPIO.setup(motor_step_pin, GPIO.OUT)
+    GPIO.setup(motor_dir_pin, GPIO.OUT)
+
+    # Create the motor wrapper
+    pin_list = [motor_step_pin, motor_dir_pin]
+    motor = CubertMotor(motor_en_pin, pin_list)
+
+    # Spin
+    while True:
+        motor.step(1, MotorSpin.CLOCKWISE, 60)
