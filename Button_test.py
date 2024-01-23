@@ -16,9 +16,9 @@ try:
         button_state = GPIO.input(BUTTON_PIN)
 
         # Check if the button is pressed (the pin reads low if pressed)
-        if button_state == False:
+        if not button_state:
             print("Button Pressed")
-            while GPIO.input(BUTTON_PIN) == False:
+            while not GPIO.input(BUTTON_PIN):
                 # Wait for the button to be released to avoid multiple prints
                 time.sleep(0.1)
 
