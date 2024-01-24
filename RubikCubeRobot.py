@@ -265,9 +265,9 @@ class RubiksCubeRobot:
         #     self.vision.capture()
 
         if self.manual_buttons[0].pressed():
-            self.base_motor.step(1, MotorSpin.CLOCKWISE)
+            self.base_motor.step(1, MotorSpin.CLOCKWISE, 60)
         if self.manual_buttons[1].pressed():
-            self.base_motor.step(1, MotorSpin.COUNTER_CLOCKWISE)
+            self.base_motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
 
         if self.command_button.pressed():
             print("Command button is pressed!")
