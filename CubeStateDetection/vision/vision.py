@@ -79,7 +79,7 @@ def getCubeState(rgbCube, mask, cubeletsVertical, cubeletsHorizontal, writeOutpu
     useCentreCorrection = True
 
     # Kind of also parameters but not really
-    basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
+    basePath = os.getcwd() + "/CubeStateDetection/vision/"
     outPath = basePath + "output/"
 
     # Create/clean output folder

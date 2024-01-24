@@ -1,5 +1,4 @@
 import socket
-import msvcrt
 import cv2 as cv
 import numpy as np
 import os
@@ -15,7 +14,7 @@ x_ = b'X'
 ACK = b'a'
 OK = b'k'
 
-basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
+basePath = os.getcwd() + "/CubeStateDetection/vision/"
 imagesPath = basePath + "images/"
 imageUrl = "http://192.168.4.1/capture"
 mask = 'mask2.png'
@@ -201,60 +200,46 @@ print("Connected to ESP32 through bluetooth")
 message = ''
 
 while True:
-    if msvcrt.kbhit():
-        letter = msvcrt.getch().decode("utf-8")
+    command = input('Input command: ')
 
-        if letter == "\r":
-            print()
-            match message:
-                case "solve":
-                    solve(imageUrl, maskPath)
+    emptySocket(client)
 
-                case "disk":
-                    solve(imageUrl, maskPath, True, True)
+    match command:
+        case "solve":
+            solve(imageUrl, maskPath)
 
-                case "cap":
-                    captureCube(imageUrl, client, imagesPath + "cubes/")
+        case "disk":
+            solve(imageUrl, maskPath, True, True)
 
-                case "data":
-                    letter = ""
-                    num = 1
-                    while letter != "\r":
-                        print(f"{num}: Waiting for scramble")
-                        send(client, "s", False)
-                        waitForAcks(client, 1, True)
-                        print(f"{num}: Cube scrambled")
-                        time.sleep(2)
+        case "cap":
+            captureCube(imageUrl, client, imagesPath + "cubes/")
 
-                        print(f"{num}: enabling lights")
-                        enableLights(imageUrl, client)
-                        print(f"{num}: enabled lights")
-                        time.sleep(2)
+        case "data":
+            num = 1
+            while True:
+                print(f"{num}: Waiting for scramble")
+                send(client, "s", False)
+                waitForAcks(client, 1, True)
+                print(f"{num}: Cube scrambled")
+                time.sleep(2)
 
-                        print(f"{num}: capturing cube")
-                        captureCube(imageUrl, client, imagesPath + "cubes/")
-                        print(f"{num}: cube captured")
-                        time.sleep(1)
+                print(f"{num}: enabling lights")
+                enableLights(imageUrl, client)
+                print(f"{num}: enabled lights")
+                time.sleep(2)
 
-                        num += 1
+                print(f"{num}: capturing cube")
+                captureCube(imageUrl, client, imagesPath + "cubes/")
+                print(f"{num}: cube captured")
+                time.sleep(1)
 
-                        if msvcrt.kbhit():
-                            letter = msvcrt.getch().decode("utf-8")
-                        
-                case "l":
-                    enableLights(imageUrl, client)
+                num += 1
+                
+        case "l":
+            enableLights(imageUrl, client)
 
-                case _:
-                    if message != "":
-                        send(client, message)
-            print(f"\n{message}: Command completed, ready for next command")
-            message = ""
-        else: 
-            message += letter
-            print(letter, end="")
+        case _:
+            if command != "":
+                send(client, command)
 
-    try:
-        data = client.recv(1)
-
-    except:
-        print("",end="")
+    print(f"\n{command}: Command completed, ready for next command")
