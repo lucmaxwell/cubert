@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <SerialCommands.h>
 #include "BluetoothSerial.h"
 #include <Adafruit_INA219.h>
@@ -85,17 +84,20 @@ int gripStrength                =     360;
 int moveArmSpeed                =      20;        // set the velocity (1-100) that we will raise or lower the arm
 int handOpenCloseSpeed          =      20;  // set the velocity (1-100) that we will open and close the ha
 int spinSpeed                   =      75;
-int interActionDelay            =      10;
+int betweenActionsDelay         =      10;
 int cubeDropDistance            =     400;
 int numStepsFromBottomToMiddle  =     800;
 int numStepsFromTopToMiddle     =    1100;
 int numStepsFromDropoffToMiddle =     700;
-float cubeRotationError         =       4; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
+float cubeRotationError         =       3; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
 int homePosition                =  MIDDLE;
 int zenSpinSpeed                =      10;
 int zenArmSpeed                 =      10;
 int zenHandOpenCloseSpeed       =      10;
-
+int faceRotationErrorCounter    =       0;
+int numRotationsB4SecondaryCorrection = 2;
+float secondaryCorrectionDegrees  =    45;
+ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int handState    = UNKNOWN;
 int armLocation  = UNKNOWN;
@@ -401,7 +403,7 @@ void scanLightCurrent(SerialCommands *sender){
   digitalWrite(motors_base_dir_pin, ccw);
   float currentMeasurement;
   Serial.println("How large should the boxcar be?");
-  int boxCarLength = getIntegerFromUser(); // boxcar size must be odd 
+  int boxCarLength = getIntegerFromUser(); // boxcar size must be odd
   float sectionMeasurements[boxCarLength];
   float iterationMedian;
   float thisMeasurement;
@@ -411,10 +413,10 @@ void scanLightCurrent(SerialCommands *sender){
       digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
       thisMeasurement = lightRingINA.getCurrent_mA();      
       sectionMeasurements[j] = thisMeasurement;  
-      delay(2);         
+      delay(2);        
     }  
     sortArray(sectionMeasurements, boxCarLength);
-    iterationMedian = sectionMeasurements[(boxCarLength + 1 ) / 2 - 1]; 
+    iterationMedian = sectionMeasurements[(boxCarLength + 1 ) / 2 - 1];
     Serial.println(iterationMedian);  
     if(iterationMedian >= threshold){
       numTimesCrossed++;
@@ -424,16 +426,15 @@ void scanLightCurrent(SerialCommands *sender){
     }
   }
 }
-
 void homeBase(){
   int threshold = 110;
-  Serial.println("Homing base"); 
+  Serial.println("Homing base");
   int numTimesToCross = 16;
   int numTimesCrossed = 0;
   lightRingINA.powerSave(false);
   digitalWrite(motors_base_dir_pin, ccw);
   float currentMeasurement;
-  int boxCarLength = 27; // boxcar size must be odd 
+  int boxCarLength = 27; // boxcar size must be odd
   float sectionMeasurements[boxCarLength];
   float iterationMedian;
   float thisMeasurement;
@@ -443,21 +444,20 @@ void homeBase(){
       digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
       thisMeasurement = lightRingINA.getCurrent_mA();      
       sectionMeasurements[j] = thisMeasurement;  
-      delay(1);         
+      delay(1);        
     }  
     sortArray(sectionMeasurements, boxCarLength);
-    iterationMedian = sectionMeasurements[(boxCarLength + 1 ) / 2 - 1]; 
+    iterationMedian = sectionMeasurements[(boxCarLength + 1 ) / 2 - 1];
     Serial.println(iterationMedian);  
     if(iterationMedian >= threshold){
       numTimesCrossed++;
-    }   
+    }  
   }
 }
-
 void homeBase2(){
     lightRingINA.powerSave(false);
       Serial.println("would you like to scan or have a shot at it? (0 to scan, 1 to try)");
-      int mode = getIntegerFromUser();   
+      int mode = getIntegerFromUser();  
       Serial.println("What should the cutoff threshold be?");
       int threshold = getIntegerFromUser();
     int queueLength = 289;
@@ -471,7 +471,7 @@ void homeBase2(){
     int timesCrossed = 0;
     int tic;
     int toc;
-    
+   
 
     for(int i = 0; i < queueLength; i++){
       digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
@@ -481,7 +481,7 @@ void homeBase2(){
     }
     memcpy(&tempQueue, &queue, sizeof(queue));    
     sortArray(tempQueue, queueLength);
-    median = tempQueue[(queueLength + 1 ) / 2 - 1]; 
+    median = tempQueue[(queueLength + 1 ) / 2 - 1];
     Serial.println(median);
 
     switch(mode){
@@ -492,7 +492,7 @@ void homeBase2(){
             queue[i] = queue[i+1]; // update the queue
           }
           digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
-          
+         
           queue[queueLength - 1] = lightRingINA.getCurrent_mA();// done updating queue
 
           memcpy(&tempQueue, &queue, sizeof(queue));    //fill the temp queue
@@ -510,8 +510,8 @@ void homeBase2(){
             Serial.print(" ");
             Serial.print(graphTop);
             Serial.print(" ");
-            Serial.println(median);                 
-            
+            Serial.println(median);                
+           
           }else{
             divisor++;
           }
@@ -530,7 +530,7 @@ void homeBase2(){
 
           memcpy(&tempQueue, &queue, sizeof(queue));    
           sortArray(tempQueue, queueLength);
-          median = tempQueue[(queueLength + 1 ) / 2 - 1]; 
+          median = tempQueue[(queueLength + 1 ) / 2 - 1];
           Serial.println(median);
           delayMicroseconds(600);
         }          
@@ -538,7 +538,6 @@ void homeBase2(){
     }
 
 }
-
 void homeBase3(){
     lightRingINA.powerSave(false);
     int shortDelay = 0;
@@ -548,9 +547,9 @@ void homeBase3(){
     float currentReading;
     float queue[queueLength];
     float tempQueue[queueLength];
-    float median     = 0; 
+    float median     = 0;
     int divisor      = 1;
-    int timesCrossed = 0;   
+    int timesCrossed = 0;  
     int threshold  = 110;
 
     for(int i = 0; i < queueLength; i++){
@@ -561,7 +560,7 @@ void homeBase3(){
     }
     memcpy(&tempQueue, &queue, sizeof(queue));    
     sortArray(tempQueue, queueLength);
-    median = tempQueue[(queueLength + 1 ) / 2 - 1];     
+    median = tempQueue[(queueLength + 1 ) / 2 - 1];    
          
         while(timesCrossed < 40){
 
@@ -577,7 +576,7 @@ void homeBase3(){
           memcpy(&tempQueue, &queue, sizeof(queue));    //fill the temp queue
           sortArray(tempQueue, queueLength);
           median = tempQueue[(queueLength + 1 ) / 2 - 1]; // see what the median is
-          
+         
           if(median > 105)
           {
             // Serial.println("Set long delay as we approach our destination");
@@ -595,22 +594,20 @@ void homeBase3(){
               timesCrossed = 0;
               stepDelay = shortDelay;
               // Serial.println("Set short delay at divisor check.");
-            }         
-            divisor = 1; 
+            }        
+            divisor = 1;
           }else{
             divisor++;
-          }         
+          }        
           // Serial.print("Delaying for "); Serial.println(stepDelay); Serial.println(" microseconds.");
           delayMicroseconds(stepDelay);
         }    
-          // toggling the steppers off and on will force the motor to settle at the nearest pole. 
+          // toggling the steppers off and on will force the motor to settle at the nearest pole.
           //Assuming we're pretty close, we'll get to the exact center.
         toggleSteppers(NULL);
         delay(100);
         toggleSteppers(NULL);
     }
-
-
 void homeBase4(){
     lightRingINA.powerSave(false);
     int shortDelay = 10;
@@ -620,9 +617,9 @@ void homeBase4(){
     float currentReading;
     float queue[queueLength];
     float tempQueue[queueLength];
-    float median     = 0; 
+    float median     = 0;
     int divisor      = 1;
-    int timesCrossed = 0;   
+    int timesCrossed = 0;  
     int threshold  = 110;
 
     for(int i = 0; i < queueLength; i++){
@@ -633,7 +630,7 @@ void homeBase4(){
     }
     memcpy(&tempQueue, &queue, sizeof(queue));    
     sortArray(tempQueue, queueLength);
-    median = tempQueue[(queueLength + 1 ) / 2 - 1];     
+    median = tempQueue[(queueLength + 1 ) / 2 - 1];    
          
         while(timesCrossed < 41){
 
@@ -649,7 +646,7 @@ void homeBase4(){
           memcpy(&tempQueue, &queue, sizeof(queue));    //fill the temp queue
           sortArray(tempQueue, queueLength);
           median = tempQueue[(queueLength + 1 ) / 2 - 1]; // see what the median is
-          
+         
           if(median > 105)
           {
             // Serial.println("Set long delay as we approach our destination");
@@ -667,21 +664,20 @@ void homeBase4(){
               timesCrossed = 0;
               stepDelay = shortDelay;
               // Serial.println("Set short delay at divisor check.");
-            }         
-            divisor = 1; 
+            }        
+            divisor = 1;
           }else{
             divisor++;
-          }         
+          }        
           // Serial.print("Delaying for "); Serial.println(stepDelay); Serial.println(" microseconds.");
           delayMicroseconds(stepDelay);
         }    
-          // toggling the steppers off and on will force the motor to settle at the nearest pole. 
+          // toggling the steppers off and on will force the motor to settle at the nearest pole.
           //Assuming we're pretty close, we'll get to the exact center.
         toggleSteppers(NULL);
         delay(100);
         toggleSteppers(NULL);
     }
-
 void homeBase5(){
     lightRingINA.powerSave(false);
     int shortDelay = 0;
@@ -691,9 +687,9 @@ void homeBase5(){
     float currentReading;
     float queue[queueLength];
     float tempQueue[queueLength];
-    float median     = 0; 
+    float median     = 0;
     int divisor      = 1;
-    int timesCrossed = 0;   
+    int timesCrossed = 0;  
     int threshold  = 110;
 
     for(int i = 0; i < queueLength; i++){
@@ -704,7 +700,7 @@ void homeBase5(){
     }
     memcpy(&tempQueue, &queue, sizeof(queue));    
     sortArray(tempQueue, queueLength);
-    median = tempQueue[(queueLength + 1 ) / 2 - 1];     
+    median = tempQueue[(queueLength + 1 ) / 2 - 1];    
          
         while(timesCrossed < 41){
 
@@ -720,7 +716,7 @@ void homeBase5(){
           memcpy(&tempQueue, &queue, sizeof(queue));    //fill the temp queue
           sortArray(tempQueue, queueLength);
           median = tempQueue[(queueLength + 1 ) / 2 - 1]; // see what the median is
-          
+         
           if(median > 105)
           {
             // Serial.println("Set long delay as we approach our destination");
@@ -738,15 +734,15 @@ void homeBase5(){
               timesCrossed = 0;
               stepDelay = shortDelay;
               // Serial.println("Set short delay at divisor check.");
-            }         
-            divisor = 1; 
+            }        
+            divisor = 1;
           }else{
             divisor++;
-          }         
+          }        
           // Serial.print("Delaying for "); Serial.println(stepDelay); Serial.println(" microseconds.");
           delayMicroseconds(stepDelay);
         }    
-          // toggling the steppers off and on will force the motor to settle at the nearest pole. 
+          // toggling the steppers off and on will force the motor to settle at the nearest pole.
           //Assuming we're pretty close, we'll get to the exact center.
         toggleSteppers(NULL);
         delay(100);
@@ -771,7 +767,7 @@ void microScan(){
   while((sweepSize % boxCarLength) > 0){ // increase the size of the sweep until the number of steps is a multiple of the boxcar length
     sweepSize++;
   }
-  int numberOfMedianMeasurements = sweepSize/boxCarLength; 
+  int numberOfMedianMeasurements = sweepSize/boxCarLength;
   float mediansArray[numberOfMedianMeasurements];
 
   digitalWrite(motors_base_dir_pin, ccw);
@@ -782,10 +778,10 @@ void microScan(){
       thisMeasurement = lightRingINA.getCurrent_mA();
       Serial.println(thisMeasurement);
       sectionMeasurements[j] = thisMeasurement;  
-      delay(2);         
+      delay(2);        
     }  
     sortArray(sectionMeasurements, boxCarLength);
-    iterationMedian = sectionMeasurements[(boxCarLength + 1 ) / 2 - 1]; 
+    iterationMedian = sectionMeasurements[(boxCarLength + 1 ) / 2 - 1];
     //Serial.println(iterationMedian);
     mediansArray[i] = iterationMedian;
   }
@@ -853,7 +849,7 @@ int findLightRing(float* samples, int length){
   return lightPos;
 }
 void moveArmTo(int destination) {
-  if(!gripperFunctional) 
+  if(!gripperFunctional)
   {
     return;
   }  
@@ -873,7 +869,7 @@ void moveArmTo(int destination) {
       Serial.print("unknown location");
       break;
   }
-  
+ 
   Serial.print(" to ");
   switch (destination) {
     case TOP:
@@ -903,7 +899,7 @@ void moveArmTo(int destination) {
         if(digitalRead(destination) == 0)
           break;
       moveArm(UP);
-      }     
+      }    
       armLocation = TOP;
       break;
     ///MIDDLE/////////////////////////////////////////////////////
@@ -925,7 +921,7 @@ void moveArmTo(int destination) {
           }
           armLocation = MIDDLE;
           break;
-      } 
+      }
       else if (armLocation == DROPOFFHEIGHT){
         for(int i = 0; i < numStepsFromDropoffToMiddle; i++){
           moveArm(DOWN);
@@ -934,10 +930,10 @@ void moveArmTo(int destination) {
         break;
       }
       else {
-        while (digitalRead(TOP) == 1) {     
+        while (digitalRead(TOP) == 1) {    
           moveArm(UP);
         }
-        delay(interActionDelay);
+        delay(betweenActionsDelay);
         for(int i = 0; i < numStepsFromTopToMiddle; i++){
               moveArm(DOWN);            
         }
@@ -946,13 +942,13 @@ void moveArmTo(int destination) {
         break;    
   }
     Serial.println("Arrived at destination.");
-    delay(interActionDelay);}
+    delay(betweenActionsDelay);}
 void closeHand() {
   Serial.println("Closing hand");
   for (int i = 0; i < gripStrength; i++) {
     articulateHand(CLOSE);
   }
-  delay(interActionDelay);
+  delay(betweenActionsDelay);
   handState = CLOSE; }  
 void openHand() {
 
@@ -970,15 +966,15 @@ void openHand() {
     }
   }
   handState = OPENED;
-  delay(interActionDelay); }
+  delay(betweenActionsDelay); }
 void spinBase(int my_direction, bool correctionEnabled) {
   int stepDelay = getDelay(spinSpeed);
-  int degreesToRotate = 90;   
+  int degreesToRotate = 90;  
 
   if(correctionEnabled){
     degreesToRotate += cubeRotationError;
-  } 
-  
+  }
+ 
   if (armLocation != TOP && armLocation != MIDDLE && gripperFunctional) {
     openHand();
     moveArmTo(MIDDLE);
@@ -990,8 +986,8 @@ void spinBase(int my_direction, bool correctionEnabled) {
     digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
     delayMicroseconds(stepDelay);
   }
-  delay(interActionDelay);
-  
+  delay(betweenActionsDelay);
+ 
   if(correctionEnabled){
     if(my_direction == cw){
       my_direction = ccw;
@@ -1007,14 +1003,14 @@ void spinBase(int my_direction, bool correctionEnabled) {
       digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));  // Perform one motor step
       delayMicroseconds(stepDelay);
     }
-    delay(interActionDelay);
+    delay(betweenActionsDelay);
   }  
   }
 void spinBaseTwice(int my_direction, bool correctionEnabled){
-  int defaultInteractionDelay = interActionDelay;
-  interActionDelay = 0;
+  int defaultbetweenActionsDelay = betweenActionsDelay;
+  betweenActionsDelay = 0;
   spinBase(my_direction, false);
-  interActionDelay = defaultInteractionDelay;
+  betweenActionsDelay = defaultbetweenActionsDelay;
   spinBase(my_direction, true);  
   }
 float getFloatFromUser(){
@@ -1054,7 +1050,7 @@ void dropCubeToBase() {
   for (int i = 0; i < cubeDropDistance; i++) {
     moveArm(DOWN);
   }
-  delay(interActionDelay);
+  delay(betweenActionsDelay);
   armLocation = UNKNOWN; // lol imagine forgetting to put this here xD
   armLocation = DROPOFFHEIGHT;}
 void articulateHand(int direction) {
@@ -1090,7 +1086,79 @@ int  getIntegerFromUser() {
     int flush = Serial.read();
   }
   return value;}
+void performSecondaryCorrection(){
+  faceRotationErrorCounter = 0;
+  int stepDelay = getDelay(spinSpeed);
+  moveArmTo(MIDDLE);
+  if(handState != CLOSED)
+    closeHand();
+ 
+  for(int i = 0; i < secondaryCorrectionDegrees * 19200 / 360; i++){ //rotate cube x degrees. This squashes error in other faces
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
+    delayMicroseconds(stepDelay);
+  }
+  delay(betweenActionsDelay);
+ 
+  digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin)); // change direction and rotate back. (We will now add twice the correction error with this move)
+
+  for(int i = 0; i <  2 * (secondaryCorrectionDegrees) * 19200 / 360; i++){
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
+    delayMicroseconds(stepDelay);
+  }
+  delay(betweenActionsDelay);
+ 
+  digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin)); // change direction)
+ 
+  for(int i = 0; i < (secondaryCorrectionDegrees + 2 * cubeRotationError) * 19200 / 360; i++){ // undo the double error
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
+    delayMicroseconds(stepDelay);
+  }
+  delay(betweenActionsDelay);
+
+  digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin)); // change direction)
+ 
+  openHand();
+  for(int i = 0; i < (2 * cubeRotationError) * 19200 / 360; i++){ // remove base overshoot from double error correction
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
+    delayMicroseconds(stepDelay);
+  }
+
+}
+
+void fixCubeError(SerialCommands *sender){
+ 
+  int stepDelay = getDelay(spinSpeed);
+  openHand();
+  moveArmTo(MIDDLE);
+  closeHand();
+
+  for(int i = 0; i < secondaryCorrectionDegrees * 19200.0 / 360.0; i++){ //rotate cube x degrees. This squashes error in other faces
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
+    delayMicroseconds(stepDelay);
+  }
+  delay(betweenActionsDelay);
+ 
+  digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin)); // change direction and rotate back. (We will now add twice the correction error with this move)
+
+  for(int i = 0; i <  (secondaryCorrectionDegrees + cubeRotationError) * 19200.0 / 360.0; i++){
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
+    delayMicroseconds(stepDelay);
+  }
+  delay(betweenActionsDelay);
+ 
+  digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin)); // change direction)
+ 
+  // openHand();
+
+  for(int i = 0; i < cubeRotationError * 19200 / 360; i++){ // undo the double error
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
+    delayMicroseconds(stepDelay);
+  }
+  delay(betweenActionsDelay);  
+}
+
 void flipCube() {
+ 
   Serial.println("////// Flipping cube");
   openHand();
   moveArmTo(BOTTOM);
@@ -1098,10 +1166,14 @@ void flipCube() {
   moveArmTo(TOP);
   delay(50);
   dropCubeToBase();
-  openHand();}
+  openHand();
+  if(faceRotationErrorCounter >= numRotationsB4SecondaryCorrection){
+    performSecondaryCorrection();    
+  }
 
+}
 void rotateFace(int face, int singleOrDouble) {
-  int direction;   
+  int direction;  
   openHand();
   switch(face){
     case FRONTCW:
@@ -1171,8 +1243,11 @@ void rotateFace(int face, int singleOrDouble) {
         direction = ccw;
         break;
   }
-  moveArmTo(MIDDLE); 
-  closeHand();
+
+  moveArmTo(MIDDLE);
+  if(handState != CLOSED)
+    closeHand();
+ 
   if(singleOrDouble == 2){
     spinBaseTwice(direction, true);
   }else{
@@ -1182,7 +1257,11 @@ void rotateFace(int face, int singleOrDouble) {
   openHand();
   armLocation = MIDDLE;
   handState   = OPENED;
-  delay(interActionDelay);}
+  delay(betweenActionsDelay);
+  faceRotationErrorCounter++;
+  }
+
+
 void readCurrent(){
   lightRingINA.powerSave(false);
 
@@ -1229,9 +1308,9 @@ void setDistanceToMiddleFromCubeRelease(SerialCommands *sender){
   }
   Serial.println("Set distance from dropoff to middle");
   numStepsFromDropoffToMiddle = numSteps; }
-void setInterActionDelay(SerialCommands *sender){
+void setbetweenActionsDelay(SerialCommands *sender){
   Serial.println("Please enter an inter-action delay (ms)");
-  interActionDelay = getIntegerFromUser();}
+  betweenActionsDelay = getIntegerFromUser();}
 void setScrambleAndSolveSpeed(SerialCommands *sender){
   Serial.println("Please enter the cube spin speed (0 - 120):");
   spinSpeed  = getIntegerFromUser();
@@ -1338,17 +1417,17 @@ void scramble(SerialCommands * sender) {
   int lastMove = TOPCW;  
   int numScrambles = 13;
   float startTime = millis();
-  for(int i = 0; i < numScrambles; i++){ 
+  for(int i = 0; i < numScrambles; i++){
     int randomNumberOfTurns = random(1,3);    
     int randomMove = random(1,13);
-    rotateFace(randomMove, randomNumberOfTurns); 
+    rotateFace(randomMove, randomNumberOfTurns);
     Serial.print("Performing ");
     Serial.print(randomNumberOfTurns);
     Serial.println(" turns.");
     lastMove = randomMove;
   }
   float elapsed = millis() - startTime;
-  Serial.print("It took "); Serial.print(elapsed/1000);Serial.print(" seconds to perform "); Serial.print(numScrambles);Serial.println(" scrambles."); 
+  Serial.print("It took "); Serial.print(elapsed/1000);Serial.print(" seconds to perform "); Serial.print(numScrambles);Serial.println(" scrambles.");
 }//initialize serialCommand functions
 
 SerialCommand setGripDistance_("t", setGripDistance);
@@ -1360,9 +1439,10 @@ SerialCommand setZenSpeeds_("setZen", setZenSpeeds);
 SerialCommand testMove_("testMove", testMove);
 SerialCommand testCorrection_("testCorr", testCorrection);
 SerialCommand toggleSteppers_("tog", toggleSteppers);
-SerialCommand setInterActionDelay_("setD", setInterActionDelay);
+SerialCommand setbetweenActionsDelay_("setD", setbetweenActionsDelay);
 SerialCommand setScrambleAndSolveSpeed_("setSpeed", setScrambleAndSolveSpeed);
 SerialCommand scanLightCurrent_("scan", scanLightCurrent);
+SerialCommand fixCubeError_("fix", fixCubeError);
 
 SerialCommand speeen_("speeen", speeen);
 SerialCommand zenMode_("zen", zenMode); // zen mode will slowly and infinitely scramble until serial input is received (will finish current move)
@@ -1378,12 +1458,13 @@ void setup() {
   serial_commands_.AddCommand(&testDistanceToMiddleFromBottom_);
   serial_commands_.AddCommand(&setDistanceToMiddleFromCubeRelease_);  
   serial_commands_.AddCommand(&setCubeError_);
-  serial_commands_.AddCommand(&testMove_); 
-  serial_commands_.AddCommand(&setZenSpeeds_); 
-  serial_commands_.AddCommand(&toggleSteppers_); 
-  serial_commands_.AddCommand(&setInterActionDelay_);
-  serial_commands_.AddCommand(&setScrambleAndSolveSpeed_); 
-  serial_commands_.AddCommand(&scanLightCurrent_); 
+  serial_commands_.AddCommand(&testMove_);
+  serial_commands_.AddCommand(&setZenSpeeds_);
+  serial_commands_.AddCommand(&toggleSteppers_);
+  serial_commands_.AddCommand(&setbetweenActionsDelay_);
+  serial_commands_.AddCommand(&setScrambleAndSolveSpeed_);
+  serial_commands_.AddCommand(&scanLightCurrent_);
+  serial_commands_.AddCommand(&fixCubeError_);
 
   serial_commands_.AddCommand(&speeen_);
   serial_commands_.AddCommand(&scramble_);
@@ -1409,7 +1490,7 @@ void setup() {
   pinMode(endstop_arm_upperLimit_pin, INPUT_PULLUP);
   pinMode(endstop_arm_lowerLimit_pin, INPUT_PULLUP);
 
-  
+ 
   digitalWrite(motors_en_pin, LOW); // enable steppers
 
   // Start bluetooth
@@ -1423,9 +1504,9 @@ void setup() {
   homeArmAndHand();
   // homeBase();
   // homeBase2();
-  // homeBase3();
+   homeBase3();
   // homeBase4();
-  homeBase5();
+  // homeBase5();
   // centreLight();
   // homeLight();
   // Serial.println("Now performing micro-scan");
@@ -1458,7 +1539,7 @@ void loop() {
   }
 
   if (spin == 0) {
-    spinBase(cw, false);   
+    spinBase(cw, false);  
   }
 
   serial_commands_.ReadSerial();
@@ -1478,8 +1559,8 @@ void loop() {
       Serial.write("Received: ");
       Serial.write(BluetoothIn);
       Serial.println("");
-      
-      // Do command 
+     
+      // Do command
       switch (BluetoothIn)
       {    
         case 's':
@@ -1497,11 +1578,11 @@ void loop() {
         case 't':
           toggleSteppers(NULL);
           SerialBT.write(ACK);
-          break;     
+          break;    
 
         // Cubing notation moves
         case 'b':
-          moveArmTo(MIDDLE); 
+          moveArmTo(MIDDLE);
           closeHand();
           spinBase(cw, true);
           openHand();
@@ -1509,7 +1590,7 @@ void loop() {
           break;
 
         case 'B':
-          moveArmTo(MIDDLE); 
+          moveArmTo(MIDDLE);
           closeHand();
           spinBase(ccw, true);
           openHand();
@@ -1546,3 +1627,5 @@ void loop() {
 
   delay(1);
 }
+
+
