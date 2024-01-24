@@ -70,14 +70,14 @@ def cubertify(solution, verbose=False):
         'D': "",
         'F': "X",
         'U': "XX",
-        'B': "YYX",
+        'B': "PX",
         'L': "YX",
         'R': "yX"
     }
 
     SPINS = {
         '1': "b",
-        '2': "bb",
+        '2': "p",
         '3': "B"
     }
 

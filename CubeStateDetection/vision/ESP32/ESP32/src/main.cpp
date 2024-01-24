@@ -1006,12 +1006,12 @@ void spinBase(int my_direction, bool correctionEnabled) {
     delay(betweenActionsDelay);
   }  
   }
-void spinBaseTwice(int my_direction, bool correctionEnabled){
+void spinBaseTwice(bool correctionEnabled){
   int defaultbetweenActionsDelay = betweenActionsDelay;
   betweenActionsDelay = 0;
-  spinBase(my_direction, false);
+  spinBase(ccw, false);
   betweenActionsDelay = defaultbetweenActionsDelay;
-  spinBase(my_direction, true);  
+  spinBase(ccw, true);  
   }
 float getFloatFromUser(){
   Serial.println("Please enter a value:");
@@ -1189,13 +1189,13 @@ void rotateFace(int face, int singleOrDouble) {
     case REARCW:
       Serial.println("/////////////// Turning rear face clockwise");
       direction = ccw;
-      spinBaseTwice(ccw, false);        
+      spinBaseTwice(false);        
       flipCube();
       break;
     case REARCCW:
       Serial.println("/////////////// Turning rear face counterclockwise");
       direction = cw;
-      spinBaseTwice(cw, false);        
+      spinBaseTwice(false);        
       flipCube();
       break;
     case RIGHTCW:
@@ -1249,7 +1249,7 @@ void rotateFace(int face, int singleOrDouble) {
     closeHand();
  
   if(singleOrDouble == 2){
-    spinBaseTwice(direction, true);
+    spinBaseTwice(true);
   }else{
     spinBase(direction, true);
   }
@@ -1567,14 +1567,17 @@ void loop() {
           scramble(NULL);
           SerialBT.write(ACK);
           break;
+
         case 'z':
           zenMode(NULL);
           SerialBT.write(ACK);
           break;
+
         case 'r':
           speeen(NULL);
           SerialBT.write(ACK);
           break;
+
         case 't':
           toggleSteppers(NULL);
           SerialBT.write(ACK);
@@ -1597,6 +1600,14 @@ void loop() {
           SerialBT.write(ACK);
           break;
 
+        case 'p':
+          moveArmTo(MIDDLE);
+          closeHand();
+          spinBaseTwice(true);
+          openHand();
+          SerialBT.write(ACK);
+          break;
+
         case 'y':
           spinBase(ccw, false);
           SerialBT.write(ACK);
@@ -1605,6 +1616,10 @@ void loop() {
         case 'Y':
           spinBase(cw, false);
           SerialBT.write(ACK);
+          break;
+
+        case 'P':
+          spinBaseTwice(false);
           break;
 
         case 'X':
