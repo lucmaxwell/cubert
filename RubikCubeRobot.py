@@ -3,7 +3,6 @@ import time
 import RPi.GPIO as GPIO
 
 from CubertArm import CubertArm, ArmDirection, ArmPosition
-from CubertVision import CubertVision
 from RubikCube import RubikCube, Face
 from Button import CubertButton
 from Motor import CubertMotor, MotorSpin
