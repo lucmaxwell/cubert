@@ -196,9 +196,9 @@ class RubiksCubeRobot:
 
     def action(self, action):
         if action == RobotAction.SPIN_BASE_CLOCKWISE:
-            self.spin_base(MotorSpin.CLOCKWISE)
+            self.spin_cube(MotorSpin.CLOCKWISE)
         elif action == RobotAction.SPIN_BASE_COUNTERCLOCKWISE:
-            self.spin_base(MotorSpin.COUNTER_CLOCKWISE)
+            self.spin_cube(MotorSpin.COUNTER_CLOCKWISE)
         elif action == RobotAction.GRIP_AND_FLIP:
             self.grip_and_flip()
         elif action == RobotAction.SPIN_CUBE_CLOCKWISE:
@@ -265,9 +265,9 @@ class RubiksCubeRobot:
         #     self.vision.capture()
 
         if self.manual_buttons[0].pressed():
-            self.arm.move_arm(ArmDirection.UP, self.arm_speed)
+            self.base_motor.step(1, MotorSpin.CLOCKWISE)
         if self.manual_buttons[1].pressed():
-            self.arm.move_arm(ArmDirection.DOWN, self.arm_speed)
+            self.base_motor.step(1, MotorSpin.COUNTER_CLOCKWISE)
 
         if self.command_button.pressed():
             print("Command button is pressed!")
@@ -276,10 +276,10 @@ class RubiksCubeRobot:
 if __name__ == '__main__':
     # Motor pins
     motors_en_pin = 5  # GPIO number for motor enable pin
-    motors_base_step_pin = 2  # GPIO number for base step pin
-    motors_base_dir_pin = 15  # GPIO number for base direction pin
-    motors_arm_left_dir_pin = 22  # GPIO number for arm left direction pin
-    motors_arm_left_step_pin = 27  # GPIO number for arm left step pin
+    motors_base_step_pin = 22  # GPIO number for base step pin
+    motors_base_dir_pin = 27  # GPIO number for base direction pin
+    motors_arm_left_dir_pin = 2  # GPIO number for arm left direction pin
+    motors_arm_left_step_pin = 15  # GPIO number for arm left step pin
     motors_arm_right_dir_pin = 16  # GPIO number for arm right direction pin
     motors_arm_right_step_pin = 17  # GPIO number for arm right step pin
 
