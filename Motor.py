@@ -71,7 +71,11 @@ if __name__ == '__main__':
     print("Running motor...")
     try:
         while True:
-            motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
+            #motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
+            GPIO.output(motor_en_pin, GPIO.HIGH)
+            GPIO.output(motor_step_pin, GPIO.HIGH)
+            GPIO.output(motor_dir_pin, GPIO.HIGH)
+
     except KeyboardInterrupt:
         pass
     finally:
