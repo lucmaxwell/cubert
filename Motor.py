@@ -26,16 +26,13 @@ class CubertMotor:
         self.step_pin = pin_list[0]
         self.dir_pin = pin_list[1]
 
-    # def enable(self):
-    #     GPIO.output(self.enable_pin, GPIO.LOW)
-
-    # def disable(self):
-    #     GPIO.output(self.enable_pin, GPIO.HIGH)
-
-    def step(self, steps, direction, move_speed, correction_enable=False):
-        # Enable
+    def enable(self):
         GPIO.output(self.enable_pin, GPIO.LOW)
 
+    def disable(self):
+        GPIO.output(self.enable_pin, GPIO.HIGH)
+
+    def step(self, steps, direction, move_speed, correction_enable=False):
         # Write the spin direction
         GPIO.output(self.dir_pin, GPIO.LOW if direction == MotorSpin.CLOCKWISE else GPIO.HIGH)
 
@@ -49,8 +46,6 @@ class CubertMotor:
             GPIO.output(self.step_pin, GPIO.LOW)
             time.sleep(stepDelay)
 
-        # Disable
-        GPIO.output(self.enable_pin, GPIO.HIGH)
 
 if __name__ == '__main__':
     motor_en_pin = 5
@@ -70,19 +65,9 @@ if __name__ == '__main__':
     # Spin
     print("Running motor...")
     try:
-
-        GPIO.output(motor_en_pin, GPIO.LOW)
-        GPIO.output(motor_dir_pin, GPIO.HIGH)
-
+        motor.enable()
         while True:
-            #motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
-            # Spin with given number of steps
-            for _ in range(100):
-                GPIO.output(motor_step_pin, GPIO.HIGH)
-                time.sleep(200/1_000_000)
-                GPIO.output(motor_step_pin, GPIO.LOW)
-                time.sleep(200/1_000_000)
-
+            motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
     except KeyboardInterrupt:
         pass
     finally:
