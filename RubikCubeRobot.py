@@ -263,10 +263,12 @@ class RubiksCubeRobot:
         # if self.command_button.pressed():
         #     self.vision.capture()
 
-        if self.manual_buttons[0].pressed():
-            self.base_motor.step(1, MotorSpin.CLOCKWISE, 60)
-        if self.manual_buttons[1].pressed():
-            self.base_motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
+        # if self.manual_buttons[0].pressed():
+        #     self.base_motor.step(1, MotorSpin.CLOCKWISE, 60)
+        # if self.manual_buttons[1].pressed():
+        #     self.base_motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
+
+        self.base_motor.step(1, MotorSpin.CLOCKWISE, 60)
 
         if self.command_button.pressed():
             print("Command button is pressed!")
@@ -275,12 +277,12 @@ class RubiksCubeRobot:
 if __name__ == '__main__':
     # Motor pins
     motors_en_pin = 6  # GPIO number for motor enable pin
-    motors_base_step_pin = 22  # GPIO number for base step pin
-    motors_base_dir_pin = 27  # GPIO number for base direction pin
-    motors_arm_left_dir_pin = 2  # GPIO number for arm left direction pin
+    motors_base_step_pin = 27  # GPIO number for base step pin
+    motors_base_dir_pin = 22  # GPIO number for base direction pin
     motors_arm_left_step_pin = 15  # GPIO number for arm left step pin
-    motors_arm_right_dir_pin = 16  # GPIO number for arm right direction pin
+    motors_arm_left_dir_pin = 2  # GPIO number for arm left direction pin
     motors_arm_right_step_pin = 17  # GPIO number for arm right step pin
+    motors_arm_right_dir_pin = 16  # GPIO number for arm right direction pin
 
     # End stop for arm
     end_stop_hand_open_pin = 18  # GPIO number for arm open limit end stop
@@ -304,10 +306,10 @@ if __name__ == '__main__':
     GPIO.setup(motors_en_pin, GPIO.OUT)
     GPIO.setup(motors_base_step_pin, GPIO.OUT)
     GPIO.setup(motors_base_dir_pin, GPIO.OUT)
-    GPIO.setup(motors_arm_left_dir_pin, GPIO.OUT)
     GPIO.setup(motors_arm_left_step_pin, GPIO.OUT)
-    GPIO.setup(motors_arm_right_dir_pin, GPIO.OUT)
+    GPIO.setup(motors_arm_left_dir_pin, GPIO.OUT)
     GPIO.setup(motors_arm_right_step_pin, GPIO.OUT)
+    GPIO.setup(motors_arm_right_dir_pin, GPIO.OUT)
     GPIO.setup(end_stop_hand_open_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(end_stop_arm_upperLimit_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(end_stop_arm_lowerLimit_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
