@@ -294,7 +294,7 @@ if __name__ == '__main__':
     lowerArmButton = 24  # GPIO number for lower arm button
     openHandButton = 28  # GPIO number for open hand button
     closeHandButton = 32  # GPIO number for close hand button
-    spinBaseButton = 27  # GPIO number for spin base button
+    spinBaseButton = 21  # GPIO number for spin base button
 
     # GPIO pins
     BUTTON_PIN = 17
@@ -341,7 +341,7 @@ if __name__ == '__main__':
         motor = CubertMotor(motors_en_pin, base_motor_pin_list)
 
         motor.enable()
-        
+
         while True:
             #robot.doStuffs()
             #robot.test()
