@@ -274,7 +274,7 @@ class RubiksCubeRobot:
 
 if __name__ == '__main__':
     # Motor pins
-    motors_en_pin = 5  # GPIO number for motor enable pin
+    motors_en_pin = 6  # GPIO number for motor enable pin
     motors_base_step_pin = 22  # GPIO number for base step pin
     motors_base_dir_pin = 27  # GPIO number for base direction pin
     motors_arm_left_dir_pin = 2  # GPIO number for arm left direction pin
