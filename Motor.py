@@ -72,7 +72,7 @@ if __name__ == '__main__':
     try:
         while True:
             #motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
-            GPIO.output(motor_en_pin, GPIO.HIGH)
+            GPIO.output(motor_en_pin, GPIO.LOW)
             GPIO.output(motor_step_pin, GPIO.HIGH)
             GPIO.output(motor_dir_pin, GPIO.HIGH)
 
