@@ -70,11 +70,18 @@ if __name__ == '__main__':
     # Spin
     print("Running motor...")
     try:
+
+        GPIO.output(motor_en_pin, GPIO.LOW)
+        GPIO.output(motor_dir_pin, GPIO.HIGH)
+
         while True:
             #motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
-            GPIO.output(motor_en_pin, GPIO.LOW)
-            GPIO.output(motor_step_pin, GPIO.HIGH)
-            GPIO.output(motor_dir_pin, GPIO.HIGH)
+            # Spin with given number of steps
+            for _ in range(100):
+                GPIO.output(motor_step_pin, GPIO.HIGH)
+                time.sleep(200/1_000_000)
+                GPIO.output(motor_step_pin, GPIO.LOW)
+                time.sleep(200/1_000_000)
 
     except KeyboardInterrupt:
         pass
