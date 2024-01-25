@@ -48,6 +48,7 @@ if __name__ == '__main__':
     GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     try:
+        print("Try...")
         while True:
             # Read the button state
             button_state = GPIO.input(BUTTON_PIN)
