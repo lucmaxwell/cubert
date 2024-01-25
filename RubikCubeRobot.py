@@ -341,7 +341,7 @@ if __name__ == '__main__':
         while True:
             #robot.doStuffs()
             robot.test()
-        
+
     except KeyboardInterrupt:
         pass
     finally:
