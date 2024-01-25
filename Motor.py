@@ -27,6 +27,7 @@ class CubertMotor:
         self.dir_pin = pin_list[1]
 
     def enable(self):
+        print("Enable pin")
         GPIO.output(self.enable_pin, GPIO.LOW)
 
     def disable(self):
