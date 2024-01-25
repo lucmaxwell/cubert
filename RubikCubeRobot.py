@@ -336,8 +336,8 @@ if __name__ == '__main__':
             motors_en_pin, base_motor_pin_list, left_motor_pin_list, right_motor_pin_list, end_stop_arm_pin_list,
             manual_button_pin_list, BUTTON_PIN)
         while True:
-            # robot.doStuffs()
-            robot.test()
+            robot.doStuffs()
+            #robot.test()
     except KeyboardInterrupt:
         pass
     finally:
