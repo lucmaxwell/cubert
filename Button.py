@@ -42,7 +42,7 @@ if __name__ == '__main__':
     GPIO.setmode(GPIO.BCM)
 
     # Define the pin number where the button is connected
-    BUTTON_PIN = 17  # Use the appropriate pin number based on your setup
+    BUTTON_PIN = 23  # Use the appropriate pin number based on your setup
 
     # Set up the button pin with a pull-up resistor
     GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
