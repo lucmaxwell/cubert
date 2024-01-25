@@ -340,6 +340,8 @@ if __name__ == '__main__':
 
         motor = CubertMotor(motors_en_pin, base_motor_pin_list)
 
+        motor.enable()
+        
         while True:
             #robot.doStuffs()
             #robot.test()
