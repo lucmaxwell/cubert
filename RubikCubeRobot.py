@@ -276,26 +276,26 @@ if __name__ == '__main__':
     # Motor pins
     motors_en_pin = 6  # GPIO number for motor enable pin
     motors_base_step_pin = 27  # GPIO number for base step pin
-    motors_base_dir_pin = 22  # GPIO number for base direction pin
-    motors_arm_left_step_pin = 15  # GPIO number for arm left step pin
-    motors_arm_left_dir_pin = 2  # GPIO number for arm left direction pin
-    motors_arm_right_step_pin = 17  # GPIO number for arm right step pin
-    motors_arm_right_dir_pin = 16  # GPIO number for arm right direction pin
+    motors_base_dir_pin = 17  # GPIO number for base direction pin
+    motors_arm_left_step_pin = 22  # GPIO number for arm left step pin
+    motors_arm_left_dir_pin = 13  # GPIO number for arm left direction pin
+    motors_arm_right_step_pin = 19  # GPIO number for arm right step pin
+    motors_arm_right_dir_pin = 26  # GPIO number for arm right direction pin
 
     # End stop for arm
-    end_stop_hand_open_pin = 18  # GPIO number for arm open limit end stop
+    end_stop_hand_open_pin = 12  # GPIO number for arm open limit end stop
     end_stop_arm_upperLimit_pin = 26  # GPIO number for arm upper limit end stop
-    end_stop_arm_lowerLimit_pin = 19  # GPIO number for arm lower limit end stop
+    end_stop_arm_lowerLimit_pin = 16  # GPIO number for arm lower limit end stop
 
     # Manual button pins
     raiseArmButton = 23  # GPIO number for raise arm button
     lowerArmButton = 24  # GPIO number for lower arm button
     openHandButton = 28  # GPIO number for open hand button
-    closeHandButton = 32  # GPIO number for close hand button
+    closeHandButton = 20 # GPIO number for close hand button
     spinBaseButton = 21  # GPIO number for spin base button
 
     # GPIO pins
-    BUTTON_PIN = 17
+    BUTTON_PIN = 18
 
     # GPIO mode
     GPIO.setmode(GPIO.BCM)
