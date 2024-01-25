@@ -27,7 +27,6 @@ class CubertMotor:
         self.dir_pin = pin_list[1]
 
     def enable(self):
-        print("Enable pin")
         GPIO.output(self.enable_pin, GPIO.LOW)
 
     def disable(self):
@@ -66,7 +65,8 @@ if __name__ == '__main__':
     # Spin
     print("Running motor...")
     try:
-        GPIO.output(motor_en_pin, GPIO.LOW)
+        motor.enable()
+
         while True:
             motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
     except KeyboardInterrupt:
