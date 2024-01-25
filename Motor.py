@@ -66,7 +66,7 @@ if __name__ == '__main__':
     # Spin
     print("Running motor...")
     try:
-        motor.enable()
+        GPIO.output(motor_en_pin, GPIO.LOW)
         while True:
             motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
     except KeyboardInterrupt:
