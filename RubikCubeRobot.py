@@ -208,7 +208,7 @@ class RubiksCubeRobot:
 
     def doStuffs(self):
         # Get the button pressed
-        if self.button.pressed():
+        if self.command_button.pressed():
             hold_time = 0
             pressed_count = 0
 
@@ -220,7 +220,7 @@ class RubiksCubeRobot:
             hold_time_start = time.time()
             while reading_time - reading_start_time < BUFFER_TIME:
                 # Button pressed
-                if self.button.pressed():
+                if self.command_button.pressed():
                     last_button_state = True
 
                     # Reset the countdown
