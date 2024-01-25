@@ -26,13 +26,16 @@ class CubertMotor:
         self.step_pin = pin_list[0]
         self.dir_pin = pin_list[1]
 
-    def enable(self):
-        GPIO.output(self.enable_pin, GPIO.LOW)
+    # def enable(self):
+    #     GPIO.output(self.enable_pin, GPIO.LOW)
 
-    def disable(self):
-        GPIO.output(self.enable_pin, GPIO.HIGH)
+    # def disable(self):
+    #     GPIO.output(self.enable_pin, GPIO.HIGH)
 
     def step(self, steps, direction, move_speed, correction_enable=False):
+        # Enable
+        GPIO.output(self.enable_pin, GPIO.LOW)
+
         # Write the spin direction
         GPIO.output(self.dir_pin, GPIO.LOW if direction == MotorSpin.CLOCKWISE else GPIO.HIGH)
 
@@ -46,6 +49,8 @@ class CubertMotor:
             GPIO.output(self.step_pin, GPIO.LOW)
             time.sleep(stepDelay)
 
+        # Disable
+        GPIO.output(self.enable_pin, GPIO.HIGH)
 
 if __name__ == '__main__':
     motor_en_pin = 5
