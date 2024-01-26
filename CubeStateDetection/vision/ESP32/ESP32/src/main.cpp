@@ -65,6 +65,7 @@ BluetoothSerial SerialBT;
 int8_t BluetoothIn;
 
 Adafruit_INA219 lightRingINA; // current sensor
+Adafruit_INA219 gripperINA(0x041); //gripper current sensor
 
 typedef struct{
   float*  data;
@@ -1288,6 +1289,21 @@ void readCurrent(){
 
   Serial.printf("Current is %fmA\r\n", avg);
 }
+void readGripCurrent(SerialCommands *sender){
+  gripStrength = 300;
+  float gripCurrent = 0;
+  closeHand();
+
+  gripperINA.powerSave(false);
+
+  for(int i = 300; i < 350; i++){
+    gripStrength = i;
+    closeHand();
+    gripCurrent = gripperINA.getCurrent_mA();
+    Serial.println(gripCurrent);
+    delay(100);
+  }
+}
 void testCorrection(SerialCommands *sender){
   moveArmTo(MIDDLE);
   closeHand();
@@ -1455,6 +1471,7 @@ SerialCommand setbetweenActionsDelay_("setD", setbetweenActionsDelay);
 SerialCommand setScrambleAndSolveSpeed_("setSpeed", setScrambleAndSolveSpeed);
 SerialCommand scanLightCurrent_("scan", scanLightCurrent);
 SerialCommand fixCubeError_("fix", fixCubeError);
+SerialCommand readGripperCurrent_("gorgrip", readGripCurrent);
 
 SerialCommand speeen_("speeen", speeen);
 SerialCommand zenMode_("zen", zenMode); // zen mode will slowly and infinitely scramble until serial input is received (will finish current move)
@@ -1477,6 +1494,7 @@ void setup() {
   serial_commands_.AddCommand(&setScrambleAndSolveSpeed_);
   serial_commands_.AddCommand(&scanLightCurrent_);
   serial_commands_.AddCommand(&fixCubeError_);
+  serial_commands_.AddCommand(&readGripperCurrent_);
 
   serial_commands_.AddCommand(&speeen_);
   serial_commands_.AddCommand(&scramble_);
