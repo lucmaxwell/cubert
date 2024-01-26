@@ -3,8 +3,6 @@
 #include <Adafruit_INA219.h>
 #include <ArduinoSort.h>
 
-
-
 //motor/endstop/current sense pin assignments
 #define motors_en_pin               5      // LOW: Driver enabled. HIGH: Driver disabled
 #define motors_base_step_pin        2      // Step on rising edge
@@ -82,9 +80,9 @@ typedef struct{
 #define MIN_SPEED 0.000001   // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 int gripStrength                =     400;
-int moveArmSpeed                =      50;        // set the velocity (1-100) that we will raise or lower the arm
-int handOpenCloseSpeed          =      50;  // set the velocity (1-100) that we will open and close the ha
-int spinSpeed                   =     100;
+int moveArmSpeed                =      25;        // set the velocity (1-100) that we will raise or lower the arm
+int handOpenCloseSpeed          =      25;  // set the velocity (1-100) that we will open and close the ha
+int spinSpeed                   =     150;
 int betweenActionsDelay         =      10;
 int cubeDropDistance            =     400;
 int numStepsFromBottomToMiddle  =     800;
@@ -101,7 +99,7 @@ int zenHandOpenCloseSpeed       =      10;
 int faceRotationErrorCounter    =       0;
 int numRotationsB4SecondaryCorrection = 2;
 float fixCubeDegrees            =      80;
- 
+double minimumBaseVelocity      =    10.0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int handState    = UNKNOWN;
 int armLocation  = UNKNOWN;
@@ -753,7 +751,6 @@ void homeBase5(){
         toggleSteppers(NULL);
     }
 
-
 void copy(float* src, float* dst, int len) {
     memcpy(dst, src, sizeof(src[0])*len);
 }
@@ -813,7 +810,7 @@ Array* movingMedian(float* samples, int length, int windowSize){
   return arr;
 }
 
-int findLightRing(float* samples, int length){
+int  findLightRing(float* samples, int length){
   Array* arr = movingMedian(samples, length, 5);
 
   const float TOL = 0.5;
@@ -972,7 +969,6 @@ void openHand() {
 
 void spinBase(int my_direction, bool correctionEnabled) {   
   Serial.println("Spinning base once");
-  double piOverTwo = 1.5708;
   int degreesToRotate = 90;  
 
   digitalWrite(motors_base_dir_pin, my_direction);  // set the direction
@@ -986,53 +982,47 @@ void spinBase(int my_direction, bool correctionEnabled) {
     degreesToRotate += cubeRotationError;
   }
 
-  int divisor = 24;
-  double totalSteps = 19200.0 * degreesToRotate / 360.0;// yeah these two lines are probably poo poo caca
+  double totalSteps = 19200.0 * degreesToRotate / 360.0;
   int actualSteps = floor(totalSteps);
   int stepDelay = 0;
   double velocity;
-  double ratio = (19200.0/360.0)/(piOverTwo*2)*180.0;
+  float point1 = totalSteps / 5;
+  float point2 = totalSteps * 4 / 5;
 
+  for (int i = 0; i < actualSteps; i++) {        
+       if(i < point1){
+        velocity = spinSpeed * double(i)/point1;        
+       }
+       else if(i >= point1 && i <= point2){
+        velocity = spinSpeed;
+      }else{
+        velocity = spinSpeed * (totalSteps - double(i)) / point1;
+      }
+       velocity  = max(velocity, minimumBaseVelocity);
+       stepDelay = getDelay(velocity);  
 
-  for (int i = 0; i < actualSteps; i++) { 
-       digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
-
-      if(i % 100 == 0){
-        velocity = sin(i/ratio);        
-       
-
-      velocity = max(velocity, 10.0); 
-      stepDelay = getDelay(velocity);       
-      delayMicroseconds(stepDelay);
-
-    }     
+       digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));     
+       delayMicroseconds(stepDelay);
   }
 
   if(correctionEnabled){
-    if(my_direction == cw){
-      my_direction = ccw;
-    }
-    else{
-      my_direction = cw;
-    }
-  
-    double numCorrectionSteps = 19200.0 * cubeRotationError / 360.0;
-    int correctionStepDelay = getDelay(correctionSpeed);
-    for(int i = 0; i < numCorrectionSteps; i++){
-      digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
-      delayMicroseconds(correctionStepDelay);
-    } 
+    digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin));  // change the direction  
+    int correctionStepDelay = getDelay(correctionSpeed);                   // set the movement speed for the alignment
+
+   for(int i = 0; i < cubeRotationError * 19200.0 / 360.0; i++){           // undo the base error
+    digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
+    delayMicroseconds(correctionStepDelay);
   }
-  
-  delay(betweenActionsDelay);
-  Serial.println("Done spinning base once");
+
+  }  
+    delay(betweenActionsDelay);
+    Serial.println("Done spinning base once");
 }
 
 void spinBaseTwice(bool correctionEnabled){
+
   Serial.println("Spinning base twice");
   int degreesToRotate = 180;  
-
-  digitalWrite(motors_base_dir_pin, ccw);  // set the direction
   
   if (armLocation != TOP && armLocation != MIDDLE && gripperFunctional) {
     openHand();
@@ -1043,41 +1033,42 @@ void spinBaseTwice(bool correctionEnabled){
     degreesToRotate += cubeRotationError;
   }
 
-  double totalSteps = 19200.0 * degreesToRotate / 360.0;// yeah these two lines are probably poo poo caca
+  double totalSteps = 19200.0 * degreesToRotate / 360.0;
   int actualSteps = floor(totalSteps);
   int stepDelay = 0;
   double velocity;
-  float point1 = totalSteps /3 ;
-  float point2 = totalSteps * 2/3 ;
+  float point1 = totalSteps    /5;
+  float point2 = totalSteps * 4/5;
 
   for (int i = 0; i < actualSteps; i++) { 
-       digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
+       
        if(i < point1){
-        velocity = spinSpeed * 100 * double(i)/point1;        
+        velocity = spinSpeed * double(i)/point1;        
        }
        else if(i >= point1 && i <= point2){
         velocity = spinSpeed;
       }else{
-        velocity = spinSpeed * 100 * (totalSteps - double(i)) / point1;
+        velocity = spinSpeed * (totalSteps - double(i)) / point1;
       }
-       velocity = max(velocity, 10.0);
-       stepDelay = getDelay(velocity);       
+       velocity  = max(velocity, minimumBaseVelocity);
+       stepDelay = getDelay(velocity);   
+
+       digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));    
        delayMicroseconds(stepDelay);
   }
 
   if(correctionEnabled){
-    digitalWrite(motors_base_dir_pin, cw);   
-    double numCorrectionSteps = 19200.0 * cubeRotationError / 360.0;
- 
-    int correctionStepDelay = getDelay(correctionSpeed);
-    for(int i = 0; i < numCorrectionSteps; i++){
+    digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin));  // change the direction  
+    int correctionStepDelay = getDelay(correctionSpeed);                   // set the movement speed for the alignment
+
+    for(int i = 0; i < cubeRotationError * 19200.0 / 360.0; i++){           // undo the base error
       digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
       delayMicroseconds(correctionStepDelay);
-    } 
-  }  
-    delay(betweenActionsDelay);
-    Serial.println("Done spinning base twice");
+    }
   }
+  delay(betweenActionsDelay);
+  Serial.println("Done spinning base twice");
+}
   
 float getFloatFromUser(){
   Serial.println("Please enter a value:");
@@ -1383,7 +1374,6 @@ void toggleSteppers(SerialCommands *sender){
   Serial.println("Switched motors state (on/off)");
 }
 
-
 void speeen(SerialCommands * sender) {
   int startTime = 0;
   openHand();
@@ -1426,7 +1416,7 @@ void zenMode(SerialCommands *sender){
     int randomNumberOfTurns = random(1,2); //FLAG  
     int randomMove = random(1,11);
     rotateFace(randomMove, randomNumberOfTurns);  
-    lastMove = randomMove; //FLAG - this does not actualyl preven the previous move to be cancelled out due to the transformation that occurs to the cube when it is flipped ie topCW for move2
+    lastMove = randomMove; //FLAG - this does not actually prevent the previous move to be cancelled out due to the transformation that occurs to the cube when it is flipped ie topCW for move2
     //isn't opped by topCCW on move 1
   }
 
