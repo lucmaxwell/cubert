@@ -1000,6 +1000,8 @@ void spinBase(int my_direction, bool correctionEnabled) {
       if(i % 100 == 0){
         velocity = sin(i/ratio);        
        
+
+      velocity = max(velocity, 10.0); 
       stepDelay = getDelay(velocity);       
       delayMicroseconds(stepDelay);
 
