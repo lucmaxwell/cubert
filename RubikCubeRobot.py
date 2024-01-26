@@ -277,10 +277,10 @@ if __name__ == '__main__':
     motors_en_pin = 6  # GPIO number for motor enable pin
     motors_base_step_pin = 19  # GPIO number for base step pin
     motors_base_dir_pin = 26  # GPIO number for base direction pin
-    motors_arm_left_step_pin = 22  # GPIO number for arm left step pin
-    motors_arm_left_dir_pin = 13  # GPIO number for arm left direction pin
-    motors_arm_right_step_pin = 27  # GPIO number for arm right step pin
-    motors_arm_right_dir_pin = 17  # GPIO number for arm right direction pin
+    motors_arm_left_step_pin = 27  # GPIO number for arm left step pin
+    motors_arm_left_dir_pin = 17  # GPIO number for arm left direction pin
+    motors_arm_right_step_pin = 22  # GPIO number for arm right step pin
+    motors_arm_right_dir_pin = 13  # GPIO number for arm right direction pin
 
     # End stop for arm
     end_stop_hand_open_pin = 12  # GPIO number for arm open limit end stop
