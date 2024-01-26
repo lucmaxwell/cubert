@@ -1,3 +1,3 @@
-source ./cubertEnv/bin/activate
-pip install -r requirements.txt
-pip list
+mkdir cubertEnv
+python3 -m venv cubertEnv
+
