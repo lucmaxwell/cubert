@@ -9,7 +9,6 @@ from Motor import CubertMotor, MotorSpin
 
 from enum import Enum
 
-
 # Parameters
 ARM_SPEED = 60
 HAND_OPEN_CLOSE_SPEED = 60
@@ -17,6 +16,7 @@ SPIN_SPEED = 100
 ZEN_ARM_SPEED = 10
 ZEN_HAND_OPEN_CLOSE_SPEED = 10
 ZEN_SPIN_SPEED = 10
+
 
 class RobotAction(Enum):
     SPIN_BASE_CLOCKWISE = 0
@@ -32,7 +32,8 @@ class RubiksCubeRobot:
     MAX_SPEED = 3.3
     MIN_SPEED = 0.000001
 
-    def __init__(self, motors_en_pin, base_motor_pin_list, left_motor_pin_list, right_motor_pin_list, end_stop_arm_pin_list, manual_button_pin_list, command_button_pin):
+    def __init__(self, motors_en_pin, base_motor_pin_list, left_motor_pin_list, right_motor_pin_list,
+                 end_stop_arm_pin_list, manual_button_pin_list, command_button_pin):
         # Parameters
         self.zen_mode = False
         self.arm_speed = ARM_SPEED
@@ -47,7 +48,7 @@ class RubiksCubeRobot:
         self.command_button = CubertButton(command_button_pin, GPIO.LOW)
 
         # Vision
-        #self.vision = CubertVision()
+        # self.vision = CubertVision()
 
         # Initialize the cube's state
         self.cube = RubikCube(3)
@@ -205,7 +206,6 @@ class RubiksCubeRobot:
         elif action == RobotAction.SPIN_CUBE_COUNTERCLOCKWISE:
             self.spin_cube(MotorSpin.COUNTER_CLOCKWISE)
 
-
     def doStuffs(self):
         # Get the button pressed
         if self.command_button.pressed():
@@ -264,9 +264,9 @@ class RubiksCubeRobot:
         #     self.vision.capture()
 
         if self.manual_buttons[0].pressed():
-            self.base_motor.step(1, MotorSpin.CLOCKWISE, 60)
+            self.arm.move_arm(ArmDirection.UP, 60)
         if self.manual_buttons[1].pressed():
-            self.base_motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
+            self.arm.move_arm(ArmDirection.DOWN, 60)
 
         if self.command_button.pressed():
             print("Command button is pressed!")
@@ -275,12 +275,12 @@ class RubiksCubeRobot:
 if __name__ == '__main__':
     # Motor pins
     motors_en_pin = 6  # GPIO number for motor enable pin
-    motors_base_step_pin = 27  # GPIO number for base step pin
-    motors_base_dir_pin = 17  # GPIO number for base direction pin
+    motors_base_step_pin = 19  # GPIO number for base step pin
+    motors_base_dir_pin = 26  # GPIO number for base direction pin
     motors_arm_left_step_pin = 22  # GPIO number for arm left step pin
     motors_arm_left_dir_pin = 13  # GPIO number for arm left direction pin
-    motors_arm_right_step_pin = 19  # GPIO number for arm right step pin
-    motors_arm_right_dir_pin = 26  # GPIO number for arm right direction pin
+    motors_arm_right_step_pin = 27  # GPIO number for arm right step pin
+    motors_arm_right_dir_pin = 17  # GPIO number for arm right direction pin
 
     # End stop for arm
     end_stop_hand_open_pin = 12  # GPIO number for arm open limit end stop
@@ -291,7 +291,7 @@ if __name__ == '__main__':
     raiseArmButton = 23  # GPIO number for raise arm button
     lowerArmButton = 24  # GPIO number for lower arm button
     openHandButton = 28  # GPIO number for open hand button
-    closeHandButton = 20 # GPIO number for close hand button
+    closeHandButton = 20  # GPIO number for close hand button
     spinBaseButton = 21  # GPIO number for spin base button
 
     # GPIO pins
@@ -337,7 +337,7 @@ if __name__ == '__main__':
             manual_button_pin_list, BUTTON_PIN)
 
         while True:
-            #robot.doStuffs()
+            # robot.doStuffs()
             robot.test()
 
     except KeyboardInterrupt:
