@@ -5,8 +5,8 @@ from sklearn.cluster import KMeans
 import scipy.stats as stats
 import vision
 
-basePath = os.getcwd() + "\\CubeStateDetection\\vision\\"
-cubeFolder = basePath + "\images\cubes\\"
+basePath = os.getcwd() + "/CubeStateDetection/vision/"
+cubeFolder = basePath + "/images/cubes/"
 imagesPath = basePath + "images/"
 mask = 'mask3.png'
 maskPath = imagesPath + mask
