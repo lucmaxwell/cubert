@@ -3,6 +3,8 @@
 #include <Adafruit_INA219.h>
 #include <ArduinoSort.h>
 
+
+
 //motor/endstop/current sense pin assignments
 #define motors_en_pin               5      // LOW: Driver enabled. HIGH: Driver disabled
 #define motors_base_step_pin        2      // Step on rising edge
@@ -751,6 +753,7 @@ void homeBase5(){
         toggleSteppers(NULL);
     }
 
+
 void copy(float* src, float* dst, int len) {
     memcpy(dst, src, sizeof(src[0])*len);
 }
@@ -988,22 +991,19 @@ void spinBase(int my_direction, bool correctionEnabled) {
   int actualSteps = floor(totalSteps);
   int stepDelay = 0;
   double velocity;
-  float point1 = totalSteps / 3;
-  float point2 = totalSteps * 2 / 3;
+  double ratio = (19200.0/360.0)/(piOverTwo*2)*180.0;
+
 
   for (int i = 0; i < actualSteps; i++) { 
        digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
-       if(i < point1){
-        velocity = spinSpeed * 100 * double(i)/point1;        
-       }
-       else if(i >= point1 && i <= point2){
-        velocity = spinSpeed;
-      }else{
-        velocity = spinSpeed * 100 * (totalSteps - double(i)) / point1;
-      }
-       velocity = max(velocity, 6.0);
-       stepDelay = getDelay(velocity);       
-       delayMicroseconds(stepDelay);
+
+      if(i % 100 == 0){
+        velocity = sin(i/ratio);        
+       
+      stepDelay = getDelay(velocity);       
+      delayMicroseconds(stepDelay);
+
+    }     
   }
 
   if(correctionEnabled){
@@ -1022,9 +1022,10 @@ void spinBase(int my_direction, bool correctionEnabled) {
     } 
   }
   
-    delay(betweenActionsDelay);
-    Serial.println("Done spinning base once");
-  }
+  delay(betweenActionsDelay);
+  Serial.println("Done spinning base once");
+}
+
 void spinBaseTwice(bool correctionEnabled){
   Serial.println("Spinning base twice");
   int degreesToRotate = 180;  
