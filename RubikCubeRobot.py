@@ -284,8 +284,8 @@ if __name__ == '__main__':
 
     # End stop for arm
     end_stop_hand_open_pin = 12  # GPIO number for arm open limit end stop
-    end_stop_arm_upperLimit_pin = 26  # GPIO number for arm upper limit end stop
-    end_stop_arm_lowerLimit_pin = 16  # GPIO number for arm lower limit end stop
+    end_stop_arm_upperLimit_pin = 21  # GPIO number for arm upper limit end stop
+    end_stop_arm_lowerLimit_pin = 20  # GPIO number for arm lower limit end stop
 
     # Manual button pins
     raiseArmButton = 23  # GPIO number for raise arm button
