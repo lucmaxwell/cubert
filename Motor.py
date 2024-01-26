@@ -50,7 +50,7 @@ class CubertMotor:
 if __name__ == '__main__':
     motor_en_pin = 6
     motor_step_pin = 27
-    motor_dir_pin = 22
+    motor_dir_pin = 17
 
     # GPIO
     GPIO.setmode(GPIO.BCM)
