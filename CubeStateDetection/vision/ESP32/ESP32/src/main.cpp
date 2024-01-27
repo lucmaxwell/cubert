@@ -66,7 +66,6 @@ int8_t BluetoothIn;
 
 Adafruit_INA219 lightRingINA; // current sensor
 Adafruit_INA219 gripperINA(0x041); //gripper current sensor
-
 typedef struct{
   float*  data;
   int   length;
@@ -80,21 +79,21 @@ typedef struct{
 #define MAX_SPEED 3.3        // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 #define MIN_SPEED 0.000001   // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-int gripStrength                =     400;
+int gripStrength                =     350;
 int moveArmSpeed                =      25;        // set the velocity (1-100) that we will raise or lower the arm
 int handOpenCloseSpeed          =      25;  // set the velocity (1-100) that we will open and close the ha
 int spinSpeed                   =     150;
 int betweenActionsDelay         =      10;
 int cubeDropDistance            =     400;
-int numStepsFromBottomToMiddle  =     800;
+int numStepsFromBottomToMiddle  =     600;
 int numStepsFromTopToMiddle     =    1350;
-int numStepsFromDropoffToMiddle =     700;
+int numStepsFromDropoffToMiddle =     850;
 
 float cubeRotationError         =       3; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
 int correctionSpeed             =       6;
 
 int homePosition                =  MIDDLE;
-int zenSpinSpeed                =      10;
+int zenSpinSpeed                =      50;
 int zenArmSpeed                 =      10;
 int zenHandOpenCloseSpeed       =      10;
 int faceRotationErrorCounter    =       0;
@@ -943,10 +942,31 @@ void moveArmTo(int destination) {
     Serial.println("Arrived at destination.");
     delay(betweenActionsDelay);}
 void closeHand() {
+  digitalWrite(motors_arm_left_dir_pin, ccw);
+  digitalWrite(motors_arm_right_dir_pin, ccw);
   Serial.println("Closing hand");
-  for (int i = 0; i < gripStrength; i++) {
-    articulateHand(CLOSE);
+  int point1 = gripStrength / 5;
+  int point2 = gripStrength * 4 / 5;
+  int velocity;
+  int stepDelay;
+
+    for (int i = 0; i < gripStrength; i++) {        
+       if(i < point1){
+        velocity = handOpenCloseSpeed * double(i)/point1;        
+       }
+       else if(i >= point1 && i <= point2){
+        velocity = handOpenCloseSpeed;
+      }else{
+        velocity = handOpenCloseSpeed * (gripStrength - double(i)) / point1;
+      }
+       velocity  = max(velocity, 10);
+       stepDelay = getDelay(velocity);  
+
+       digitalWrite(motors_arm_left_step_pin,  !digitalRead(motors_arm_left_step_pin));    // Step left motor
+       digitalWrite(motors_arm_right_step_pin, !digitalRead(motors_arm_right_step_pin));  // Step right motor   
+       delayMicroseconds(stepDelay);
   }
+  
   delay(betweenActionsDelay);
   handState = CLOSE; }  
 void openHand() {
@@ -1019,7 +1039,6 @@ void spinBase(int my_direction, bool correctionEnabled) {
     delay(betweenActionsDelay);
     Serial.println("Done spinning base once");
 }
-
 void spinBaseTwice(bool correctionEnabled){
 
   Serial.println("Spinning base twice");
@@ -1070,7 +1089,6 @@ void spinBaseTwice(bool correctionEnabled){
   delay(betweenActionsDelay);
   Serial.println("Done spinning base twice");
 }
-  
 float getFloatFromUser(){
   Serial.println("Please enter a value:");
   while (!Serial.available()) {}  // wait until the user enters a value
@@ -1174,7 +1192,6 @@ void fixCubeError(SerialCommands *sender){
 
   delay(betweenActionsDelay);  
 }
-
 void flipCube() { 
   Serial.println("////// Flipping cube");
   openHand();
@@ -1289,21 +1306,6 @@ void readCurrent(){
 
   Serial.printf("Current is %fmA\r\n", avg);
 }
-void readGripCurrent(SerialCommands *sender){
-  gripStrength = 300;
-  float gripCurrent = 0;
-  closeHand();
-
-  gripperINA.powerSave(false);
-
-  for(int i = 300; i < 350; i++){
-    gripStrength = i;
-    closeHand();
-    gripCurrent = gripperINA.getCurrent_mA();
-    Serial.println(gripCurrent);
-    delay(100);
-  }
-}
 void testCorrection(SerialCommands *sender){
   moveArmTo(MIDDLE);
   closeHand();
@@ -1389,6 +1391,78 @@ void toggleSteppers(SerialCommands *sender){
   digitalWrite(motors_en_pin,!digitalRead(motors_en_pin));
   Serial.println("Switched motors state (on/off)");
 }
+void readGripCurrent(SerialCommands *sender){
+ /*
+  gripStrength = 300;
+  gripperINA.powerSave(false);
+  float gripCurrent = 0;
+  openHand();
+
+  for(int i = 0; i < gripStrength; i++){
+    articulateHand(CLOSE);
+    delay(1);
+  }
+
+  for(int i = 300; i < 500; i++){
+    gripStrength = i;
+    articulateHand(CLOSE);
+    gripCurrent = gripperINA.getCurrent_mA();
+    Serial.println(gripCurrent);
+    delay(100);
+  }
+
+   gripperINA.powerSave(true);
+*/
+  openHand();
+  moveArmTo(MIDDLE);
+  gripperINA.powerSave(false);
+  float currentReading;
+  float median = 0;
+  int graphBottom = 500;
+  int graphTop    = 700;   
+  int potentialGripStrength = 0;
+  float lastReading = 0;
+  float thisReading = 0;
+  
+  for(int i = 0; i < 100; i++){
+    articulateHand(CLOSE); potentialGripStrength++;
+    lastReading = gripperINA.getCurrent_mA();
+    delay(10);
+    thisReading = gripperINA.getCurrent_mA(); 
+    
+  }
+
+  while(true){ 
+    
+    articulateHand(CLOSE);   
+    potentialGripStrength++;
+
+    thisReading = gripperINA.getCurrent_mA(); 
+
+            
+      
+    Serial.print(graphBottom);
+    Serial.print(" ");
+    Serial.print(graphTop);
+    Serial.print(" ");
+    Serial.println(thisReading);   
+    delay(10);
+    
+
+    if (abs(thisReading - lastReading) > 70){
+       Serial.println(potentialGripStrength);
+      gripperINA.powerSave(true);
+      handState = UNKNOWN;
+      armLocation = UNKNOWN;
+      return;
+    } 
+    lastReading = thisReading;
+   
+  }
+    handState = UNKNOWN;
+    armLocation = UNKNOWN;
+}
+
 
 void speeen(SerialCommands * sender) {
   int startTime = 0;
@@ -1456,8 +1530,9 @@ void scramble(SerialCommands * sender) {
   }
   float elapsed = millis() - startTime;
   Serial.print("It took "); Serial.print(elapsed/1000);Serial.print(" seconds to perform "); Serial.print(numScrambles);Serial.println(" scrambles.");
-}//initialize serialCommand functions
+}
 
+//initialize serialCommand functions
 SerialCommand setGripDistance_("t", setGripDistance);
 SerialCommand testDistanceToMiddleFromTop_("m", testDistanceToMiddleFromTop);
 SerialCommand testDistanceToMiddleFromBottom_("m2", testDistanceToMiddleFromBottom);
@@ -1475,76 +1550,74 @@ SerialCommand readGripperCurrent_("gorgrip", readGripCurrent);
 
 SerialCommand speeen_("speeen", speeen);
 SerialCommand zenMode_("zen", zenMode); // zen mode will slowly and infinitely scramble until serial input is received (will finish current move)
-SerialCommand scramble_("scramble", scramble); // scramble will ask the user for a number of moves to scramble for and then perform that many random scrambles
-
+SerialCommand scramble_("scramble", scramble); 
 
 void setup() {
-  Serial.begin(115200);
-  serial_commands_.SetDefaultHandler(cmd_unrecognized);
+Serial.begin(115200);
+serial_commands_.SetDefaultHandler(cmd_unrecognized);
 
-  serial_commands_.AddCommand(&setGripDistance_);
-  serial_commands_.AddCommand(&testDistanceToMiddleFromTop_);
-  serial_commands_.AddCommand(&testDistanceToMiddleFromBottom_);
-  serial_commands_.AddCommand(&setDistanceToMiddleFromCubeRelease_);  
-  serial_commands_.AddCommand(&setCubeError_);
-  serial_commands_.AddCommand(&testMove_);
-  serial_commands_.AddCommand(&setZenSpeeds_);
-  serial_commands_.AddCommand(&toggleSteppers_);
-  serial_commands_.AddCommand(&setbetweenActionsDelay_);
-  serial_commands_.AddCommand(&setScrambleAndSolveSpeed_);
-  serial_commands_.AddCommand(&scanLightCurrent_);
-  serial_commands_.AddCommand(&fixCubeError_);
-  serial_commands_.AddCommand(&readGripperCurrent_);
+serial_commands_.AddCommand(&setGripDistance_);
+serial_commands_.AddCommand(&testDistanceToMiddleFromTop_);
+serial_commands_.AddCommand(&testDistanceToMiddleFromBottom_);
+serial_commands_.AddCommand(&setDistanceToMiddleFromCubeRelease_);  
+serial_commands_.AddCommand(&setCubeError_);
+serial_commands_.AddCommand(&testMove_);
+serial_commands_.AddCommand(&setZenSpeeds_);
+serial_commands_.AddCommand(&toggleSteppers_);
+serial_commands_.AddCommand(&setbetweenActionsDelay_);
+serial_commands_.AddCommand(&setScrambleAndSolveSpeed_);
+serial_commands_.AddCommand(&scanLightCurrent_);
+serial_commands_.AddCommand(&fixCubeError_);
+serial_commands_.AddCommand(&readGripperCurrent_);
 
-  serial_commands_.AddCommand(&speeen_);
-  serial_commands_.AddCommand(&scramble_);
-  serial_commands_.AddCommand(&zenMode_);
-  serial_commands_.AddCommand(&testCorrection_);
+serial_commands_.AddCommand(&speeen_);
+serial_commands_.AddCommand(&scramble_);
+serial_commands_.AddCommand(&zenMode_);
+serial_commands_.AddCommand(&testCorrection_);
 
-  // configure motor pins for esp32 wroom
-  pinMode(motors_en_pin, OUTPUT);
-  pinMode(motors_base_step_pin, OUTPUT);
-  pinMode(motors_base_dir_pin, OUTPUT);
-  pinMode(motors_arm_left_step_pin, OUTPUT);
-  pinMode(motors_arm_left_dir_pin, OUTPUT);
-  pinMode(motors_arm_right_step_pin, OUTPUT);
-  pinMode(motors_arm_right_dir_pin, OUTPUT);
+// configure motor pins for esp32 wroom
+pinMode(motors_en_pin, OUTPUT);
+pinMode(motors_base_step_pin, OUTPUT);
+pinMode(motors_base_dir_pin, OUTPUT);
+pinMode(motors_arm_left_step_pin, OUTPUT);
+pinMode(motors_arm_left_dir_pin, OUTPUT);
+pinMode(motors_arm_right_step_pin, OUTPUT);
+pinMode(motors_arm_right_dir_pin, OUTPUT);
 
-  //configure control buttons
-  pinMode(raiseArmButton, INPUT_PULLUP);
-  pinMode(lowerArmButton, INPUT_PULLUP);
-  pinMode(openHandButton, INPUT_PULLUP);
-  pinMode(closeHandButton, INPUT_PULLUP);
-  pinMode(spinBaseButton, INPUT_PULLUP);
-  pinMode(endstop_arm_openLimit_pin, INPUT_PULLUP);
-  pinMode(endstop_arm_upperLimit_pin, INPUT_PULLUP);
-  pinMode(endstop_arm_lowerLimit_pin, INPUT_PULLUP);
+//configure control buttons
+pinMode(raiseArmButton, INPUT_PULLUP);
+pinMode(lowerArmButton, INPUT_PULLUP);
+pinMode(openHandButton, INPUT_PULLUP);
+pinMode(closeHandButton, INPUT_PULLUP);
+pinMode(spinBaseButton, INPUT_PULLUP);
+pinMode(endstop_arm_openLimit_pin, INPUT_PULLUP);
+pinMode(endstop_arm_upperLimit_pin, INPUT_PULLUP);
+pinMode(endstop_arm_lowerLimit_pin, INPUT_PULLUP);
 
- 
-  digitalWrite(motors_en_pin, LOW); // enable steppers
 
-  // Start bluetooth
-  SerialBT.begin("ESP32test2"); //Bluetooth device name
+digitalWrite(motors_en_pin, LOW); // enable steppers
 
-  if (! lightRingINA.begin()) {
-    Serial.println("Failed to find Light Ring Curret sensor");
-  }
+// Start bluetooth
+SerialBT.begin("ESP32test2"); //Bluetooth device name
 
-  Serial.println("Ready!");
-  homeArmAndHand();
-  // homeBase();
-  // homeBase2();
-  // homeBase3();
-  // homeBase4();
-  // homeBase5();
-  // centreLight();
-  // homeLight();
-  // Serial.println("Now performing micro-scan");
-  // delay(1000);
-  // smallScan();
-  // microScan();
-  // toggleSteppers(NULL);
+if (! lightRingINA.begin()) {
+  Serial.println("Failed to find Light Ring Curret sensor");
 }
+
+if (! gripperINA.begin()) {
+  Serial.println("Failed to find Gripper Curret sensor");
+}
+
+
+Serial.println("Ready!");
+homeArmAndHand();
+// homeBase();
+// homeBase2();
+// homeBase3();
+// homeBase4();
+// homeBase5();
+}
+
 void loop() {
   int raise = digitalRead(raiseArmButton);
   int lower = digitalRead(lowerArmButton);
@@ -1672,7 +1745,6 @@ void loop() {
     }
   }
 
-  // readCurrent();
 
   delay(1);
 }
