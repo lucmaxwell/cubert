@@ -33,9 +33,10 @@
 #define OPEN             1
 #define CLOSE            0
 #define CLOSED           0
-#define OPENED           0
+#define OPENED           1
+#define OPEN_AT_ENDSTOP  2
 #define MIDDLE         420
-#define DROPOFFHEIGHT   69
+#define DROPOFF_HEIGHT  69
 #define BOTTOM          19
 #define TOP             23
 #define FRONTCW          1
@@ -65,7 +66,7 @@ BluetoothSerial SerialBT;
 int8_t BluetoothIn;
 
 Adafruit_INA219 lightRingINA; // current sensor
-
+Adafruit_INA219 gripperINA(0x041); //gripper current sensor
 typedef struct{
   float*  data;
   int   length;
@@ -79,17 +80,18 @@ typedef struct{
 #define MAX_SPEED 3.3        // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 #define MIN_SPEED 0.000001   // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-int gripStrength                =     350;
-int moveArmSpeed                =      25;        // set the velocity (1-100) that we will raise or lower the arm
-int handOpenCloseSpeed          =      25;  // set the velocity (1-100) that we will open and close the ha
+int gripStrength                =     365;
+int moveArmSpeed                =      85;        // set the velocity (1-100) that we will raise or lower the arm
+int handOpenCloseSpeed          =      50;  // set the velocity (1-100) that we will open and close the ha
 int spinSpeed                   =     150;
 int betweenActionsDelay         =      10;
 int cubeDropDistance            =     400;
 int numStepsFromBottomToMiddle  =     600;
 int numStepsFromTopToMiddle     =    1350;
 int numStepsFromDropoffToMiddle =     850;
+int numStepsTopToBottom         =       0;
 
-float cubeRotationError         =       3; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
+float cubeRotationError         =       5; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
 int correctionSpeed             =       6;
 
 int homePosition                =  MIDDLE;
@@ -98,8 +100,29 @@ int zenArmSpeed                 =      10;
 int zenHandOpenCloseSpeed       =      10;
 int faceRotationErrorCounter    =       0;
 int numRotationsB4SecondaryCorrection = 2;
-float fixCubeDegrees            =      80;
+float fixCubeDegrees            =      45;
 double minimumBaseVelocity      =    10.0;
+int firstTimeOpening            =       1;
+
+int armSpeedupDenominator       =       5; // this means that for the first 1/armSpeedupDenominator the arm will move slowly,
+                                           // and for the last (armSpeedupDenominator - 1)/armSpeedupDenominator percentage of the move it will slow down
+                                           // ie, if this is 4, the first 25% of the move will be accelerating (linearly) and the last 25% will be decelerating 
+                                           // in other words, we'll be at the 'posted' speed 50% of the time.
+int handSpeedupDenominator      =       5; // see above
+int spinSpeedupDenominator      =       5; // see above
+double minimumArmSpeed     =      25; // when we calculate an acceleration on the above lines, the first step delays will be too long (movement will be too slow)
+double minimumHandSpeed    =      10; // by setting these, we can force the initial speed of the arm/hand/base spinning to some values
+double minimumSpinSpeed    =      60;
+//////////////////////////////////////////////////////// calculations for absolute movement (mm) calculations
+double armStepsPerMm        = 1900.0/45.0;
+double cubeletLength            =    17.0; // in mm
+double bottomEndstopHeight      =    46.8; // this is the distance in mm between the base and the top edge of the hand
+double topEndstopHeight         =    94.5; // in mm (measured from the base to the top edge of the hand)
+double bottomGripHeight         =    bottomEndstopHeight + 2.0; 
+double middleHeight             =    bottomGripHeight + cubeletLength - 2.0;
+double topOfRotationHeight      =    bottomGripHeight + 2 * cubeletLength + 12.0;
+double dropoffHeight            =    topOfRotationHeight - 9.0;
+double currentCubeHeight        =    0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int handState    = UNKNOWN;
 int armLocation  = UNKNOWN;
@@ -117,12 +140,14 @@ int getIntegerFromUser();
 void articulateHand(int direction);
 void spinBase(int,bool);
 void toggleSteppers(SerialCommands *sender);
+void moveArmToMM(int destination); 
 
 char serial_command_buffer_[32];
 SerialCommands serial_commands_(&Serial, serial_command_buffer_, sizeof(serial_command_buffer_), "\r\n", " ");
 void cmd_unrecognized(SerialCommands* sender, const char* cmd) {
 sender->GetSerial()->println("Unrecognized command");}
-void homeArmAndHand() {
+
+void  homeArmAndHand() {
   String desiredLocation = "";
   Serial.print("Homing hand to ");
   switch (homePosition) {
@@ -140,9 +165,9 @@ void homeArmAndHand() {
 
   openHand();
   if(gripperFunctional){
-  moveArmTo(homePosition);
+  moveArmToMM(homePosition);
   }}
-void centreLight(){
+void  centreLight(){
   float maxCurrent;
   float tempCurrent;
   int spinCount = 0;
@@ -171,9 +196,8 @@ void centreLight(){
     }
   }
 
-  lightRingINA.powerSave(true);
-}
-void homeLight(){
+  lightRingINA.powerSave(true);}
+void  homeLight(){
   float maxCurrent;
   float tempCurrent;
   int lightRingPos = 0;
@@ -234,9 +258,8 @@ void homeLight(){
     }
   }
 
-  lightRingINA.powerSave(true);
-}
-void homeLightv2(){
+  lightRingINA.powerSave(true);}
+void  homeLightv2(){
   float tempCurrent;
   // const float thresh = 100;
   const int SAMPLE_NUM = 256*5;  // number of times to sample the current should be a factor of motor steps
@@ -312,9 +335,8 @@ void homeLightv2(){
   //   }
   // }
 
-  lightRingINA.powerSave(true);
-}
-void smallScan(){
+  lightRingINA.powerSave(true);}
+void  smallScan(){
   const int STEPS_LR = 19200/360*12;
 
   float stepDelay = getDelay(100);
@@ -394,9 +416,8 @@ void smallScan(){
 
   Serial.println(stepDelta);
 
-  lightRingINA.powerSave(true);
-}
-void scanLightCurrent(SerialCommands *sender){
+  lightRingINA.powerSave(true);}
+void  scanLightCurrent(SerialCommands *sender){
   int threshold = 110;
   Serial.println("How many times to cross current threshold?");
   int numTimesToCross = getIntegerFromUser();
@@ -426,9 +447,8 @@ void scanLightCurrent(SerialCommands *sender){
     if(numTimesCrossed > numTimesToCross){
       return;
     }
-  }
-}
-void homeBase(){
+  }}
+void  homeBase(){
   int threshold = 110;
   Serial.println("Homing base");
   int numTimesToCross = 16;
@@ -454,9 +474,8 @@ void homeBase(){
     if(iterationMedian >= threshold){
       numTimesCrossed++;
     }  
-  }
-}
-void homeBase2(){
+  }}
+void  homeBase2(){
     lightRingINA.powerSave(false);
       Serial.println("would you like to scan or have a shot at it? (0 to scan, 1 to try)");
       int mode = getIntegerFromUser();  
@@ -537,10 +556,8 @@ void homeBase2(){
           delayMicroseconds(600);
         }          
           break;
-    }
-
-}
-void homeBase3(){
+    }}
+void  homeBase3(){
     lightRingINA.powerSave(false);
     int shortDelay = 0;
     int longDelay  = 600;
@@ -610,7 +627,7 @@ void homeBase3(){
         delay(100);
         toggleSteppers(NULL);
     }
-void homeBase4(){
+void  homeBase4(){
     lightRingINA.powerSave(false);
     int shortDelay = 10;
     int longDelay  = 600;
@@ -680,7 +697,7 @@ void homeBase4(){
         delay(100);
         toggleSteppers(NULL);
     }
-void homeBase5(){
+void  homeBase5(){
     lightRingINA.powerSave(false);
     int shortDelay = 0;
     int longDelay  = 600;
@@ -705,7 +722,6 @@ void homeBase5(){
     median = tempQueue[(queueLength + 1 ) / 2 - 1];    
          
         while(timesCrossed < 41){
-
           // this for loop should be a function
           for(int i = 0; i < queueLength - 1; i++){
             queue[i] = queue[i+1]; // update the queue
@@ -751,10 +767,9 @@ void homeBase5(){
         toggleSteppers(NULL);
     }
 
-void copy(float* src, float* dst, int len) {
-    memcpy(dst, src, sizeof(src[0])*len);
-}
-void microScan(){
+void  copy(float* src, float* dst, int len) {
+    memcpy(dst, src, sizeof(src[0])*len);}
+void  microScan(){
   lightRingINA.powerSave(false);
   int degreesToSweep = 24;
   int boxCarLength   = 7; // boxcar size must be odd
@@ -783,8 +798,7 @@ void microScan(){
     iterationMedian = sectionMeasurements[(boxCarLength + 1 ) / 2 - 1];
     //Serial.println(iterationMedian);
     mediansArray[i] = iterationMedian;
-  }
-}
+  }}
 Array* movingMedian(float* samples, int length, int windowSize){
   int arrLength = length / windowSize;
 
@@ -807,10 +821,9 @@ Array* movingMedian(float* samples, int length, int windowSize){
     arr->data[i] = median;
   }
 
-  return arr;
-}
+  return arr;}
 
-int  findLightRing(float* samples, int length){
+int   findLightRing(float* samples, int length){
   Array* arr = movingMedian(samples, length, 5);
 
   const float TOL = 0.5;
@@ -844,9 +857,8 @@ int  findLightRing(float* samples, int length){
 
   lightPos = 5*(2*streakStart/length + 1);
 
-  return lightPos;
-}
-void moveArmTo(int destination) {
+  return lightPos;}
+void  moveArmTo(int destination) {
   if(!gripperFunctional)
   {
     return;
@@ -856,6 +868,9 @@ void moveArmTo(int destination) {
   switch(armLocation){
     case TOP:
       Serial.print("top");
+      break;
+    case DROPOFF_HEIGHT:
+      Serial.print("dropoff height");
       break;
     case MIDDLE:
       Serial.print("middle");
@@ -873,6 +888,9 @@ void moveArmTo(int destination) {
     case TOP:
       desiredLocation = "top";
       break;
+    case DROPOFF_HEIGHT:
+      desiredLocation = "dropoff height";
+      break;
     case BOTTOM:
       desiredLocation = "bottom";
       break;
@@ -884,20 +902,16 @@ void moveArmTo(int destination) {
   switch (destination) {
     /////////////////////////////////////////////////////////
     case BOTTOM:
-      while (1) {
-        if (digitalRead(destination) == 0)
-          break;
+      while (digitalRead(BOTTOM) == 1){          
         moveArm(DOWN);
       }
       armLocation = BOTTOM;
       break;
     /////////////////////////////////////////////////////////
     case TOP:
-      while(1){
-        if(digitalRead(destination) == 0)
-          break;
+      while(digitalRead(TOP) == 1){   
       moveArm(UP);
-      }    
+      }          
       armLocation = TOP;
       break;
     ///MIDDLE/////////////////////////////////////////////////////
@@ -920,7 +934,7 @@ void moveArmTo(int destination) {
           armLocation = MIDDLE;
           break;
       }
-      else if (armLocation == DROPOFFHEIGHT){
+      else if (armLocation == DROPOFF_HEIGHT){
         for(int i = 0; i < numStepsFromDropoffToMiddle; i++){
           moveArm(DOWN);
         }
@@ -941,52 +955,99 @@ void moveArmTo(int destination) {
   }
     Serial.println("Arrived at destination.");
     delay(betweenActionsDelay);}
-void closeHand() {
+void  closeHand() {
+  digitalWrite(motors_arm_left_dir_pin, ccw);
+  digitalWrite(motors_arm_right_dir_pin, ccw);
   Serial.println("Closing hand");
-  int point1 = gripStrength / 5;
-  int point2 = gripStrength * 4 / 5;
-  int velocity;
+  int point1 = gripStrength / handSpeedupDenominator;
+  int point2 = gripStrength * (handSpeedupDenominator - 1) / handSpeedupDenominator;
+  double velocity;
   int stepDelay;
+  int gs = gripStrength;
 
-    for (int i = 0; i < gripStrength; i++) {        
+  if(handState == UNKNOWN)
+    openHand();
+
+  if(handState == OPENED)
+    gs -= 100;
+
+
+  for (int i = 0; i < gs; i++) {        
+      if(i < point1){
+      velocity = handOpenCloseSpeed * double(i)/point1;        
+      }
+      else if(i >= point1 && i <= point2){
+      velocity = handOpenCloseSpeed;
+    }else{
+      velocity = handOpenCloseSpeed * (gripStrength - double(i)) / point1;
+    }
+      velocity  = max(velocity, minimumHandSpeed);
+      stepDelay = getDelay(velocity);  
+
+      digitalWrite(motors_arm_left_step_pin,  !digitalRead(motors_arm_left_step_pin));    // Step left motor
+      digitalWrite(motors_arm_right_step_pin, !digitalRead(motors_arm_right_step_pin));  // Step right motor   
+      delayMicroseconds(stepDelay);
+  }
+  
+  delay(betweenActionsDelay);
+  handState = CLOSE; }  
+void  openHand() {
+
+  Serial.println("Opening hand");
+  int count = 0;
+
+  if(handState == OPENED || handState == OPEN_AT_ENDSTOP){
+    Serial.println("Hand was already opened.");
+    return;
+  }
+
+  if(handState == UNKNOWN ){
+    Serial.println("Didn't know where hand was- opening hand until we hit the end stop.");
+    while(digitalRead(endstop_arm_openLimit_pin) == 1){
+      count++;
+      articulateHand(OPEN);
+      int stepDelay = getDelay(handOpenCloseSpeed);
+      delayMicroseconds(stepDelay);
+      if (count > 1000){
+        gripperFunctional = false;
+        Serial.println("Hand could not reach end stop");
+        break;
+      }
+    }    
+    handState = OPEN_AT_ENDSTOP; 
+  }
+  if(handState == CLOSED){ // if the hand is closed, we'll move the hand open for gripStrength - 100 steps (to not hit the end stop)
+    digitalWrite(motors_arm_left_dir_pin, cw);
+    digitalWrite(motors_arm_right_dir_pin, cw);
+    Serial.println("Opening hand without hitting endstop");
+    int point1 = gripStrength / handSpeedupDenominator;
+    int point2 = gripStrength * (handSpeedupDenominator - 1) / handSpeedupDenominator;
+    double velocity;
+    int stepDelay;
+    int gs = gripStrength - 100;
+
+    for (int i = 0; i < gs; i++) {        
        if(i < point1){
         velocity = handOpenCloseSpeed * double(i)/point1;        
        }
        else if(i >= point1 && i <= point2){
         velocity = handOpenCloseSpeed;
       }else{
-        velocity = handOpenCloseSpeed * (gripStrength - double(i)) / point1;
+        velocity = handOpenCloseSpeed * (gs - double(i)) / point1;
       }
-       velocity  = max(velocity, 10);
+       velocity  = max(velocity, minimumHandSpeed);
        stepDelay = getDelay(velocity);  
 
        digitalWrite(motors_arm_left_step_pin,  !digitalRead(motors_arm_left_step_pin));    // Step left motor
        digitalWrite(motors_arm_right_step_pin, !digitalRead(motors_arm_right_step_pin));  // Step right motor   
        delayMicroseconds(stepDelay);
+   }
+  handState = OPENED;
   }
   
-  delay(betweenActionsDelay);
-  handState = CLOSE; }  
-void openHand() {
+  delay(betweenActionsDelay);}
 
-  Serial.println("Opening hand");
-  int count = 0;
-  while (1) {
-    if (digitalRead(endstop_arm_openLimit_pin) == 0)
-      return;
-    articulateHand(OPEN);
-    count++;
-    if (count > 10000){
-        gripperFunctional = false;
-        Serial.println("Hand could not reach end stop");
-        break;
-    }
-  }
-  handState = OPENED;
-  delay(betweenActionsDelay + 100);//FLAG
-   }
-
-void spinBase(int my_direction, bool correctionEnabled) {   
+void  spinBase(int my_direction, bool correctionEnabled) {   
   Serial.println("Spinning base once");
   int degreesToRotate = 90;  
 
@@ -994,7 +1055,7 @@ void spinBase(int my_direction, bool correctionEnabled) {
   
   if (armLocation != TOP && armLocation != MIDDLE && gripperFunctional) {
     openHand();
-    moveArmTo(MIDDLE);
+    moveArmToMM(MIDDLE);
   }
 
   if(correctionEnabled){
@@ -1005,8 +1066,8 @@ void spinBase(int my_direction, bool correctionEnabled) {
   int actualSteps = floor(totalSteps);
   int stepDelay = 0;
   double velocity;
-  float point1 = totalSteps / 5;
-  float point2 = totalSteps * 4 / 5;
+  float point1 = totalSteps / spinSpeedupDenominator;
+  float point2 = totalSteps * (spinSpeedupDenominator - 1) / spinSpeedupDenominator;
 
   for (int i = 0; i < actualSteps; i++) {        
        if(i < point1){
@@ -1017,7 +1078,7 @@ void spinBase(int my_direction, bool correctionEnabled) {
       }else{
         velocity = spinSpeed * (totalSteps - double(i)) / point1;
       }
-       velocity  = max(velocity, minimumBaseVelocity);
+       velocity  = max(velocity, minimumSpinSpeed);
        stepDelay = getDelay(velocity);  
 
        digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));     
@@ -1027,24 +1088,23 @@ void spinBase(int my_direction, bool correctionEnabled) {
   if(correctionEnabled){
     digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin));  // change the direction  
     int correctionStepDelay = getDelay(correctionSpeed);                   // set the movement speed for the alignment
-
-   for(int i = 0; i < cubeRotationError * 19200.0 / 360.0; i++){           // undo the base error
+    openHand();                                                            // stop carrying the cube
+    for(int i = 0; i < cubeRotationError * 19200.0 / 360.0; i++){           // undo the base error
     digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
     delayMicroseconds(correctionStepDelay);
   }
 
   }  
     delay(betweenActionsDelay);
-    Serial.println("Done spinning base once");
-}
-void spinBaseTwice(bool correctionEnabled){
+    Serial.println("Done spinning base once");}
+void  spinBaseTwice(bool correctionEnabled){
 
   Serial.println("Spinning base twice");
   int degreesToRotate = 180;  
   
   if (armLocation != TOP && armLocation != MIDDLE && gripperFunctional) {
     openHand();
-    moveArmTo(MIDDLE);
+    moveArmToMM(MIDDLE);
   }
 
   if(correctionEnabled){
@@ -1055,8 +1115,8 @@ void spinBaseTwice(bool correctionEnabled){
   int actualSteps = floor(totalSteps);
   int stepDelay = 0;
   double velocity;
-  float point1 = totalSteps    /5;
-  float point2 = totalSteps * 4/5;
+  float point1 = totalSteps    /(spinSpeedupDenominator * 2);
+  float point2 = totalSteps * (spinSpeedupDenominator * 2 - 1) / (spinSpeedupDenominator * 2);
 
   for (int i = 0; i < actualSteps; i++) { 
        
@@ -1068,7 +1128,7 @@ void spinBaseTwice(bool correctionEnabled){
       }else{
         velocity = spinSpeed * (totalSteps - double(i)) / point1;
       }
-       velocity  = max(velocity, minimumBaseVelocity);
+       velocity  = max(velocity, minimumSpinSpeed);
        stepDelay = getDelay(velocity);   
 
        digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));    
@@ -1078,15 +1138,14 @@ void spinBaseTwice(bool correctionEnabled){
   if(correctionEnabled){
     digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin));  // change the direction  
     int correctionStepDelay = getDelay(correctionSpeed);                   // set the movement speed for the alignment
-
+    openHand();
     for(int i = 0; i < cubeRotationError * 19200.0 / 360.0; i++){           // undo the base error
       digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
       delayMicroseconds(correctionStepDelay);
     }
   }
   delay(betweenActionsDelay);
-  Serial.println("Done spinning base twice");
-}
+  Serial.println("Done spinning base twice");}
 float getFloatFromUser(){
   Serial.println("Please enter a value:");
   while (!Serial.available()) {}  // wait until the user enters a value
@@ -1095,7 +1154,7 @@ float getFloatFromUser(){
     int flush = Serial.read();
   }
   return value;}
-void moveArm(int direction) {
+void  moveArm(int direction) {
   armLocation = UNKNOWN;
   //set the direction that the arm motors spin
   if (direction == UP) {
@@ -1117,17 +1176,8 @@ void moveArm(int direction) {
   }
   digitalWrite(motors_arm_left_step_pin, !digitalRead(motors_arm_left_step_pin));    // Step left motor
   digitalWrite(motors_arm_right_step_pin, !digitalRead(motors_arm_right_step_pin));  // Step right motor
-  // delay(5);
-  int stepDelay = getDelay(moveArmSpeed);
-  delayMicroseconds(stepDelay);}
-void dropCubeToBase() {
-  for (int i = 0; i < cubeDropDistance; i++) {
-    moveArm(DOWN);
   }
-  delay(betweenActionsDelay);
-  armLocation = UNKNOWN; // lol imagine forgetting to put this here xD
-  armLocation = DROPOFFHEIGHT;}
-void articulateHand(int direction) {
+void  articulateHand(int direction) {
   handState = UNKNOWN;
   //set the direction that the arm motors spin
   if (direction == OPEN) {
@@ -1144,14 +1194,13 @@ void articulateHand(int direction) {
     digitalWrite(motors_arm_left_step_pin, !digitalRead(motors_arm_left_step_pin));    // Step left motor
     digitalWrite(motors_arm_right_step_pin, !digitalRead(motors_arm_right_step_pin));  // Step right motor
   }
-  int stepDelay = getDelay(handOpenCloseSpeed);
-  delayMicroseconds(stepDelay);}
-int  getDelay(int velocity) {
+}
+int   getDelay(int velocity) {
   velocity = min(velocity, 200);
   double x = MIN_SPEED + velocity * (MAX_SPEED - MIN_SPEED) / 100;
   double delayDuration = pow(0.0003 * x, -1) / 10;
   return round(delayDuration);}
-int  getIntegerFromUser() {
+int   getIntegerFromUser() {
   Serial.println("Please enter a value:");
   while (!Serial.available()) {}  // wait until the user enters a value
   int value = Serial.parseInt();
@@ -1159,10 +1208,10 @@ int  getIntegerFromUser() {
     int flush = Serial.read();
   }
   return value;}
-void fixCubeError(SerialCommands *sender){
+void  fixCubeError(SerialCommands *sender){
   int stepDelay = getDelay(spinSpeed);
   openHand();
-  moveArmTo(MIDDLE);
+  moveArmToMM(MIDDLE);
   closeHand();
 
   for(int i = 0; i < fixCubeDegrees * 19200.0 / 360.0; i++){ //rotate cube x degrees. This squashes error in other faces
@@ -1173,8 +1222,8 @@ void fixCubeError(SerialCommands *sender){
 
   digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin)); // change direction 
 
-// Rotate back, moving the base past center, but aligning the cube with itself, adding one rotation error
-  for(int i = 0; i <  (fixCubeDegrees + cubeRotationError) * 19200.0 / 360.0; i++){
+
+  for(int i = 0; i <  (fixCubeDegrees + cubeRotationError) * 19200.0 / 360.0; i++){// Rotate back, moving the base past center, but aligning the cube with itself, adding one rotation error
     digitalWrite(motors_base_step_pin, !digitalRead(motors_base_step_pin));
     delayMicroseconds(stepDelay);
   }
@@ -1188,19 +1237,17 @@ void fixCubeError(SerialCommands *sender){
     delayMicroseconds(stepDelay);
   }
 
-  delay(betweenActionsDelay);  
-}
-void flipCube() { 
+  delay(betweenActionsDelay);  }
+void  flipCube() { 
   Serial.println("////// Flipping cube");
   openHand();
-  moveArmTo(BOTTOM);
+  moveArmToMM(BOTTOM);
   closeHand();
-  moveArmTo(TOP);
-  delay(50);
-  dropCubeToBase();
-  openHand();
-}
-void rotateFace(int face, int singleOrDouble) {
+  moveArmToMM(TOP);
+  delay(100);
+  moveArmToMM(DROPOFF_HEIGHT);
+  openHand();}
+void  rotateFace(int face, int singleOrDouble) {
   int direction;  
   openHand();
   switch(face){
@@ -1274,7 +1321,7 @@ void rotateFace(int face, int singleOrDouble) {
         break;
   }
 
-  moveArmTo(MIDDLE);
+  moveArmToMM(MIDDLE);
   if(handState != CLOSED)
     closeHand();
  
@@ -1291,7 +1338,7 @@ void rotateFace(int face, int singleOrDouble) {
   faceRotationErrorCounter++;
   }
 
-void readCurrent(){
+void  readCurrent(){
   lightRingINA.powerSave(false);
 
   float avg = 0;
@@ -1302,45 +1349,52 @@ void readCurrent(){
 
   avg /= 1000;
 
-  Serial.printf("Current is %fmA\r\n", avg);
-}
-void testCorrection(SerialCommands *sender){
-  moveArmTo(MIDDLE);
+  Serial.printf("Current is %fmA\r\n", avg);}
+void  testCorrection(SerialCommands *sender){
+  moveArmToMM(MIDDLE);
   closeHand();
   Serial.println("How many degrees to correct?");
   cubeRotationError = getIntegerFromUser();
   spinBase(cw, true);
  }
-void testDistanceToMiddleFromTop(SerialCommands * sender) {
+void  testDistanceToMiddleFromTop(SerialCommands * sender) {
   int value = getIntegerFromUser();
-  moveArmTo(TOP);
+  moveArmToMM(TOP);
   for (int i = 0; i < value; i++) {
     moveArm(DOWN);
+    int stepDelay = getDelay(moveArmSpeed);
+    delayMicroseconds(stepDelay);
   }}
-void testDistanceToMiddleFromBottom(SerialCommands * sender) {
+void  testDistanceToMiddleFromBottom(SerialCommands * sender) {
   int value = getIntegerFromUser();
-  moveArmTo(BOTTOM);
+  moveArmToMM(BOTTOM);
   for (int i = 0; i < value; i++) {
     moveArm(UP);
+    int stepDelay = getDelay(moveArmSpeed);
+    delayMicroseconds(stepDelay);
   }}
-void setDistanceToMiddleFromCubeRelease(SerialCommands *sender){
+void  setDistanceToMiddleFromCubeRelease(SerialCommands *sender){
   openHand();
-  moveArmTo(TOP);
+  moveArmToMM(TOP);
   for(int i = 0; i < cubeDropDistance; i++){
     moveArm(DOWN);
+    int stepDelay = getDelay(moveArmSpeed);
+    delayMicroseconds(stepDelay);
   }
   Serial.println("Please enter how many steps to travel from the dropoff location to the middle of the cube: ");
   int numSteps = getIntegerFromUser();
 
   for(int i = 0; i < numSteps; i++){
     moveArm(DOWN);
+    int stepDelay = getDelay(moveArmSpeed);
+    delayMicroseconds(stepDelay);
   }
   Serial.println("Set distance from dropoff to middle");
   numStepsFromDropoffToMiddle = numSteps; }
-void setbetweenActionsDelay(SerialCommands *sender){
+void  setbetweenActionsDelay(SerialCommands *sender){
   Serial.println("Please enter an inter-action delay (ms)");
   betweenActionsDelay = getIntegerFromUser();}
-void setScrambleAndSolveSpeed(SerialCommands *sender){
+void  setScrambleAndSolveSpeed(SerialCommands *sender){
   Serial.println("Please enter the cube spin speed (0 - 120):");
   spinSpeed  = getIntegerFromUser();
   Serial.print("Set cube spin speed to "); Serial.println(spinSpeed);
@@ -1352,13 +1406,30 @@ void setScrambleAndSolveSpeed(SerialCommands *sender){
   Serial.println("Please enter the hand open/close speed (0 - 100):");
   handOpenCloseSpeed   = getIntegerFromUser();  
   Serial.print("Set hand speed to "); Serial.println(handOpenCloseSpeed);}
-void setCubeError(SerialCommands *sender){
-  Serial.println("Please set the cube rotation error:");
-  float value = getFloatFromUser();
-  cubeRotationError = value;}
-void setGripDistance(SerialCommands * sender) {
+void  setCubeError(SerialCommands *sender){
+  int errorAcceptable = 0;
+  float value; 
+  
+  while(errorAcceptable == 0){
+    Serial.println("Please make sure the cube is aligned and on the base. Enter anything to continue.");
+    int dummy = getIntegerFromUser();
+    moveArmToMM(MIDDLE);
+    closeHand();
+    Serial.println("Please set the cube rotation error in degrees (can be a decimal):");
+    cubeRotationError = getFloatFromUser();
+    spinBase(cw,true);
+    openHand();
+    Serial.println("Is the cube aligned? (1 = Yes, 0 = No)");
+    errorAcceptable = getIntegerFromUser();
+    if(errorAcceptable == 0)
+      Serial.println("Please remember to align the cube before trying again-");
+    }
+  }
+void  setGripDistance(SerialCommands * sender) {
   while (digitalRead(endstop_arm_openLimit_pin) == 1) {
     articulateHand(OPEN);
+    int stepDelay = getDelay(handOpenCloseSpeed);
+    delayMicroseconds(stepDelay);
   }
   Serial.println("Please enter how many steps to close the gripper for:");
   int numSteps = getIntegerFromUser();
@@ -1367,13 +1438,15 @@ void setGripDistance(SerialCommands * sender) {
   Serial.println(" steps.");
   for (int i = 0; i < numSteps; i++) {
     articulateHand(CLOSE);
+    int stepDelay = getDelay(handOpenCloseSpeed);
+    delayMicroseconds(stepDelay);
   }
   gripStrength = numSteps;
   Serial.print("Set grip strength to ");
   Serial.println(numSteps);
   armLocation = UNKNOWN;
   handState = UNKNOWN;}
-void setZenSpeeds(SerialCommands * sender){
+void  setZenSpeeds(SerialCommands * sender){
   Serial.println("Please enter the cube spin speed for zen mode (0 - 100):");
   zenSpinSpeed  = getIntegerFromUser();
   Serial.print("Set cube spin speed to "); Serial.println(zenSpinSpeed);
@@ -1385,11 +1458,324 @@ void setZenSpeeds(SerialCommands * sender){
   Serial.println("Please enter the hand open/close speed for zen mode (0 - 100):");
   zenHandOpenCloseSpeed   = getIntegerFromUser();  
   Serial.print("Set arm speed to "); Serial.println(zenArmSpeed);}
-void toggleSteppers(SerialCommands *sender){
+void  toggleSteppers(SerialCommands *sender){
   digitalWrite(motors_en_pin,!digitalRead(motors_en_pin));
-  Serial.println("Switched motors state (on/off)");
+  Serial.println("Switched motors state (on/off)");}
+void  readGripCurrent(SerialCommands *sender){
+
+  openHand();
+  moveArmToMM(MIDDLE);
+  gripperINA.powerSave(false);
+  float currentReading;
+  float median = 0;
+  int graphBottom = 500;
+  int graphTop    = 700;   
+  int potentialGripStrength = 0;
+  float lastReading = 0;
+  float thisReading = 0;
+  
+  for(int i = 0; i < 100; i++){
+    articulateHand(CLOSE); potentialGripStrength++;
+    lastReading = gripperINA.getCurrent_mA();
+    delay(10);
+    thisReading = gripperINA.getCurrent_mA(); 
+    
+  }
+
+  while(true){ 
+    
+    articulateHand(CLOSE);   
+    potentialGripStrength++;
+
+    thisReading = gripperINA.getCurrent_mA(); 
+
+            
+      
+    Serial.print(graphBottom);
+    Serial.print(" ");
+    Serial.print(graphTop);
+    Serial.print(" ");
+    Serial.print(thisReading);   
+    Serial.print(" ");
+    Serial.println(potentialGripStrength);
+    delay(10);
+    
+
+    if (abs(thisReading - lastReading) > 50){
+      Serial.println(potentialGripStrength);
+      gripperINA.powerSave(true);
+      handState = UNKNOWN;
+      armLocation = UNKNOWN;
+      return;
+    } 
+    lastReading = thisReading;
+   
+  }
+    handState = UNKNOWN;
+    armLocation = UNKNOWN;}
+void  testNewCloseHand(SerialCommands *sender){
+  moveArmToMM(MIDDLE);
+  openHand();
+  closeHand();}
+void  measureDistanceTopToBottom(SerialCommands *sender){ 
+  int stepDelay = getDelay(moveArmSpeed);
+  openHand();
+  moveArmToMM(TOP);
+
+  while(digitalRead(endstop_arm_lowerLimit_pin) == 1 ){
+    moveArm(DOWN); numStepsTopToBottom++;
+    delayMicroseconds(stepDelay);
+  }
+  armLocation = BOTTOM;
+  Serial.print("Measured "); Serial.print(numStepsTopToBottom);Serial.println(" steps from top to bottom.");}
+void  moveArmMillimeters(double mm, int direction){
+    double numSteps = round(armStepsPerMm * mm); 
+    int point1 = numSteps / armSpeedupDenominator;
+    int point2 = numSteps * (armSpeedupDenominator - 1) / armSpeedupDenominator;
+    double velocity;
+    int stepDelay;
+
+    for (int i = 0; i < numSteps; i++) {        
+       if(i < point1){
+        velocity = moveArmSpeed * double(i)/point1;        
+       }
+       else if(i >= point1 && i <= point2){
+        velocity = moveArmSpeed;
+      }else{
+        velocity = moveArmSpeed * (numSteps - double(i)) / point1;
+      }
+      velocity  = max(velocity, minimumArmSpeed);
+      stepDelay = getDelay(velocity);  
+      moveArm(direction);
+      delayMicroseconds(stepDelay);  
+   }
+    ////////////// 
+}
+void  testMoveArmMM(SerialCommands *sender){
+    int direction;
+    float distance  = 10;
+    Serial.println("Which direction would you like to go? (up = 1, down = 0)");
+    direction = getIntegerFromUser();
+    Serial.println("How many mm to travel?");
+    distance = getFloatFromUser();
+    moveArmMillimeters(distance, direction);
+    Serial.println("Done moving arm.");}
+
+void  printOutMoveArmDebugMessage(int destination){
+   String desiredLocation = "";
+  Serial.print("Moving arm from ");
+  switch(armLocation){
+    case TOP:
+      Serial.print("top");
+      break;
+    case MIDDLE:
+      Serial.print("middle");
+      break;
+    case BOTTOM:
+      Serial.print("bottom");
+      break;
+    case UNKNOWN:
+      Serial.print("unknown location");
+      break;
+  }
+ 
+  Serial.print(" to ");
+  switch (destination) {
+    case TOP:
+      desiredLocation = "top";
+      break;
+    case BOTTOM:
+      desiredLocation = "bottom";
+      break;
+    case MIDDLE:
+      desiredLocation = "middle";
+      break;
+  }
+  Serial.println(desiredLocation);
+
+}
+void moveArmToMM(int destination) {
+  if(!gripperFunctional){
+    Serial.println("Gripper not functional. Can't perform move.");
+    return;
+  }  
+  printOutMoveArmDebugMessage(destination);
+  int stepDelay = getDelay(moveArmSpeed);
+
+  switch (destination) { 
+    case BOTTOM:
+      if(armLocation == BOTTOM){
+        break;
+      }
+      if(armLocation == MIDDLE){
+        moveArmMillimeters(middleHeight - bottomGripHeight, DOWN);
+        armLocation = BOTTOM;
+        break; 
+      }
+      if(armLocation == DROPOFF_HEIGHT){
+        moveArmMillimeters((dropoffHeight - bottomGripHeight), DOWN);
+        armLocation = BOTTOM;
+        break; 
+      }
+      if(armLocation == TOP){
+        moveArmMillimeters((topOfRotationHeight - bottomGripHeight), DOWN);
+        armLocation = BOTTOM;
+        break; 
+      }
+      if(armLocation == UNKNOWN){
+        openHand();
+        while(digitalRead(BOTTOM) == 1){
+          moveArm(DOWN);
+          delayMicroseconds(stepDelay);
+        }
+        moveArmMillimeters( (bottomGripHeight - bottomEndstopHeight) , UP);  
+        armLocation = BOTTOM;
+        break; 
+      }     
+       
+ 
+    case MIDDLE:
+      if(armLocation == MIDDLE){
+        break;
+      }
+      if(armLocation == BOTTOM){
+        moveArmMillimeters((middleHeight - bottomGripHeight), UP);  
+        armLocation = MIDDLE;
+        break; 
+      }
+      if(armLocation == DROPOFF_HEIGHT){
+        moveArmMillimeters((dropoffHeight - middleHeight), DOWN);    
+        armLocation = MIDDLE;
+        break; 
+      }
+      if(armLocation == TOP){
+        moveArmMillimeters((topOfRotationHeight - middleHeight), DOWN);     
+        armLocation = MIDDLE;
+        break; 
+      }
+      if(armLocation == UNKNOWN){
+        openHand();
+        while(digitalRead(BOTTOM) == 1){
+          moveArm(DOWN);
+          delayMicroseconds(stepDelay);
+        }
+        moveArmMillimeters((middleHeight - bottomEndstopHeight), UP);  
+        armLocation = MIDDLE;
+        break; 
+      }  
+
+    case DROPOFF_HEIGHT:
+      if(armLocation == DROPOFF_HEIGHT){
+        break;
+      }
+      if(armLocation == BOTTOM){
+        moveArmMillimeters((dropoffHeight - bottomGripHeight), UP);  
+        armLocation = DROPOFF_HEIGHT;
+        break; 
+      }
+      if(armLocation == MIDDLE){
+        moveArmMillimeters((dropoffHeight - middleHeight), UP);    
+        armLocation = DROPOFF_HEIGHT;
+        break; 
+      }
+      if(armLocation == TOP){
+        moveArmMillimeters((topOfRotationHeight - dropoffHeight), DOWN);     
+        armLocation = DROPOFF_HEIGHT;
+        break; 
+      }
+      if(armLocation == UNKNOWN){
+        openHand();
+        while(digitalRead(BOTTOM) == 1){
+          moveArm(DOWN);
+          delayMicroseconds(stepDelay);
+        }
+        moveArmMillimeters( (dropoffHeight - bottomEndstopHeight) , UP);  
+        armLocation = DROPOFF_HEIGHT;
+        break;  
+      }  
+    
+  
+    case TOP:
+      if(armLocation == TOP){
+        break;
+      }
+      if(armLocation == BOTTOM){
+        moveArmMillimeters((topOfRotationHeight - bottomGripHeight), UP);
+        armLocation = TOP;
+        break;
+      }  
+      if(armLocation == MIDDLE){
+        moveArmMillimeters((topOfRotationHeight -middleHeight), UP);
+        armLocation = TOP;
+        break;
+      }  
+      if(armLocation == DROPOFF_HEIGHT){
+        moveArmMillimeters((topOfRotationHeight - dropoffHeight), UP);     
+        armLocation = TOP;
+        break;
+      }  
+      if(armLocation == UNKNOWN){
+        openHand();
+        while(digitalRead(BOTTOM) == 1){
+          moveArm(DOWN);
+          delayMicroseconds(stepDelay);
+        }
+        moveArmMillimeters( (topOfRotationHeight - bottomEndstopHeight), UP);  
+        armLocation = TOP;
+        break;
+      }    
+  }
+}
+void homeArmAndHandMM(){
+  openHand();
+  moveArmToMM(TOP); //go to the top endstop
+  double distanceToMiddleFromTopEndstop = topEndstopHeight - middleHeight;
+  moveArmMillimeters(distanceToMiddleFromTopEndstop, DOWN);
+  armLocation = MIDDLE;
 }
 
+
+
+
+void testMoveArmToMM(SerialCommands *sender){
+  int exit = 0;
+  while(exit == 0){
+    Serial.println("Which location would you like to go to?: 1 = top, 2 = dropoff, 3 = middle, 4 = bottom, 5 = close hand, 6 = open hand, 7 = exit");
+    int command = getIntegerFromUser();    
+    
+    switch(command){
+      case 1:
+        moveArmToMM(TOP);
+        break;
+      case 2:
+        moveArmToMM(DROPOFF_HEIGHT);
+        break;
+      case 3:
+        moveArmToMM(MIDDLE);
+        break;
+      case 4:
+        moveArmToMM(BOTTOM);
+        break;
+      case 5:
+        closeHand();    
+        break;
+      case 6:
+        openHand();   
+        break;
+      case 7:
+        Serial.println("Exit command received. Leaving test function.");
+        exit = 1;  
+        break;
+      default:
+        exit = 1;
+        Serial.println("Unrecognized entry. Exiting function.");
+        return;
+    }
+  }
+}
+// last left off trying to implement the new movement function where we use moveArmToMM whenever possible. Lets see if this pans out.
+// this must be finished for zen mode to be truly perfect (0 sound)
+// current issue is that we need to make sure that when we go to top we're actually going up high enough to spin the cube.
 void speeen(SerialCommands * sender) {
   int startTime = 0;
   openHand();
@@ -1443,9 +1829,10 @@ void zenMode(SerialCommands *sender){
   }
 void scramble(SerialCommands * sender) {
   int lastMove = TOPCW;  
-  int numScrambles = 13;
+  int numScrambles = 50;
   float startTime = millis();
   for(int i = 0; i < numScrambles; i++){
+    Serial.print("////////////////////////////// Now performing scramble number "); Serial.println( i + 1);
     int randomNumberOfTurns = random(1,3);    
     int randomMove = random(1,13);
     rotateFace(randomMove, randomNumberOfTurns);
@@ -1457,6 +1844,7 @@ void scramble(SerialCommands * sender) {
   float elapsed = millis() - startTime;
   Serial.print("It took "); Serial.print(elapsed/1000);Serial.print(" seconds to perform "); Serial.print(numScrambles);Serial.println(" scrambles.");
 }
+
 
 //initialize serialCommand functions
 SerialCommand setGripDistance_("t", setGripDistance);
@@ -1472,6 +1860,11 @@ SerialCommand setbetweenActionsDelay_("setD", setbetweenActionsDelay);
 SerialCommand setScrambleAndSolveSpeed_("setSpeed", setScrambleAndSolveSpeed);
 SerialCommand scanLightCurrent_("scan", scanLightCurrent);
 SerialCommand fixCubeError_("fix", fixCubeError);
+SerialCommand readGripperCurrent_("gg", readGripCurrent);
+SerialCommand testNewCloseHand_("ch", testNewCloseHand);
+SerialCommand measureDistanceTopToBottom_("t2b", measureDistanceTopToBottom);
+SerialCommand testMoveArmMM_("tma",testMoveArmMM);
+SerialCommand testMoveArmToMM_("tmaMM", testMoveArmToMM);
 
 SerialCommand speeen_("speeen", speeen);
 SerialCommand zenMode_("zen", zenMode); // zen mode will slowly and infinitely scramble until serial input is received (will finish current move)
@@ -1493,6 +1886,11 @@ serial_commands_.AddCommand(&setbetweenActionsDelay_);
 serial_commands_.AddCommand(&setScrambleAndSolveSpeed_);
 serial_commands_.AddCommand(&scanLightCurrent_);
 serial_commands_.AddCommand(&fixCubeError_);
+serial_commands_.AddCommand(&readGripperCurrent_);
+serial_commands_.AddCommand(&testNewCloseHand_);
+serial_commands_.AddCommand(&measureDistanceTopToBottom_);
+serial_commands_.AddCommand(&testMoveArmMM_);
+serial_commands_.AddCommand(&testMoveArmToMM_);
 
 serial_commands_.AddCommand(&speeen_);
 serial_commands_.AddCommand(&scramble_);
@@ -1528,8 +1926,15 @@ if (! lightRingINA.begin()) {
   Serial.println("Failed to find Light Ring Curret sensor");
 }
 
+if (! gripperINA.begin()) {
+  Serial.println("Failed to find Gripper Curret sensor");
+}
+
+
 Serial.println("Ready!");
-homeArmAndHand();
+// homeArmAndHand();
+homeArmAndHandMM();
+// moveArmToMM(MIDDLE);
 // homeBase();
 // homeBase2();
 // homeBase3();
@@ -1545,7 +1950,7 @@ void loop() {
   int spin  = digitalRead(spinBaseButton);
 
   if (raise == 0) {
-    moveArm(UP);
+    moveArm(UP);    
     armLocation = UNKNOWN;
   }
 
@@ -1611,7 +2016,7 @@ void loop() {
 
         // Cubing notation moves
         case 'b':
-          moveArmTo(MIDDLE);
+          moveArmToMM(MIDDLE);
           closeHand();
           spinBase(cw, true);
           openHand();
@@ -1619,7 +2024,7 @@ void loop() {
           break;
 
         case 'B':
-          moveArmTo(MIDDLE);
+          moveArmToMM(MIDDLE);
           closeHand();
           spinBase(ccw, true);
           openHand();
@@ -1627,7 +2032,7 @@ void loop() {
           break;
 
         case 'p':
-          moveArmTo(MIDDLE);
+          moveArmToMM(MIDDLE);
           closeHand();
           spinBaseTwice(true);
           openHand();
