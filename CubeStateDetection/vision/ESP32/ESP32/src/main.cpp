@@ -1733,6 +1733,78 @@ void homeArmAndHandMM(){
   moveArmMillimeters(distanceToMiddleFromTopEndstop, DOWN);
   armLocation = MIDDLE;
 }
+void readGripCurrent(SerialCommands *sender){
+ /*
+  gripStrength = 300;
+  gripperINA.powerSave(false);
+  float gripCurrent = 0;
+  openHand();
+
+  for(int i = 0; i < gripStrength; i++){
+    articulateHand(CLOSE);
+    delay(1);
+  }
+
+  for(int i = 300; i < 500; i++){
+    gripStrength = i;
+    articulateHand(CLOSE);
+    gripCurrent = gripperINA.getCurrent_mA();
+    Serial.println(gripCurrent);
+    delay(100);
+  }
+
+   gripperINA.powerSave(true);
+*/
+  openHand();
+  moveArmTo(MIDDLE);
+  gripperINA.powerSave(false);
+  float currentReading;
+  float median = 0;
+  int graphBottom = 500;
+  int graphTop    = 700;   
+  int potentialGripStrength = 0;
+  float lastReading = 0;
+  float thisReading = 0;
+  
+  for(int i = 0; i < 100; i++){
+    articulateHand(CLOSE); potentialGripStrength++;
+    lastReading = gripperINA.getCurrent_mA();
+    delay(10);
+    thisReading = gripperINA.getCurrent_mA(); 
+    
+  }
+
+  while(true){ 
+    
+    articulateHand(CLOSE);   
+    potentialGripStrength++;
+
+    thisReading = gripperINA.getCurrent_mA(); 
+
+            
+      
+    Serial.print(graphBottom);
+    Serial.print(" ");
+    Serial.print(graphTop);
+    Serial.print(" ");
+    Serial.println(thisReading);   
+    delay(10);
+    
+
+    if (abs(thisReading - lastReading) > 70){
+       Serial.println(potentialGripStrength);
+      gripperINA.powerSave(true);
+      handState = UNKNOWN;
+      armLocation = UNKNOWN;
+      return;
+    } 
+    lastReading = thisReading;
+   
+  }
+    handState = UNKNOWN;
+    armLocation = UNKNOWN;
+}
+
 
 
 
@@ -1844,7 +1916,6 @@ void scramble(SerialCommands * sender) {
   float elapsed = millis() - startTime;
   Serial.print("It took "); Serial.print(elapsed/1000);Serial.print(" seconds to perform "); Serial.print(numScrambles);Serial.println(" scrambles.");
 }
-
 
 //initialize serialCommand functions
 SerialCommand setGripDistance_("t", setGripDistance);
