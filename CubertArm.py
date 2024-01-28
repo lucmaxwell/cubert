@@ -161,7 +161,7 @@ class CubertArm:
 
         # Apply recalibration of the arm
         self.recalibrate(move_speed)
-        
+
         # Update the current arm position
         self.current_arm_position = target_arm_position
 

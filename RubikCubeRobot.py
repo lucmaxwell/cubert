@@ -264,9 +264,9 @@ class RubiksCubeRobot:
         #     self.vision.capture()
 
         if self.manual_buttons[0].pressed():
-            self.arm.move_arm(ArmDirection.UP, 60)
+            self.arm.move_arm_to(ArmPosition.TOP, 60)
         if self.manual_buttons[1].pressed():
-            self.arm.move_arm(ArmDirection.DOWN, 60)
+            self.arm.move_arm_to(ArmPosition.BOTTOM, 60)
 
         if self.command_button.pressed():
             self.arm.open_hand(120)
