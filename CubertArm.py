@@ -50,7 +50,7 @@ class CubertArm:
         
         # First time calibration
         # Arm calibration move to the bottom and hit the end stop
-        self.move_arm_to_bottom()
+        self.move_arm_to_bottom(60)
         
         # Count the number of steps to reach the top end stop
         self.arm_total_steps = 0
