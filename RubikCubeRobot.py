@@ -271,12 +271,20 @@ class RubiksCubeRobot:
         # if self.command_button.pressed():
         #     self.arm.open_hand(120)
 
+        # if self.arm.end_stop_arm_upper_limit.pressed():
+        #     print("UP")
+        # if self.arm.end_stop_arm_lower_limit.pressed():
+        #     print("LOW")
+        # if self.arm.end_stop_hand_open_limit.pressed():
+        #     print("OPEN")
+
         if self.arm.end_stop_arm_upper_limit.pressed():
-            print("UP")
+            self.arm.move_arm(ArmDirection.UP, 60)
         if self.arm.end_stop_arm_lower_limit.pressed():
-            print("LOW")
+            self.arm.move_arm(ArmDirection.DOWN, 60)
         if self.arm.end_stop_hand_open_limit.pressed():
-            print("OPEN")
+            self.arm.open_hand(60)
+
 
 
 if __name__ == '__main__':
