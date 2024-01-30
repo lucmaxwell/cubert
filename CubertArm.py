@@ -85,6 +85,11 @@ class CubertArm:
             # Move to the correct direction
             self.left_motor.step(1, MotorSpin.CLOCKWISE, move_speed)
             self.right_motor.step(1, MotorSpin.COUNTER_CLOCKWISE, move_speed)
+
+            # Disable the motor
+            self.left_motor.disable()
+            self.right_motor.disable()
+
         elif arm_direction == ArmDirection.DOWN and not self.end_stop_arm_lower_limit.pressed():
             # Enable the motors
             self.left_motor.enable()
@@ -93,6 +98,10 @@ class CubertArm:
             # Move to the correct direction
             self.left_motor.step(1, MotorSpin.COUNTER_CLOCKWISE, move_speed)
             self.right_motor.step(1, MotorSpin.CLOCKWISE, move_speed)
+
+            # Disable the motor
+            self.left_motor.disable()
+            self.right_motor.disable()
 
     def move_hand(self, open_close_flag, move_speed):
         if open_close_flag == HandAction.OPEN and not self.end_stop_hand_open_limit.pressed():
@@ -141,5 +150,6 @@ class CubertArm:
             self.move_hand(HandAction.CLOSE, move_speed)
 
     def open_hand(self, move_speed):
-        while not self.end_stop_hand_open_limit.pressed():
+        #while not self.end_stop_hand_open_limit.pressed():
+        for _ in range(GRIP_STRENGTH):
             self.move_hand(HandAction.OPEN, move_speed)
