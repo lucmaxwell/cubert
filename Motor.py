@@ -14,17 +14,17 @@ class MotorSpin(Enum):
 
 
 def get_step_delay(velocity):
-    # v = min(velocity, 200)
-    # x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100
-    # delay_duration = 1 / (0.0003 * x) / 10
-    # return round(delay_duration) / 1_000_000
+    v = min(velocity, 200)
+    x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100
+    delay_duration = 1 / (0.0003 * x) / 10
+    return round(delay_duration) / 1_000_000
 
-    # Ensure velocity is within bounds
-    v = max(min(velocity, 200), 0)  # Clamp velocity between 0 and 200
-    # Linearly map velocity to delay range
-    delay_seconds = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * (v / 200.0)
-    # Return delay in seconds without premature rounding
-    return delay_seconds
+    # # Ensure velocity is within bounds
+    # v = max(min(velocity, 200), 0)  # Clamp velocity between 0 and 200
+    # # Linearly map velocity to delay range
+    # delay_seconds = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * (v / 200.0)
+    # # Return delay in seconds without premature rounding
+    # return delay_seconds
 
 
 class CubertMotor:
@@ -44,8 +44,7 @@ class CubertMotor:
         GPIO.output(self.dir_pin, GPIO.LOW if direction == MotorSpin.CLOCKWISE else GPIO.HIGH)
 
         # Calculate the delay time of the pulse
-        #stepDelay = get_step_delay(move_speed)
-        stepDelay = 0.01
+        stepDelay = get_step_delay(move_speed)
 
         # Spin with given number of steps
         for _ in range(steps):
