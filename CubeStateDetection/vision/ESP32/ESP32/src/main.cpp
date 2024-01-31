@@ -80,8 +80,8 @@ typedef struct{
 #define MAX_SPEED 3.3        // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 #define MIN_SPEED 0.000001   // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-int gripStrength                =     365;
-int moveArmSpeed                =      85;        // set the velocity (1-100) that we will raise or lower the arm
+int gripStrength                =     400;
+int moveArmSpeed                =     130;        // set the velocity (1-100) that we will raise or lower the arm
 int handOpenCloseSpeed          =      50;  // set the velocity (1-100) that we will open and close the ha
 int spinSpeed                   =     150;
 int betweenActionsDelay         =      10;
@@ -91,8 +91,8 @@ int numStepsFromTopToMiddle     =    1350;
 int numStepsFromDropoffToMiddle =     850;
 int numStepsTopToBottom         =       0;
 
-float cubeRotationError         =       5; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
-int correctionSpeed             =       6;
+float cubeRotationError         =      10; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
+int correctionSpeed             =      20;
 
 int homePosition                =  MIDDLE;
 int zenSpinSpeed                =      50;
@@ -120,7 +120,7 @@ double bottomEndstopHeight      =    46.8; // this is the distance in mm between
 double topEndstopHeight         =    94.5; // in mm (measured from the base to the top edge of the hand)
 double bottomGripHeight         =    bottomEndstopHeight + 2.0; 
 double middleHeight             =    bottomGripHeight + cubeletLength - 2.0;
-double topOfRotationHeight      =    bottomGripHeight + 2 * cubeletLength + 12.0;
+double topOfRotationHeight      =    bottomGripHeight + 2 * cubeletLength + 11.0;
 double dropoffHeight            =    topOfRotationHeight - 9.0;
 double currentCubeHeight        =    0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1417,7 +1417,7 @@ void  setCubeError(SerialCommands *sender){
     closeHand();
     Serial.println("Please set the cube rotation error in degrees (can be a decimal):");
     cubeRotationError = getFloatFromUser();
-    spinBase(cw,true);
+    spinBase(cw, true);
     openHand();
     Serial.println("Is the cube aligned? (1 = Yes, 0 = No)");
     errorAcceptable = getIntegerFromUser();
@@ -1733,78 +1733,6 @@ void homeArmAndHandMM(){
   moveArmMillimeters(distanceToMiddleFromTopEndstop, DOWN);
   armLocation = MIDDLE;
 }
-void readGripCurrent(SerialCommands *sender){
- /*
-  gripStrength = 300;
-  gripperINA.powerSave(false);
-  float gripCurrent = 0;
-  openHand();
-
-  for(int i = 0; i < gripStrength; i++){
-    articulateHand(CLOSE);
-    delay(1);
-  }
-
-  for(int i = 300; i < 500; i++){
-    gripStrength = i;
-    articulateHand(CLOSE);
-    gripCurrent = gripperINA.getCurrent_mA();
-    Serial.println(gripCurrent);
-    delay(100);
-  }
-
-   gripperINA.powerSave(true);
-*/
-  openHand();
-  moveArmTo(MIDDLE);
-  gripperINA.powerSave(false);
-  float currentReading;
-  float median = 0;
-  int graphBottom = 500;
-  int graphTop    = 700;   
-  int potentialGripStrength = 0;
-  float lastReading = 0;
-  float thisReading = 0;
-  
-  for(int i = 0; i < 100; i++){
-    articulateHand(CLOSE); potentialGripStrength++;
-    lastReading = gripperINA.getCurrent_mA();
-    delay(10);
-    thisReading = gripperINA.getCurrent_mA(); 
-    
-  }
-
-  while(true){ 
-    
-    articulateHand(CLOSE);   
-    potentialGripStrength++;
-
-    thisReading = gripperINA.getCurrent_mA(); 
-
-            
-      
-    Serial.print(graphBottom);
-    Serial.print(" ");
-    Serial.print(graphTop);
-    Serial.print(" ");
-    Serial.println(thisReading);   
-    delay(10);
-    
-
-    if (abs(thisReading - lastReading) > 70){
-       Serial.println(potentialGripStrength);
-      gripperINA.powerSave(true);
-      handState = UNKNOWN;
-      armLocation = UNKNOWN;
-      return;
-    } 
-    lastReading = thisReading;
-   
-  }
-    handState = UNKNOWN;
-    armLocation = UNKNOWN;
-}
-
 
 
 
