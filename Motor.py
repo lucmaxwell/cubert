@@ -56,8 +56,8 @@ class CubertMotor:
 
 
 if __name__ == '__main__':
-    motor_en_pin = 6
-    motor_step_pin = 22
+    motor_en_pin = 26
+    motor_step_pin = 19
     motor_dir_pin = 13
 
     # GPIO
