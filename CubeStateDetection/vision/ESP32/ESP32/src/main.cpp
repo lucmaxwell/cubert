@@ -80,9 +80,9 @@ typedef struct{
 #define MAX_SPEED 3.3        // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 #define MIN_SPEED 0.000001   // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-int gripStrength                =     400;
-int moveArmSpeed                =     130;        // set the velocity (1-100) that we will raise or lower the arm
-int handOpenCloseSpeed          =      50;  // set the velocity (1-100) that we will open and close the ha
+int gripStrength                =     388;
+int moveArmSpeed                =      85;        // set the velocity (1-100) that we will raise or lower the arm
+int handOpenCloseSpeed          =      20;  // set the velocity (1-100) that we will open and close the ha
 int spinSpeed                   =     150;
 int betweenActionsDelay         =      10;
 int cubeDropDistance            =     400;
@@ -91,7 +91,7 @@ int numStepsFromTopToMiddle     =    1350;
 int numStepsFromDropoffToMiddle =     850;
 int numStepsTopToBottom         =       0;
 
-float cubeRotationError         =      10; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
+float cubeRotationError         =       10; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
 int correctionSpeed             =      20;
 
 int homePosition                =  MIDDLE;
@@ -120,7 +120,7 @@ double bottomEndstopHeight      =    46.8; // this is the distance in mm between
 double topEndstopHeight         =    94.5; // in mm (measured from the base to the top edge of the hand)
 double bottomGripHeight         =    bottomEndstopHeight + 2.0; 
 double middleHeight             =    bottomGripHeight + cubeletLength - 2.0;
-double topOfRotationHeight      =    bottomGripHeight + 2 * cubeletLength + 11.0;
+double topOfRotationHeight      =    bottomGripHeight + 2 * cubeletLength + 12.0;
 double dropoffHeight            =    topOfRotationHeight - 9.0;
 double currentCubeHeight        =    0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1560,6 +1560,13 @@ void  testMoveArmMM(SerialCommands *sender){
     distance = getFloatFromUser();
     moveArmMillimeters(distance, direction);
     Serial.println("Done moving arm.");}
+void  testSpinBaseTwice(SerialCommands *sender){
+    moveArmToMM(MIDDLE);
+    closeHand();
+    spinBaseTwice(true);
+    openHand();
+}
+
 
 void  printOutMoveArmDebugMessage(int destination){
    String desiredLocation = "";
@@ -1864,6 +1871,7 @@ SerialCommand testNewCloseHand_("ch", testNewCloseHand);
 SerialCommand measureDistanceTopToBottom_("t2b", measureDistanceTopToBottom);
 SerialCommand testMoveArmMM_("tma",testMoveArmMM);
 SerialCommand testMoveArmToMM_("tmaMM", testMoveArmToMM);
+SerialCommand testSpinBaseTwice_("tsb2", testSpinBaseTwice);
 
 SerialCommand speeen_("speeen", speeen);
 SerialCommand zenMode_("zen", zenMode); // zen mode will slowly and infinitely scramble until serial input is received (will finish current move)
@@ -1890,6 +1898,7 @@ serial_commands_.AddCommand(&testNewCloseHand_);
 serial_commands_.AddCommand(&measureDistanceTopToBottom_);
 serial_commands_.AddCommand(&testMoveArmMM_);
 serial_commands_.AddCommand(&testMoveArmToMM_);
+serial_commands_.AddCommand(&testSpinBaseTwice_);
 
 serial_commands_.AddCommand(&speeen_);
 serial_commands_.AddCommand(&scramble_);

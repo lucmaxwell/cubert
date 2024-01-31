@@ -22,8 +22,8 @@ maskPath = imagesPath + mask
 
 def getAllImages(imageUrl, client, maskPath="", writeConsole=False):
     # left is from left of image, top is from top of image, height = width
-    top = 102
-    left = 250
+    top = 147
+    left = 280
     height = 339
 
     if(maskPath != ""):
@@ -192,8 +192,8 @@ def emptySocket(client, writeConsole=False):
 
 
 client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-# client.connect(("40:22:D8:F0:E6:1A", 1))    # ESP32test
-client.connect(("40:22:D8:EB:2B:3A", 1))    # ESP32test2
+client.connect(("40:22:D8:F0:E6:1A", 1))    # ESP32test2
+# client.connect(("40:22:D8:EB:2B:3A", 1))    # ESP32test
 client.setblocking(False)
 print("Connected to ESP32 through bluetooth")
 
