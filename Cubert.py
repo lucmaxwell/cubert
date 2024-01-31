@@ -26,7 +26,7 @@ class RobotAction(Enum):
     SPIN_CUBE_COUNTERCLOCKWISE = 4
 
 
-class RubiksCubeRobot:
+class Cubert:
     # Constants
     # DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING
     MAX_SPEED = 3.3
@@ -277,6 +277,8 @@ class RubiksCubeRobot:
         #     print("LOW")
         # if self.arm.end_stop_hand_open_limit.pressed():
         #     print("OPEN")
+
+        self.arm.enable_arm_motors()
 
         if self.arm.end_stop_arm_upper_limit.pressed():
             self.arm.move_arm(ArmDirection.UP, 60)

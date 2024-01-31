@@ -34,7 +34,7 @@ class ArmPosition(Enum):
     DROP_OFF = 3
 
 
-class CubertArm:
+class Arm:
     def __init__(self, enable_pin, left_motor_pin_list, right_motor_pin_list, end_stop_arm_pin_list):
         # Initialize the motors
         self.left_motor = CubertMotor(enable_pin, left_motor_pin_list)

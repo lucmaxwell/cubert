@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import time
 
 
-class CubertButton:
+class Button:
     DEBOUNCE_DELAY = 0.05  # 50ms
 
     def __init__(self, pin, active_state):

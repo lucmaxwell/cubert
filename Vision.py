@@ -5,7 +5,7 @@ from picamera import PiCamera
 from picamera.array import PiRGBArray
 import cv2
 
-class CubertVision:
+class Vision:
     def __init__(self):
         self.camera = PiCamera()
 
