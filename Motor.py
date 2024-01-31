@@ -68,7 +68,7 @@ if __name__ == '__main__':
         motor.enable()
 
         while True:
-            motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 60)
+            motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 120)
     except KeyboardInterrupt:
         pass
     finally:
