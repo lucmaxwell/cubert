@@ -80,7 +80,7 @@ typedef struct{
 #define MAX_SPEED 3.3        // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 #define MIN_SPEED 0.000001   // DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-int gripStrength                =     388;
+int gripStrength                =     390;
 int moveArmSpeed                =      85;        // set the velocity (1-100) that we will raise or lower the arm
 int handOpenCloseSpeed          =      20;  // set the velocity (1-100) that we will open and close the ha
 int spinSpeed                   =     150;
@@ -91,7 +91,7 @@ int numStepsFromTopToMiddle     =    1350;
 int numStepsFromDropoffToMiddle =     850;
 int numStepsTopToBottom         =       0;
 
-float cubeRotationError         =       10; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
+float cubeRotationError         =       8; // FLAG - This is currently set for Bruno's cube. Whatever this number is for other cubes needs to be calculated using comp. vision
 int correctionSpeed             =      20;
 
 int homePosition                =  MIDDLE;
@@ -120,7 +120,7 @@ double bottomEndstopHeight      =    46.8; // this is the distance in mm between
 double topEndstopHeight         =    94.5; // in mm (measured from the base to the top edge of the hand)
 double bottomGripHeight         =    bottomEndstopHeight + 2.0; 
 double middleHeight             =    bottomGripHeight + cubeletLength - 2.0;
-double topOfRotationHeight      =    bottomGripHeight + 2 * cubeletLength + 12.0;
+double topOfRotationHeight      =    bottomGripHeight + 2 * cubeletLength + 10.0;
 double dropoffHeight            =    topOfRotationHeight - 9.0;
 double currentCubeHeight        =    0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1100,6 +1100,7 @@ void  spinBase(int my_direction, bool correctionEnabled) {
 void  spinBaseTwice(bool correctionEnabled){
 
   Serial.println("Spinning base twice");
+  digitalWrite(motors_base_dir_pin, !digitalRead(motors_base_dir_pin));
   int degreesToRotate = 180;  
   
   if (armLocation != TOP && armLocation != MIDDLE && gripperFunctional) {
@@ -1836,7 +1837,7 @@ void zenMode(SerialCommands *sender){
   }
 void scramble(SerialCommands * sender) {
   int lastMove = TOPCW;  
-  int numScrambles = 50;
+  int numScrambles = 13;
   float startTime = millis();
   for(int i = 0; i < numScrambles; i++){
     Serial.print("////////////////////////////// Now performing scramble number "); Serial.println( i + 1);
