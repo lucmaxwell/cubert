@@ -110,9 +110,9 @@ int armSpeedupDenominator       =       5; // this means that for the first 1/ar
                                            // in other words, we'll be at the 'posted' speed 50% of the time.
 int handSpeedupDenominator      =       5; // see above
 int spinSpeedupDenominator      =       5; // see above
-double minimumArmSpeed     =      25; // when we calculate an acceleration on the above lines, the first step delays will be too long (movement will be too slow)
-double minimumHandSpeed    =      10; // by setting these, we can force the initial speed of the arm/hand/base spinning to some values
-double minimumSpinSpeed    =      60;
+double minimumArmSpeed          =      25; // when we calculate an acceleration on the above lines, the first step delays will be too long (movement will be too slow)
+double minimumHandSpeed         =      10; // by setting these, we can force the initial speed of the arm/hand/base spinning to some values
+double minimumSpinSpeed         =      60;
 //////////////////////////////////////////////////////// calculations for absolute movement (mm) calculations
 double armStepsPerMm        = 1900.0/45.0;
 double cubeletLength            =    17.0; // in mm
