@@ -13,6 +13,10 @@ class MotorSpin(Enum):
     CLOCKWISE = 0
     COUNTER_CLOCKWISE = 1
 
+class MotorType(Enum):
+    BASE = 0
+    LEFT = 1
+    RIGHT = 2
 
 def get_step_delay(velocity):
     v = min(velocity, 200)
@@ -22,6 +26,14 @@ def get_step_delay(velocity):
 
 
 class CubertMotor:
+
+    _USE_UART = False
+
+
+    _GEAR_RATIO     = 6
+
+
+
     def __init__(self, enable_pin, step_pin_list, dir_pin_list):
 
         self.tmc_base   = TMC_2209(enable_pin, step_pin_list[0], dir_pin_list[0],
@@ -34,13 +46,7 @@ class CubertMotor:
 
         self.tmc_list = [self.tmc_base, self.tmc_left, self.tmc_right]
 
-        # self.base_steps_per_rev     = self.tmc_base.get_steps_per_rev()
-        # self.left_steps_per_rev     = self.tmc_left.get_steps_per_rev()
-        # self.right_steps_per_rev    = self.tmc_right.get_steps_per_rev()
 
-        # self.enable_pin = enable_pin
-        # self.step_pin = pin_list[0]
-        # self.dir_pin = pin_list[1]
 
     def __del__(self):
         self.disable()
@@ -50,40 +56,47 @@ class CubertMotor:
 
     def enable(self):
         self.tmc_base.set_motor_enabled(True)
-        # GPIO.output(self.enable_pin, GPIO.LOW)
 
     def disable(self):
         self.tmc_base.set_motor_enabled(False)
-        # GPIO.output(self.enable_pin, GPIO.HIGH)
 
-    def spinBase(self, degrees_to_rotate, move_direction, move_speed, degrees_to_correct=0):
-        revolutions = degrees_to_rotate  / 360.0
-        correction  = degrees_to_correct / 360.0
+    def stop(self):
+        for tmc in self.tmc_list:
+            tmc.stop()
+
+    def home(self):
+
+    def spinBase(self, degrees_to_rotate, move_direction, move_speed, degrees_to_correct=0, acceleration=0):
+        revolutions = _GEAR_RATIO * degrees_to_rotate  / 360.0
+        correction  = _GEAR_RATIO * degrees_to_correct / 360.0
 
         if move_direction == MotorSpin.COUNTER_CLOCKWISE:
             revolutions *= -1
             correction  *= -1
 
-        self.tmc_base.set_vactual_rpm(move_speed, revolutions=(revolutions+correction))
+        self.tmc_base.set_vactual_rpm(move_speed, revolutions=(revolutions+correction), acceleration=acceleration)
 
         if abs(correction) > 0:
-            self.tmc_base.set_vactual_rpm(move_speed, revolutions=correction)
-
-        
+            self.tmc_base.set_vactual_rpm(move_speed, revolutions=-1*correction, acceleration=acceleration)
 
 
-    def step(self, steps, direction, move_speed, correction_enable=False):
-        # Write the spin direction
-        GPIO.output(self.dir_pin, GPIO.LOW if direction == MotorSpin.CLOCKWISE else GPIO.HIGH)
+    def moveArm(self, distance_to_raise, move_speed, acceleration=0):
+        return
+
+
+    def step(self, steps, direction:MotorSpin, motor:MotorType, move_speed, correction_enable=False):
+        # set step direction
+        if move_direction == MotorSpin.COUNTER_CLOCKWISE:
+            step_direction = -1
+        else:
+            step_direction = 1
 
         # Calculate the delay time of the pulse
         stepDelay = get_step_delay(move_speed)
 
         # Spin with given number of steps
         for _ in range(steps):
-            GPIO.output(self.step_pin, GPIO.HIGH)
-            time.sleep(stepDelay)
-            GPIO.output(self.step_pin, GPIO.LOW)
+            self.tmc_list[motor].run_to_position_steps(step_direction)
             time.sleep(stepDelay)
 
 
@@ -92,14 +105,7 @@ if __name__ == '__main__':
     motor_step_pin = [27, 6, 19]
     motor_dir_pin = [17, 5, 13]
 
-    # # GPIO
-    GPIO.setmode(GPIO.BCM)
-    # GPIO.setup(motor_en_pin, GPIO.OUT)
-    # GPIO.setup(motor_step_pin, GPIO.OUT)
-    # GPIO.setup(motor_dir_pin, GPIO.OUT)
-
-    # Create the motor wrapper
-    # pin_list = [motor_step_pin, motor_dir_pin]
+    # initialize motor
     motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin)
 
     # Spin
@@ -119,11 +125,8 @@ if __name__ == '__main__':
         print("Spinning CCW 180 With Correction")
         motor.spinBase(180, MotorSpin.COUNTER_CLOCKWISE, 60, 5)
 
-        # while True:
-        #     motor.step(1, MotorSpin.COUNTER_CLOCKWISE, 120)
     except KeyboardInterrupt:
         pass
     finally:
-        GPIO.cleanup()
         del motor
 
