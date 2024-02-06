@@ -60,6 +60,7 @@ class TMC_2209:
     tmc_uart = None
     tmc_logger = None
     _pin_step = -1
+    _pin_step_state = GPIO.HIGH
     _pin_dir = -1
     _pin_en = -1
     _pin_stallguard = -1

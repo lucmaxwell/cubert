@@ -399,9 +399,10 @@ def make_a_step(self):
 
     for the TMC2209 there needs to be a signal duration of minimum 100 ns
     """
-    GPIO.output(self._pin_step, GPIO.HIGH)
-    time.sleep(1/1000/1000)
-    GPIO.output(self._pin_step, GPIO.LOW)
-    time.sleep(1/1000/1000)
+    self._pin_step_state = not self._pin_step_state
+    GPIO.output(self._pin_step, self._pin_step_state)
+    # time.sleep(1/1000/1000)
+    # GPIO.output(self._pin_step, GPIO.LOW)
+    # time.sleep(1/1000/1000)
 
     self.tmc_logger.log("one step", Loglevel.MOVEMENT)
