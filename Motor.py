@@ -1,19 +1,21 @@
 import RPi.GPIO as GPIO
 import time
-from enum import Enum
+from enum import Enum, IntEnum
 from TMC2209MotorLib.src.TMC_2209.TMC_2209_StepperDriver import *
+from TMC2209MotorLib.src.TMC_2209._TMC_2209_move import Direction
 
 
 # Parameter
 MAX_SPEED = 3.3 # DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 MIN_SPEED = 0.000001
 
+class GripperDirection(Enum):
+    UP = 0
+    DOWN = 1
+    OPEN = 2
+    CLOSE = 3
 
-class MotorSpin(Enum):
-    CLOCKWISE = 0
-    COUNTER_CLOCKWISE = 1
-
-class MotorType(Enum):
+class MotorType(IntEnum):
     BASE = 0
     LEFT = 1
     RIGHT = 2
@@ -34,7 +36,7 @@ class CubertMotor:
 
 
 
-    def __init__(self, enable_pin, step_pin_list, dir_pin_list):
+    def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin):
 
         self.tmc_base   = TMC_2209(enable_pin, step_pin_list[0], dir_pin_list[0],
                                    driver_address=0)
@@ -70,7 +72,7 @@ class CubertMotor:
         revolutions = _GEAR_RATIO * degrees_to_rotate  / 360.0
         correction  = _GEAR_RATIO * degrees_to_correct / 360.0
 
-        if move_direction == MotorSpin.COUNTER_CLOCKWISE:
+        if move_direction == Direction.CCW:
             revolutions *= -1
             correction  *= -1
 
@@ -83,13 +85,52 @@ class CubertMotor:
     def moveArm(self, distance_to_raise, move_speed, acceleration=0):
         return
 
+    def stepGripper(self, steps, direction:GripperDirection, move_speed):
 
-    def step(self, steps, direction:MotorSpin, motor:MotorType, move_speed, correction_enable=False):
-        # set step direction
-        if direction == MotorSpin.COUNTER_CLOCKWISE:
-            step_direction = -1
+        # set step directions
+        if direction == GripperDirection.UP:
+            self.tmc_left.set_direction_pin(Direction.CCW)
+            self.tmc_right.set_direction_pin(Direction.CW)
+
+        elif direction == GripperDirection.DOWN:
+            self.tmc_left.set_direction_pin(Direction.CW)
+            self.tmc_right.set_direction_pin(Direction.CCW)
+        
+        elif direction == GripperDirection.OPEN:
+            self.tmc_left.set_direction_pin(Direction.CW)
+            self.tmc_right.set_direction_pin(Direction.CW)
+        
+        elif direction == GripperDirection.CLOSE:
+            self.tmc_left.set_direction_pin(Direction.CCW)
+            self.tmc_right.set_direction_pin(Direction.CCW)
+
         else:
-            step_direction = 1
+            print("ERROR: Direction does not exist!")
+
+        # calculate step delay
+        step_delay = get_step_delay(move_speed)
+
+        # spind for given number of steps
+        for _ in range(steps):
+            self.tmc_left.make_a_step()
+            self.tmc_right.make_a_step()
+            time.sleep(step_delay)
+
+    def stepBase(self, steps, direction:Direction, move_speed):
+        # set step direction
+        self.tmc_base.set_direction_pin(direction)
+
+        # calculate step delay
+        step_delay = get_step_delay(move_speed)
+
+        # spind for given number of steps
+        for _ in range(steps):
+            self.tmc_base.make_a_step()
+            time.sleep(step_delay)
+
+    def step(self, steps, direction:Direction, motor:MotorType, move_speed):
+        # set step direction
+        self.tmc_list[motor].set_direction_pin(direction)
 
         # Calculate the delay time of the pulse
         stepDelay = get_step_delay(move_speed)
@@ -113,7 +154,7 @@ if __name__ == '__main__':
     try:
         motor.enable()
 
-        motor.step(1280, MotorSpin.CLOCKWISE, MotorType.BASE, 10)
+        motor.step(19200, Direction.CW, MotorType.BASE, 10)
 
         # print("Spinning CW 180")
         # motor.spinBase(180, MotorSpin.CLOCKWISE, 60)
