@@ -39,17 +39,42 @@ class CubertMotor:
 
 
 
-    def __init__(self, enable_pin, step_pin_list, dir_pin_list):#, top_end_pin, bottom_end_pin, grip_end_pin):
+    def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin):
 
+        # setup GPIO
+        GPIO.setmode(GPIO.BCM)
+
+        # setup base motor
         self.tmc_base   = TMC_2209(enable_pin, step_pin_list[0], dir_pin_list[0],
                                    driver_address=0)
 
+        # setup gripper motors
         self.tmc_left   = TMC_2209(pin_step=step_pin_list[1], pin_dir=dir_pin_list[1],
                                    driver_address=1)
         self.tmc_right  = TMC_2209(pin_step=step_pin_list[2], pin_dir=dir_pin_list[2],
                                    driver_address=2)
 
+        # used to index motors
         self.tmc_list = [self.tmc_base, self.tmc_left, self.tmc_right]
+
+        # store enstop pins
+        self._top_end_pin       = top_end_pin
+        self._bottom_end_pin    = bottom_end_pin
+        self._grip_end_pin      = grip_end_pin
+
+        # setup enstops
+        GPIO.setup(   top_end_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(bottom_end_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(  grip_end_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+        # setup endstop interrupts
+        GPIO.add_event_detect(top_end_pin, GPIO.FALLING,
+                              callback=self.endstop_pressed_callback)
+        GPIO.add_event_detect(bottom_end_pin, GPIO.FALLING,
+                              callback=self.endstop_pressed_callback)
+        GPIO.add_event_detect(grip_end_pin, GPIO.FALLING,
+                              callback=self.endstop_pressed_callback)
+
 
 
 
@@ -58,6 +83,10 @@ class CubertMotor:
 
         for tmc in self.tmc_list:
             del(tmc)
+
+        GPIO.cleanup()
+
+
 
     def enable(self):
         self.tmc_base.set_motor_enabled(True)
@@ -69,7 +98,15 @@ class CubertMotor:
         for tmc in self.tmc_list:
             tmc.stop()
 
-    # def home(self):
+
+    def endstop_pressed_callback(self, channel):
+        if not GPIO.input(self._top_end_pin):
+            print("Top Endstop Pressed")
+        elif not GPIO.input(self._bottom_end_pin):
+            print("Bottom Endstop Pressed")
+        elif not GPIO.input(self._grip_end_pin):
+            print("Gripper Endstop Pressed")
+
 
     def spinBase(self, degrees_to_rotate, move_direction, move_speed, degrees_to_correct=0, acceleration=0):
         revolutions = _GEAR_RATIO * degrees_to_rotate  / 360.0
@@ -84,9 +121,6 @@ class CubertMotor:
         if abs(correction) > 0:
             self.tmc_base.set_vactual_rpm(move_speed, revolutions=-1*correction, acceleration=acceleration)
 
-
-    def moveArm(self, distance_to_raise, move_speed, acceleration=0):
-        return
 
     def stepGripper(self, steps, direction:GripperDirection, move_speed):
 
