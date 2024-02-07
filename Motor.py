@@ -161,10 +161,13 @@ if __name__ == '__main__':
 
         motor.stepBase(19200, Direction.CCW, 10)
 
-        motor.stepGripper(256, GripperDirection.UP, 10)
-        motor.stepGripper(256, GripperDirection.DOWN, 10)
-        motor.stepGripper(256, GripperDirection.CLOSE, 10)
-        motor.stepGripper(256, GripperDirection.OPEN, 10)
+        motor.stepGripper(1000, GripperDirection.UP, 10)
+        time.sleep(1)
+        motor.stepGripper(1000, GripperDirection.DOWN, 10)
+        time.sleep(1)
+        motor.stepGripper(1000, GripperDirection.CLOSE, 10)
+        time.sleep(1)
+        motor.stepGripper(1000, GripperDirection.OPEN, 10)
 
         # print("Spinning CW 180")
         # motor.spinBase(180, MotorSpin.CLOCKWISE, 60)
