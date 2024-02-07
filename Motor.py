@@ -2,12 +2,15 @@ import RPi.GPIO as GPIO
 import time
 from enum import Enum, IntEnum
 from TMC2209MotorLib.src.TMC_2209.TMC_2209_StepperDriver import *
-from TMC2209MotorLib.src.TMC_2209._TMC_2209_move import Direction
 
 
 # Parameter
 MAX_SPEED = 3.3 # DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 MIN_SPEED = 0.000001
+
+class Direction(IntEnum):
+    CCW = 0
+    CW = 1
 
 class GripperDirection(Enum):
     UP = 0
@@ -36,7 +39,7 @@ class CubertMotor:
 
 
 
-    def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin):
+    def __init__(self, enable_pin, step_pin_list, dir_pin_list):#, top_end_pin, bottom_end_pin, grip_end_pin):
 
         self.tmc_base   = TMC_2209(enable_pin, step_pin_list[0], dir_pin_list[0],
                                    driver_address=0)
@@ -155,6 +158,13 @@ if __name__ == '__main__':
         motor.enable()
 
         motor.step(19200, Direction.CW, MotorType.BASE, 10)
+
+        motor.stepBase(19200, Direction.CCW, 10)
+
+        motor.stepGripper(256, GripperDirection.UP, 10)
+        motor.stepGripper(256, GripperDirection.DOWN, 10)
+        motor.stepGripper(256, GripperDirection.CLOSE, 10)
+        motor.stepGripper(256, GripperDirection.OPEN, 10)
 
         # print("Spinning CW 180")
         # motor.spinBase(180, MotorSpin.CLOCKWISE, 60)
