@@ -53,7 +53,7 @@ class CubertMotor:
 
     _MAX_CURRENT    = 700   # max current draw of motors in mA
 
-    _DISTANCE_FROM_BOTTOM_TO_TOP    = 64    # distance from gripper travel bottom to top in mm
+    _DISTANCE_FROM_BOTTOM_TO_TOP    = (63 - 14.24)    # distance from gripper travel bottom to top in mm
 
     _DEFAULT_MOVE_SPEED     = 10
 
@@ -422,6 +422,7 @@ if __name__ == '__main__':
         motor.moveGripper(10000, GripperDirection.OPEN, 10)
         time.sleep(1)
         motor.moveGripperToPos(GripperPosition.BOTTOM, 30)
+        time.sleep(1)
         motor.moveGripperMM(20)
 
         print("Testing Complete!")
