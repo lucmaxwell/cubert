@@ -259,13 +259,13 @@ if __name__ == '__main__':
 
         # motor.stepBase(19200, Direction.CCW, 60)
 
-        motor.stepGripper(1000, GripperDirection.UP, 10)
+        motor.stepGripper(10000, GripperDirection.UP, 10)
         time.sleep(1)
-        motor.stepGripper(1000, GripperDirection.DOWN, 10)
+        motor.stepGripper(10000, GripperDirection.DOWN, 10)
         time.sleep(1)
-        motor.stepGripper(1000, GripperDirection.CLOSE, 10)
+        motor.stepGripper(2000, GripperDirection.CLOSE, 10)
         time.sleep(1)
-        motor.stepGripper(1000, GripperDirection.OPEN, 10)
+        motor.stepGripper(10000, GripperDirection.OPEN, 10)
 
         print("Testing Complete!")
 
