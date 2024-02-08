@@ -278,7 +278,7 @@ class CubertMotor:
                 print("Position Currently Unknown: Cannot Determine Direction to Middle!")            
 
         while (not endstop_to_check()) and steps_done < steps:
-            
+
             if acceleration:
                 vel = get_motor_velocity(move_speed, self._DEFAULT_SPEED_UP_FRAC, steps_done, steps)
                 step_delay = get_step_delay(vel)
@@ -437,9 +437,9 @@ if __name__ == '__main__':
 
         motor.moveGripperToPos(GripperPosition.TOP,0)
         time.sleep(1)
-        motor.moveGripperToPos(GripperPosition.BOTTOM,75,acceleration=True)
+        motor.moveGripperToPos(GripperPosition.BOTTOM,10)
         time.sleep(1)
-        motor.moveGripperToPos(GripperPosition.MIDDLE,10)
+        motor.moveGripperToPos(GripperPosition.MIDDLE,75,acceleration=True)
         time.sleep(1)
         motor.moveGripper(200, GripperDirection.CLOSE, 10)
         time.sleep(1)
