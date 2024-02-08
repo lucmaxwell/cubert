@@ -33,10 +33,8 @@ class GripperPosition(Enum):
     BOTTOM  = 2
     MIDDLE  = 3
 
-MIN_VELOCITY = 5
-
 def get_step_delay(velocity):
-    v = min(velocity, 200)
+    v = max(min(velocity, 200), 1)
     x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100
     delay_duration = 1 / (0.0003 * x) / 10
     return round(delay_duration)
@@ -72,6 +70,7 @@ class CubertMotor:
     _DISTANCE_AT_TOP                = 64.22
 
     _DEFAULT_MOVE_SPEED     = 10
+    _DEFAULT_SPEED_UP_FRAC  = 0.25
 
     # derived class constants
     _STEPS_PER_REV  = _ACTUAL_STEPS * _MICROSTEPS # number of steps per revolution
@@ -238,7 +237,7 @@ class CubertMotor:
             self.tmc_base.set_vactual_rpm(move_speed, revolutions=-1*correction, acceleration=acceleration)
 
 
-    def moveGripperToPos(self, position:GripperPosition, move_speed=_DEFAULT_MOVE_SPEED):
+    def moveGripperToPos(self, position:GripperPosition, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False):
         endstop_to_check = self.return_false
         steps            = sys.maxsize
 
@@ -279,6 +278,11 @@ class CubertMotor:
                 print("Position Currently Unknown: Cannot Determine Direction to Middle!")            
 
         while (not endstop_to_check()) and steps_done < steps:
+            
+            if acceleration:
+                vel = get_motor_velocity(move_speed, self._DEFAULT_SPEED_UP_FRAC, steps_done, steps)
+                step_delay = get_step_delay(vel)
+
             self.stepGripper(direction)
             steps_done += 1
             libc.usleep(step_delay)
@@ -433,7 +437,7 @@ if __name__ == '__main__':
 
         motor.moveGripperToPos(GripperPosition.TOP,0)
         time.sleep(1)
-        motor.moveGripperToPos(GripperPosition.BOTTOM,10)
+        motor.moveGripperToPos(GripperPosition.BOTTOM,75,acceleration=True)
         time.sleep(1)
         motor.moveGripperToPos(GripperPosition.MIDDLE,10)
         time.sleep(1)
