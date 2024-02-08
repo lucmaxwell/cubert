@@ -31,11 +31,13 @@ class GripperPosition(Enum):
     BOTTOM  = 2
     MIDDLE  = 3
 
+MIN_VELOCITY = 5
+
 def get_step_delay(velocity):
     v = min(velocity, 200)
     x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100
     delay_duration = 1 / (0.0003 * x) / 10
-    return round(delay_duration) / 1_000_000
+    return round(delay_duration)
 
 def sigint_handler(sig, frame):
     GPIO.cleanup()
@@ -50,7 +52,7 @@ def get_motor_velocity(move_speed, speed_up_fraction, curr_steps, total_steps):
         vel = move_speed * (total_steps - curr_steps) / point1
     elif curr_steps < point2 and curr_steps > point1:
         vel = move_speed
-        
+
     return vel
 
 class CubertMotor:
@@ -277,7 +279,7 @@ class CubertMotor:
         while (not endstop_to_check()) and steps_done < steps:
             self.stepGripper(direction)
             steps_done += 1
-            time.sleep(step_delay)
+            time.usleep(step_delay)
 
         print("Movement Complete")
 
@@ -330,7 +332,7 @@ class CubertMotor:
         while (not endstop_to_check()) and steps_done < steps:
             self.stepGripper(direction)
             steps_done += 1
-            time.sleep(step_delay)
+            time.usleep(step_delay)
 
         return steps_done
 
@@ -343,7 +345,7 @@ class CubertMotor:
         # spin for given number of steps
         for _ in range(steps):
             self.stepBase(direction)
-            time.sleep(step_delay)
+            time.usleep(step_delay)
 
     def move(self, steps, direction:Direction, motor:MotorType, move_speed=_DEFAULT_MOVE_SPEED):
         # Calculate the delay time of the pulse
@@ -352,7 +354,7 @@ class CubertMotor:
         # Spin with given number of steps
         for _ in range(steps):
             self.step(direction, motor)
-            time.sleep(stepDelay)
+            time.usleep(stepDelay)
 
 
     def stepGripper(self, direction:GripperDirection):
