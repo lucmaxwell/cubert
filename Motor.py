@@ -58,7 +58,7 @@ def get_motor_velocity(move_speed, speed_up_fraction, curr_steps, total_steps):
 class CubertMotor:
 
     # class constants
-    _USE_UART = False
+    _USE_UART = True
 
     _ACTUAL_STEPS   = 400   # number of steps in motor
     _MICROSTEPS     = 8     # set microstep resolution
@@ -284,7 +284,7 @@ class CubertMotor:
                 vel = get_motor_velocity(move_speed, accel_fraction, steps_done, steps)
                 step_delay = get_step_delay(vel)
 
-            self.stepGripper(direction)
+            self.stepGripper(direction, step_delay)
             steps_done += 1
             libc.usleep(step_delay)
 
@@ -341,7 +341,7 @@ class CubertMotor:
                 vel = get_motor_velocity(move_speed, accel_fraction, steps_done, steps)
                 step_delay = get_step_delay(vel)
 
-            self.stepGripper(direction)
+            self.stepGripper(direction, step_delay)
             steps_done += 1
             libc.usleep(step_delay)
 
@@ -363,7 +363,7 @@ class CubertMotor:
                 vel = get_motor_velocity(move_speed, accel_fraction, steps_done, steps)
                 step_delay = get_step_delay(vel)
 
-            self.stepBase(direction)
+            self.stepBase(direction, step_delay)
             steps_done += 1
             libc.usleep(step_delay)
 
@@ -379,7 +379,7 @@ class CubertMotor:
             libc.usleep(stepDelay)
 
 
-    def stepGripper(self, direction:GripperDirection):
+    def stepGripper(self, direction:GripperDirection, step_delay=0):
 
         endstop_to_check = False
 
@@ -420,25 +420,32 @@ class CubertMotor:
 
         # step gripper
         if not endstop_to_check:
-            self.step(left_dir, MotorType.LEFT)
-            self.step(right_dir, MotorType.RIGHT)
+            self.step(left_dir, MotorType.LEFT, step_delay)
+            self.step(right_dir, MotorType.RIGHT, step_delay)
             # self.tmc_left.make_a_step()
             # self.tmc_right.make_a_step()
 
-    def stepBase(self, direction:Direction):
-        self.step(direction, MotorType.BASE)
+    def stepBase(self, direction:Direction, step_delay=0):
+        self.step(direction, MotorType.BASE, step_delay)
         # # set step direction
         # self.tmc_base.set_direction_pin(direction)
 
         # # step base
         # self.tmc_base.make_a_step()
 
-    def step(self, direction:Direction, motor:MotorType):
-        # set step direction
-        self.tmc_list[motor].set_direction_pin(direction)
+    def step(self, direction:Direction, motor:MotorType, step_delay=0):
+        if self._USE_UART:
+            dur = step_delay / 1_000_000
+            rev_per_sec = self._STEPS_PER_REV * step_delay / 1_000_000
+            if direction == Direction.CCW: rev_per_sec *= -1
+            self.tmc_list[motor].set_vactual_rps(rev_per_sec, duration=dur)
+            
+        else:
+            # set step direction
+            self.tmc_list[motor].set_direction_pin(direction)
 
-        # step motor
-        self.tmc_list[motor].make_a_step()
+            # step motor
+            self.tmc_list[motor].make_a_step()
 
 if __name__ == '__main__':
     motor_en_pin = 26
