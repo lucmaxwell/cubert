@@ -10,7 +10,7 @@ import ctypes
 MAX_SPEED = 3.3 # DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 MIN_SPEED = 0.000001
 
-libc = ctypes.CDLL('lib.so.6')
+libc = ctypes.CDLL('libc.so.6')
 
 class Direction(IntEnum):
     CCW = 0
