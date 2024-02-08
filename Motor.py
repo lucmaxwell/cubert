@@ -68,7 +68,7 @@ class CubertMotor:
         # setup motors
         for tmc in self.tmc_list:
             tmc.set_current(700)
-            tmc.set_microstepping_resolution(16)
+            tmc.set_microstepping_resolution(8)
 
         # store enstop pins
         self._top_end_pin       = top_end_pin
@@ -259,7 +259,7 @@ if __name__ == '__main__':
         time.sleep(1)
         motor.stepGripper(10000, GripperDirection.UP, 10)
         time.sleep(1)
-        motor.stepGripper(2000, GripperDirection.CLOSE, 10)
+        motor.stepGripper(200, GripperDirection.CLOSE, 10)
         time.sleep(1)
         motor.stepGripper(10000, GripperDirection.OPEN, 10)
 
@@ -267,13 +267,13 @@ if __name__ == '__main__':
 
         while True:
             # do nothing
-            motor.stepGripper(1000, GripperDirection.DOWN, 40)
+            motor.stepGripper(10000, GripperDirection.DOWN, 40)
             time.sleep(1)
-            motor.stepGripper(1000, GripperDirection.UP, 50)
+            motor.stepGripper(10000, GripperDirection.UP, 50)
             time.sleep(1)
-            motor.stepGripper(1000, GripperDirection.CLOSE, 20)
+            motor.stepGripper(200, GripperDirection.CLOSE, 20)
             time.sleep(1)
-            motor.stepGripper(1000, GripperDirection.OPEN, 30)
+            motor.stepGripper(10000, GripperDirection.OPEN, 30)
             time.sleep(10)
 
         # print("Spinning CW 180")
