@@ -32,7 +32,7 @@ def get_step_delay(velocity):
     return round(delay_duration) / 1_000_000
 
 def sigint_handler(sig, frame):
-    del motor
+    GPIO.cleanup()
     sys.exit(0)
 
 
@@ -43,7 +43,9 @@ class CubertMotor:
 
     _GEAR_RATIO     = 6
 
-
+    _top_endstop_pressed        = False
+    _bottom_endstop_pressed     = False
+    _gripper_endstop_pressed    = False
 
     def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin):
 
@@ -74,12 +76,12 @@ class CubertMotor:
         GPIO.setup(  grip_end_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         # setup endstop interrupts
-        GPIO.add_event_detect(top_end_pin, GPIO.FALLING,
-                              callback=self.endstop_pressed_callback)
-        GPIO.add_event_detect(bottom_end_pin, GPIO.FALLING,
-                              callback=self.endstop_pressed_callback)
-        GPIO.add_event_detect(grip_end_pin, GPIO.FALLING,
-                              callback=self.endstop_pressed_callback)
+        GPIO.add_event_detect(top_end_pin, GPIO.BOTH,
+                              callback=self.top_endstop_callback)
+        GPIO.add_event_detect(bottom_end_pin, GPIO.BOTH,
+                              callback=self.bottom_endstop_callback)
+        GPIO.add_event_detect(grip_end_pin, GPIO.BOTH,
+                              callback=self.gripper_endstop_callback)
 
 
 
@@ -105,14 +107,32 @@ class CubertMotor:
             tmc.stop()
 
 
-    def endstop_pressed_callback(self, channel):
-        print("In Callback Function")
-        if not GPIO.input(self._top_end_pin):
+    def top_endstop_callback(self, channel):
+        if not GPIO.input(self._top_end_pin) and not self._top_endstop_pressed:
+            self._top_endstop_pressed = True
             print("Top Endstop Pressed")
-        elif not GPIO.input(self._bottom_end_pin):
+
+        elif GPIO.input(self._top_end_pin) and self._top_endstop_pressed:
+            self._top_endstop_pressed = False
+            print("Top Endstop Released")
+
+    def bottom_endstop_callback(self, channel):
+        if not GPIO.input(self._bottom_end_pin) and not self._bottom_endstop_pressed:
+            self._bottom_endstop_pressed = True
             print("Bottom Endstop Pressed")
-        elif not GPIO.input(self._grip_end_pin):
+
+        elif GPIO.input(self._bottom_end_pin) and self._bottom_endstop_pressed:
+            self._bottom_endstop_pressed = False
+            print("Bottom Endstop Released")
+
+    def gripper_endstop_callback(self, channel):
+        if not GPIO.input(self._grip_end_pin) and not self._gripper_endstop_pressed:
+            self._gripper_endstop_pressed = True
             print("Gripper Endstop Pressed")
+
+        elif GPIO.input(self._grip_end_pin) and self._gripper_endstop_pressed:
+            self._gripper_endstop_pressed = False
+            print("Gripper Endstop Released")
 
 
     def spinBase(self, degrees_to_rotate, move_direction, move_speed, degrees_to_correct=0, acceleration=0):
@@ -131,34 +151,57 @@ class CubertMotor:
 
     def stepGripper(self, steps, direction:GripperDirection, move_speed):
 
+        # tracks steps completed
+        steps_done = 0
+
+        # calculate step delay
+        step_delay = get_step_delay(move_speed)
+
         # set step directions
         if direction == GripperDirection.UP:
             self.tmc_left.set_direction_pin(Direction.CCW)
             self.tmc_right.set_direction_pin(Direction.CW)
 
+            while not self._top_endstop_pressed and steps_done < steps:
+                self.stepGripperOnce(move_speed)
+
         elif direction == GripperDirection.DOWN:
             self.tmc_left.set_direction_pin(Direction.CW)
             self.tmc_right.set_direction_pin(Direction.CCW)
+
+            while not self._bottom_endstop_pressed and steps_done < steps:
+                self.stepGripperOnce(move_speed)
         
         elif direction == GripperDirection.OPEN:
             self.tmc_left.set_direction_pin(Direction.CW)
             self.tmc_right.set_direction_pin(Direction.CW)
+
+            while not self._gripper_endstop_pressed and steps_done < steps:
+                self.stepGripperOnce(move_speed)
         
         elif direction == GripperDirection.CLOSE:
             self.tmc_left.set_direction_pin(Direction.CCW)
             self.tmc_right.set_direction_pin(Direction.CCW)
 
+            while steps_done < steps:
+                self.stepGripperOnce(move_speed)
+
         else:
             print("ERROR: Direction does not exist!")
 
-        # calculate step delay
-        step_delay = get_step_delay(move_speed)
+        # # calculate step delay
+        # step_delay = get_step_delay(move_speed)
 
-        # spind for given number of steps
-        for _ in range(steps):
-            self.tmc_left.make_a_step()
-            self.tmc_right.make_a_step()
-            time.sleep(step_delay)
+        # # spin for given number of steps
+        # for _ in range(steps):
+        #     self.tmc_left.make_a_step()
+        #     self.tmc_right.make_a_step()
+        #     time.sleep(step_delay)
+
+    def stepGripperOnce(self, step_delay):
+        self.tmc_left.make_a_step()
+        self.tmc_right.make_a_step()
+        time.sleep(step_delay)
 
     def stepBase(self, steps, direction:Direction, move_speed):
         # set step direction
@@ -216,6 +259,8 @@ if __name__ == '__main__':
         motor.stepGripper(1000, GripperDirection.CLOSE, 10)
         time.sleep(1)
         motor.stepGripper(1000, GripperDirection.OPEN, 10)
+
+        print("Testing Complete!")
 
         while True:
             # do nothing
