@@ -145,6 +145,7 @@ class CubertMotor:
         self.homeBase()
 
     def homeGripper(self):
+        print("Homing Gripper")
         self.gripperMoveToPos(GripperPosition.BOTTOM, 20)
         self._steps_total_travel = self.gripperMoveToPos(GripperPosition.TOP, 20)
         self.gripperMoveToPos(GripperPosition.MIDDLE)
@@ -209,7 +210,7 @@ class CubertMotor:
         # calculate step delay
         step_delay = get_step_delay(move_speed)
 
-        print("Moving Gripper to {position}")
+        print("Moving Gripper to {}", position)
 
         # check direction to step
         if position == GripperPosition.TOP:
