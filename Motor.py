@@ -232,7 +232,7 @@ class CubertMotor:
         elif position == GripperPosition.BOTTOM:
             print("Moving Gripper to Bottom")
 
-            endstop_to_check = self.get_top_endstop_pressed
+            endstop_to_check = self.get_bottom_endstop_pressed
 
             direction = GripperDirection.DOWN
         
@@ -268,7 +268,7 @@ class CubertMotor:
 
     def moveGripper(self, steps, direction:GripperDirection, move_speed=_DEFAULT_MOVE_SPEED):
 
-        endstop_to_check = False
+        endstop_to_check = self.return_false
 
         # tracks steps completed
         steps_done = 0
@@ -280,17 +280,17 @@ class CubertMotor:
         if direction == GripperDirection.UP:
             print("Moving Gripper Up")
 
-            endstop_to_check = self._top_endstop_pressed
+            endstop_to_check = self.get_top_endstop_pressed
 
         elif direction == GripperDirection.DOWN:
             print("Moving Gripper Down")
 
-            endstop_to_check = self._bottom_endstop_pressed
+            endstop_to_check = self.get_bottom_endstop_pressed
         
         elif direction == GripperDirection.OPEN:
             print("Opening Gripper")
 
-            endstop_to_check = self._gripper_endstop_pressed
+            endstop_to_check = self.get_gripper_endstop_pressed
         
         elif direction == GripperDirection.CLOSE:
             print("Closing Gripper")
