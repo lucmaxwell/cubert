@@ -385,26 +385,34 @@ class CubertMotor:
 
         # check direction to step
         if direction == GripperDirection.UP:
-            self.tmc_left.set_direction_pin(Direction.CCW)
-            self.tmc_right.set_direction_pin(Direction.CW)
+            left_dir = Direction.CCW
+            right_dir = Direction.CW
+            # self.tmc_left.set_direction_pin(Direction.CCW)
+            # self.tmc_right.set_direction_pin(Direction.CW)
 
             endstop_to_check = self._top_endstop_pressed
 
         elif direction == GripperDirection.DOWN:
-            self.tmc_left.set_direction_pin(Direction.CW)
-            self.tmc_right.set_direction_pin(Direction.CCW)
+            left_dir = Direction.CW
+            right_dir = Direction.CCW
+            # self.tmc_left.set_direction_pin(Direction.CW)
+            # self.tmc_right.set_direction_pin(Direction.CCW)
 
             endstop_to_check = self._bottom_endstop_pressed
         
         elif direction == GripperDirection.OPEN:
-            self.tmc_left.set_direction_pin(Direction.CCW)
-            self.tmc_right.set_direction_pin(Direction.CCW)
+            left_dir = Direction.CCW
+            right_dir = Direction.CCW
+            # self.tmc_left.set_direction_pin(Direction.CCW)
+            # self.tmc_right.set_direction_pin(Direction.CCW)
 
             endstop_to_check = self._gripper_endstop_pressed
         
         elif direction == GripperDirection.CLOSE:
-            self.tmc_left.set_direction_pin(Direction.CW)
-            self.tmc_right.set_direction_pin(Direction.CW)
+            left_dir = Direction.CW
+            right_dir = Direction.CW
+            # self.tmc_left.set_direction_pin(Direction.CW)
+            # self.tmc_right.set_direction_pin(Direction.CW)
             
         else:
             print("ERROR: Direction does not exist!")
@@ -412,15 +420,18 @@ class CubertMotor:
 
         # step gripper
         if not endstop_to_check:
-            self.tmc_left.make_a_step()
-            self.tmc_right.make_a_step()
+            self.step(left_dir, MotorType.LEFT)
+            self.step(right_dir, MotorType.RIGHT)
+            # self.tmc_left.make_a_step()
+            # self.tmc_right.make_a_step()
 
     def stepBase(self, direction:Direction):
-        # set step direction
-        self.tmc_base.set_direction_pin(direction)
+        self.step(direction, MotorType.BASE)
+        # # set step direction
+        # self.tmc_base.set_direction_pin(direction)
 
-        # step base
-        self.tmc_base.make_a_step()
+        # # step base
+        # self.tmc_base.make_a_step()
 
     def step(self, direction:Direction, motor:MotorType):
         # set step direction
