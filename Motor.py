@@ -50,7 +50,7 @@ def get_motor_velocity(move_speed, speed_up_fraction, curr_steps, total_steps):
         vel = move_speed * curr_steps / point1
     elif curr_steps > point2:
         vel = move_speed * (total_steps - curr_steps) / point1
-    elif curr_steps < point2 and curr_steps > point1:
+    elif curr_steps <= point2 and curr_steps >= point1:
         vel = move_speed
 
     return vel
