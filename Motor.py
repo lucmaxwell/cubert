@@ -206,15 +206,6 @@ class CubertMotor:
         else:
             print("ERROR: Direction does not exist!")
 
-        # # calculate step delay
-        # step_delay = get_step_delay(move_speed)
-
-        # # spin for given number of steps
-        # for _ in range(steps):
-        #     self.tmc_left.make_a_step()
-        #     self.tmc_right.make_a_step()
-        #     time.sleep(step_delay)
-
     def stepBase(self, steps, direction:Direction, move_speed):
         # set step direction
         self.tmc_base.set_direction_pin(direction)
@@ -260,13 +251,13 @@ if __name__ == '__main__':
     try:
         motor.enable()
 
-        # motor.step(19200, Direction.CW, MotorType.BASE, 10)
+        motor.step(19200, Direction.CW, MotorType.BASE, 10)
 
-        # motor.stepBase(19200, Direction.CCW, 60)
+        motor.stepBase(19200, Direction.CCW, 60)
 
-        motor.stepGripper(10000, GripperDirection.UP, 10)
-        time.sleep(1)
         motor.stepGripper(10000, GripperDirection.DOWN, 10)
+        time.sleep(1)
+        motor.stepGripper(10000, GripperDirection.UP, 10)
         time.sleep(1)
         motor.stepGripper(2000, GripperDirection.CLOSE, 10)
         time.sleep(1)
@@ -276,13 +267,13 @@ if __name__ == '__main__':
 
         while True:
             # do nothing
-            motor.stepGripper(1000, GripperDirection.UP, 10)
+            motor.stepGripper(1000, GripperDirection.DOWN, 40)
             time.sleep(1)
-            motor.stepGripper(1000, GripperDirection.DOWN, 10)
+            motor.stepGripper(1000, GripperDirection.UP, 50)
             time.sleep(1)
-            motor.stepGripper(1000, GripperDirection.CLOSE, 10)
+            motor.stepGripper(1000, GripperDirection.CLOSE, 20)
             time.sleep(1)
-            motor.stepGripper(1000, GripperDirection.OPEN, 10)
+            motor.stepGripper(1000, GripperDirection.OPEN, 30)
             time.sleep(10)
 
         # print("Spinning CW 180")
