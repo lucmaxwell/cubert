@@ -255,9 +255,9 @@ if __name__ == '__main__':
     try:
         motor.enable()
 
-        motor.step(19200, Direction.CW, MotorType.BASE, 10)
+        # motor.step(19200, Direction.CW, MotorType.BASE, 10)
 
-        motor.stepBase(19200, Direction.CCW, 60)
+        # motor.stepBase(19200, Direction.CCW, 60)
 
         motor.stepGripper(1000, GripperDirection.UP, 10)
         time.sleep(1)
