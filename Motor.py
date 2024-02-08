@@ -164,6 +164,7 @@ class CubertMotor:
 
             while not self._top_endstop_pressed and steps_done < steps:
                 self.stepGripperOnce(move_speed)
+                steps_done += 1
 
         elif direction == GripperDirection.DOWN:
             self.tmc_left.set_direction_pin(Direction.CW)
@@ -171,6 +172,7 @@ class CubertMotor:
 
             while not self._bottom_endstop_pressed and steps_done < steps:
                 self.stepGripperOnce(move_speed)
+                steps_done += 1
         
         elif direction == GripperDirection.OPEN:
             self.tmc_left.set_direction_pin(Direction.CW)
@@ -178,6 +180,7 @@ class CubertMotor:
 
             while not self._gripper_endstop_pressed and steps_done < steps:
                 self.stepGripperOnce(move_speed)
+                steps_done += 1
         
         elif direction == GripperDirection.CLOSE:
             self.tmc_left.set_direction_pin(Direction.CCW)
@@ -185,6 +188,7 @@ class CubertMotor:
 
             while steps_done < steps:
                 self.stepGripperOnce(move_speed)
+                steps_done += 1
 
         else:
             print("ERROR: Direction does not exist!")
