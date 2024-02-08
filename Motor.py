@@ -1,4 +1,5 @@
 import RPi.GPIO as GPIO
+import signal
 import time
 from enum import Enum, IntEnum
 from TMC2209MotorLib.src.TMC_2209.TMC_2209_StepperDriver import *
@@ -28,6 +29,9 @@ def get_step_delay(velocity):
     x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100
     delay_duration = 1 / (0.0003 * x) / 10
     return round(delay_duration) / 1_000_000
+
+def sigint_handler():
+    del motor
 
 
 class CubertMotor:
@@ -191,6 +195,8 @@ if __name__ == '__main__':
 
     # initialize motor
     motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin)
+
+    signal.signal(signal.SIGINT, sigint_handler)
 
     # Spin
     print("Running motor...")
