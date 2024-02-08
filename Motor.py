@@ -53,12 +53,15 @@ class CubertMotor:
 
     _MAX_CURRENT    = 700   # max current draw of motors in mA
 
-    _DISTANCE_FROM_BOTTOM_TO_TOP    = (63 - 14.24)    # distance from gripper travel bottom to top in mm
+    _DISTANCE_AT_BOTTOM             = 14.24
+    _DISTANCE_AT_TOP                = 63.00
 
     _DEFAULT_MOVE_SPEED     = 10
 
     # derived class constants
     _STEPS_PER_REV  = _ACTUAL_STEPS * _MICROSTEPS # number of steps per revolution
+
+    _DISTANCE_FROM_BOTTOM_TO_TOP    = _DISTANCE_AT_TOP - _DISTANCE_AT_BOTTOM    # distance from gripper travel bottom to top in mm
 
     # determines if enstops are pressed
     _top_endstop_pressed        = False
@@ -280,6 +283,8 @@ class CubertMotor:
             direction = GripperDirection.DOWN
 
         self.moveGripper(steps, direction, move_speed)
+
+        print("Distance is ", self._DISTANCE_AT_BOTTOM + mm_to_move)
 
 
     def moveGripper(self, steps, direction:GripperDirection, move_speed=_DEFAULT_MOVE_SPEED):
