@@ -100,6 +100,7 @@ class CubertMotor:
 
 
     def endstop_pressed_callback(self, channel):
+        print("In Callback Function")
         if not GPIO.input(self._top_end_pin):
             print("Top Endstop Pressed")
         elif not GPIO.input(self._bottom_end_pin):
@@ -198,7 +199,7 @@ if __name__ == '__main__':
 
         motor.step(19200, Direction.CW, MotorType.BASE, 10)
 
-        motor.stepBase(19200, Direction.CCW, 10)
+        motor.stepBase(19200, Direction.CCW, 60)
 
         motor.stepGripper(1000, GripperDirection.UP, 10)
         time.sleep(1)
@@ -207,6 +208,10 @@ if __name__ == '__main__':
         motor.stepGripper(1000, GripperDirection.CLOSE, 10)
         time.sleep(1)
         motor.stepGripper(1000, GripperDirection.OPEN, 10)
+
+        while True:
+            # do nothing
+            time.sleep(1)
 
         # print("Spinning CW 180")
         # motor.spinBase(180, MotorSpin.CLOCKWISE, 60)
