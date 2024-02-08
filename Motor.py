@@ -184,6 +184,17 @@ class CubertMotor:
             self._gripper_endstop_pressed = False
             print("Gripper Endstop Released")
 
+    def get_top_endstop_pressed(self):
+        return self.get_top_endstop_pressed
+    
+    def get_bottom_endstop_pressed(self):
+        return self._bottom_endstop_pressed
+    
+    def get_gripper_endstop_pressed(self):
+        return self._gripper_endstop_pressed
+
+    def return_false(self):
+        return False
 
     # depreciated spin base function
     def spinBaseDep(self, degrees_to_rotate, move_direction, move_speed, degrees_to_correct=0, acceleration=0):
@@ -201,7 +212,7 @@ class CubertMotor:
 
 
     def moveGripperToPos(self, position:GripperPosition, move_speed=_DEFAULT_MOVE_SPEED):
-        endstop_to_check = False
+        endstop_to_check = self.return_false
         steps            = sys.maxsize
 
         # tracks steps completed
@@ -214,21 +225,19 @@ class CubertMotor:
         if position == GripperPosition.TOP:
             print("Moving Gripper to Top")
 
-            endstop_to_check = self._top_endstop_pressed
+            endstop_to_check = self.get_top_endstop_pressed
 
             direction = GripperDirection.UP
 
         elif position == GripperPosition.BOTTOM:
             print("Moving Gripper to Bottom")
 
-            endstop_to_check = self._bottom_endstop_pressed
+            endstop_to_check = self.get_top_endstop_pressed
 
             direction = GripperDirection.DOWN
         
         elif position == GripperPosition.MIDDLE:
             print("Moving Gripper to Middle")
-
-            endstop_to_check = self._gripper_endstop_pressed
 
             if self._current_gripper_pos == GripperPosition.TOP:
                 direction = GripperDirection.DOWN
@@ -242,7 +251,7 @@ class CubertMotor:
                 endstop_to_check = True # exit loop
                 print("Position Currently Unknown: Cannot Determine Direction to Middle!")            
 
-        while (not endstop_to_check) and steps_done < steps:
+        while (not endstop_to_check()) and steps_done < steps:
             self.stepGripper(direction)
             steps_done += 1
             time.sleep(step_delay)
