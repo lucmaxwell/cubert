@@ -65,6 +65,11 @@ class CubertMotor:
         # used to index motors
         self.tmc_list = [self.tmc_base, self.tmc_left, self.tmc_right]
 
+        # setup motors
+        for tmc in self.tmc_list:
+            tmc.set_current(700)
+            tmc.set_microstepping_resolution(16)
+
         # store enstop pins
         self._top_end_pin       = top_end_pin
         self._bottom_end_pin    = bottom_end_pin
