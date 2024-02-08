@@ -53,8 +53,8 @@ class CubertMotor:
 
     _MAX_CURRENT    = 700   # max current draw of motors in mA
 
-    _DISTANCE_AT_BOTTOM             = 14.24
-    _DISTANCE_AT_TOP                = 63.00
+    _DISTANCE_AT_BOTTOM             = 14.20
+    _DISTANCE_AT_TOP                = 64.22
 
     _DEFAULT_MOVE_SPEED     = 10
 
