@@ -395,11 +395,13 @@ if __name__ == '__main__':
     try:
         motor.enable()
 
-        # motor.home()
+        motor.home()
 
         motor.moveGripperToPos(GripperPosition.TOP,10)
         time.sleep(1)
         motor.moveGripperToPos(GripperPosition.BOTTOM,10)
+        time.sleep(1)
+        motor.moveGripperToPos(GripperPosition.MIDDLE,10)
         time.sleep(1)
         motor.moveGripper(200, GripperDirection.CLOSE, 10)
         time.sleep(1)
