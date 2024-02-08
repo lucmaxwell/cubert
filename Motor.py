@@ -184,8 +184,10 @@ class CubertMotor:
             self._gripper_endstop_pressed = False
             print("Gripper Endstop Released")
 
+
+
     def get_top_endstop_pressed(self):
-        return self.get_top_endstop_pressed
+        return self._top_endstop_pressed
     
     def get_bottom_endstop_pressed(self):
         return self._bottom_endstop_pressed
