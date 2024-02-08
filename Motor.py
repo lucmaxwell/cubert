@@ -4,11 +4,13 @@ import sys
 import time
 from enum import Enum, IntEnum
 from TMC2209MotorLib.src.TMC_2209.TMC_2209_StepperDriver import *
-
+import ctypes
 
 # Parameter
 MAX_SPEED = 3.3 # DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 MIN_SPEED = 0.000001
+
+libc = ctypes.CDLL('lib.so.6')
 
 class Direction(IntEnum):
     CCW = 0
@@ -279,7 +281,7 @@ class CubertMotor:
         while (not endstop_to_check()) and steps_done < steps:
             self.stepGripper(direction)
             steps_done += 1
-            time.usleep(step_delay)
+            libc.usleep(step_delay)
 
         print("Movement Complete")
 
@@ -332,7 +334,7 @@ class CubertMotor:
         while (not endstop_to_check()) and steps_done < steps:
             self.stepGripper(direction)
             steps_done += 1
-            time.usleep(step_delay)
+            libc.usleep(step_delay)
 
         return steps_done
 
@@ -345,7 +347,7 @@ class CubertMotor:
         # spin for given number of steps
         for _ in range(steps):
             self.stepBase(direction)
-            time.usleep(step_delay)
+            libc.usleep(step_delay)
 
     def move(self, steps, direction:Direction, motor:MotorType, move_speed=_DEFAULT_MOVE_SPEED):
         # Calculate the delay time of the pulse
@@ -354,7 +356,7 @@ class CubertMotor:
         # Spin with given number of steps
         for _ in range(steps):
             self.step(direction, motor)
-            time.usleep(stepDelay)
+            libc.usleep(stepDelay)
 
 
     def stepGripper(self, direction:GripperDirection):
