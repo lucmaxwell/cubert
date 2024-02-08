@@ -295,7 +295,7 @@ class CubertMotor:
         elif direction == GripperDirection.CLOSE:
             print("Closing Gripper")
 
-        while (not endstop_to_check) and steps_done < steps:
+        while (not endstop_to_check()) and steps_done < steps:
             self.stepGripper(direction)
             steps_done += 1
             time.sleep(step_delay)
