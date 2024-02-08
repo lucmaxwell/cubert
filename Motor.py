@@ -162,7 +162,7 @@ class CubertMotor:
             self.tmc_left.set_direction_pin(Direction.CCW)
             self.tmc_right.set_direction_pin(Direction.CW)
 
-            while not GPIO.input(self._top_end_pin) and steps_done < steps:
+            while (not GPIO.input(self._top_end_pin)) and steps_done < steps:
                 self.tmc_left.make_a_step()
                 self.tmc_right.make_a_step()
                 steps_done += 1
@@ -174,25 +174,31 @@ class CubertMotor:
             self.tmc_left.set_direction_pin(Direction.CW)
             self.tmc_right.set_direction_pin(Direction.CCW)
 
-            while not self._bottom_endstop_pressed and steps_done < steps:
-                self.stepGripperOnce(move_speed)
+            while (not self._bottom_endstop_pressed) and steps_done < steps:
+                self.tmc_left.make_a_step()
+                self.tmc_right.make_a_step()
                 steps_done += 1
+                time.sleep(step_delay)
         
         elif direction == GripperDirection.OPEN:
             self.tmc_left.set_direction_pin(Direction.CW)
             self.tmc_right.set_direction_pin(Direction.CW)
 
             while not self._gripper_endstop_pressed and steps_done < steps:
-                self.stepGripperOnce(move_speed)
+                self.tmc_left.make_a_step()
+                self.tmc_right.make_a_step()
                 steps_done += 1
+                time.sleep(step_delay)
         
         elif direction == GripperDirection.CLOSE:
             self.tmc_left.set_direction_pin(Direction.CCW)
             self.tmc_right.set_direction_pin(Direction.CCW)
 
             while steps_done < steps:
-                self.stepGripperOnce(move_speed)
+                self.tmc_left.make_a_step()
+                self.tmc_right.make_a_step()
                 steps_done += 1
+                time.sleep(step_delay)
 
         else:
             print("ERROR: Direction does not exist!")
@@ -205,11 +211,6 @@ class CubertMotor:
         #     self.tmc_left.make_a_step()
         #     self.tmc_right.make_a_step()
         #     time.sleep(step_delay)
-
-    def stepGripperOnce(self, step_delay):
-        self.tmc_left.make_a_step()
-        self.tmc_right.make_a_step()
-        time.sleep(step_delay)
 
     def stepBase(self, steps, direction:Direction, move_speed):
         # set step direction
