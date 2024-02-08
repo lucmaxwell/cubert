@@ -162,13 +162,11 @@ class CubertMotor:
             self.tmc_left.set_direction_pin(Direction.CCW)
             self.tmc_right.set_direction_pin(Direction.CW)
 
-            while (not GPIO.input(self._top_end_pin)) and steps_done < steps:
+            while (not self._top_endstop_pressed) and steps_done < steps:
                 self.tmc_left.make_a_step()
                 self.tmc_right.make_a_step()
                 steps_done += 1
                 time.sleep(step_delay)
-                # self.stepGripperOnce(move_speed)
-                # steps_done += 1
 
         elif direction == GripperDirection.DOWN:
             self.tmc_left.set_direction_pin(Direction.CW)
@@ -184,7 +182,7 @@ class CubertMotor:
             self.tmc_left.set_direction_pin(Direction.CW)
             self.tmc_right.set_direction_pin(Direction.CW)
 
-            while not self._gripper_endstop_pressed and steps_done < steps:
+            while (not self._gripper_endstop_pressed) and steps_done < steps:
                 self.tmc_left.make_a_step()
                 self.tmc_right.make_a_step()
                 steps_done += 1
