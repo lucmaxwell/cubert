@@ -41,6 +41,17 @@ def sigint_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
+def get_motor_velocity(move_speed, speed_up_fraction, curr_steps, total_steps):
+    point1 = total_steps * speed_up_fraction
+    point2 = total_steps * (1 - speed_up_fraction)
+    if curr_steps < point1:
+        vel = move_speed * curr_steps / point1
+    elif curr_steps > point2:
+        vel = move_speed * (total_steps - curr_steps) / point1
+    elif curr_steps < point2 and curr_steps > point1:
+        vel = move_speed
+        
+    return vel
 
 class CubertMotor:
 
@@ -416,7 +427,7 @@ if __name__ == '__main__':
 
         motor.home()
 
-        motor.moveGripperToPos(GripperPosition.TOP,10)
+        motor.moveGripperToPos(GripperPosition.TOP,0)
         time.sleep(1)
         motor.moveGripperToPos(GripperPosition.BOTTOM,10)
         time.sleep(1)
