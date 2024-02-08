@@ -271,7 +271,14 @@ if __name__ == '__main__':
 
         while True:
             # do nothing
+            motor.stepGripper(1000, GripperDirection.UP, 10)
             time.sleep(1)
+            motor.stepGripper(1000, GripperDirection.DOWN, 10)
+            time.sleep(1)
+            motor.stepGripper(1000, GripperDirection.CLOSE, 10)
+            time.sleep(1)
+            motor.stepGripper(1000, GripperDirection.OPEN, 10)
+            time.sleep(10)
 
         # print("Spinning CW 180")
         # motor.spinBase(180, MotorSpin.CLOCKWISE, 60)
