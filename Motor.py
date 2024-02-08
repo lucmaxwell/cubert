@@ -109,6 +109,11 @@ class CubertMotor:
         GPIO.setup(bottom_end_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(  grip_end_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
+        # validate endstop state
+        if not GPIO.input(top_end_pin)      : self._top_endstop_pressed = True
+        if not GPIO.input(bottom_end_pin)   : self._bottom_endstop_pressed = True
+        if not GPIO.input(grip_end_pin)     : self._gripper_endstop_pressed = True
+
         # setup endstop interrupts
         GPIO.add_event_detect(top_end_pin, GPIO.BOTH,
                               callback=self.top_endstop_callback)
