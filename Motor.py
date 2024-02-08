@@ -67,8 +67,7 @@ class CubertMotor:
 
     # class variables
     _steps_per_mm       = -1
-    _steps_to_top       = -1
-    _steps_to_bottom    = -1
+    _steps_from_bottom  = -1
     _steps_total_travel = -1
 
     _current_gripper_pos    = GripperPosition.UNKNOWN
@@ -155,6 +154,8 @@ class CubertMotor:
         self._steps_total_travel = self.moveGripperToPos(GripperPosition.TOP, 20)
         self.moveGripperToPos(GripperPosition.MIDDLE)
 
+        self._steps_per_mm = self._steps_total_travel / self._DISTANCE_FROM_BOTTOM_TO_TOP
+
     def homeBase(self):
         return
 
@@ -174,6 +175,7 @@ class CubertMotor:
         if not GPIO.input(self._bottom_end_pin) and not self._bottom_endstop_pressed:
             self._bottom_endstop_pressed = True
             self._current_gripper_pos = GripperPosition.BOTTOM
+            self._steps_from_bottom = 0
             print("Bottom Endstop Pressed")
 
         elif GPIO.input(self._bottom_end_pin) and self._bottom_endstop_pressed:
@@ -270,7 +272,14 @@ class CubertMotor:
         return steps_done
     
     def moveGripperMM(self, mm_to_move, move_speed=_DEFAULT_MOVE_SPEED):
-        return
+        steps = round(abs(mm_to_move) * self._steps_per_mm)
+
+        if mm_to_move > 0:
+            direction = GripperDirection.UP
+        elif mm_to_move < 0:
+            direction = GripperDirection.DOWN
+
+        self.moveGripper(steps, direction, move_speed)
 
 
     def moveGripper(self, steps, direction:GripperDirection, move_speed=_DEFAULT_MOVE_SPEED):
@@ -411,6 +420,9 @@ if __name__ == '__main__':
         motor.moveGripper(200, GripperDirection.CLOSE, 10)
         time.sleep(1)
         motor.moveGripper(10000, GripperDirection.OPEN, 10)
+        time.sleep(1)
+        motor.moveGripperToPos(GripperPosition.BOTTOM, 30)
+        motor.moveGripperMM(20)
 
         print("Testing Complete!")
 
