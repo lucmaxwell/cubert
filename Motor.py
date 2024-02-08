@@ -182,6 +182,7 @@ class CubertMotor:
         if not GPIO.input(self._top_end_pin) and not self._top_endstop_pressed:
             self._top_endstop_pressed = True
             self._current_gripper_pos = GripperPosition.TOP
+            self._steps_from_bottom = self._steps_total_travel
             print("Top Endstop Pressed")
 
         elif GPIO.input(self._top_end_pin) and self._top_endstop_pressed:
@@ -237,7 +238,7 @@ class CubertMotor:
             self.tmc_base.set_vactual_rpm(move_speed, revolutions=-1*correction, acceleration=acceleration)
 
 
-    def moveGripperToPos(self, position:GripperPosition, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False):
+    def moveGripperToPos(self, position:GripperPosition, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
         endstop_to_check = self.return_false
         steps            = sys.maxsize
 
@@ -280,7 +281,7 @@ class CubertMotor:
         while (not endstop_to_check()) and steps_done < steps:
 
             if acceleration:
-                vel = get_motor_velocity(move_speed, self._DEFAULT_SPEED_UP_FRAC, steps_done, steps)
+                vel = get_motor_velocity(move_speed, accel_fraction, steps_done, steps)
                 step_delay = get_step_delay(vel)
 
             self.stepGripper(direction)
@@ -293,7 +294,7 @@ class CubertMotor:
 
         return steps_done
     
-    def moveGripperMM(self, mm_to_move, move_speed=_DEFAULT_MOVE_SPEED):
+    def moveGripperMM(self, mm_to_move, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
         steps = round(abs(mm_to_move) * self._steps_per_mm)
 
         if mm_to_move > 0:
@@ -301,12 +302,11 @@ class CubertMotor:
         elif mm_to_move < 0:
             direction = GripperDirection.DOWN
 
-        self.moveGripper(steps, direction, move_speed)
+        self.moveGripper(steps, direction, move_speed, acceleration, accel_fraction)
 
         print("Distance is ", self._DISTANCE_AT_BOTTOM + mm_to_move)
 
-
-    def moveGripper(self, steps, direction:GripperDirection, move_speed=_DEFAULT_MOVE_SPEED):
+    def moveGripper(self, steps, direction:GripperDirection, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
 
         endstop_to_check = self.return_false
 
@@ -336,6 +336,11 @@ class CubertMotor:
             print("Closing Gripper")
 
         while (not endstop_to_check()) and steps_done < steps:
+
+            if acceleration:
+                vel = get_motor_velocity(move_speed, accel_fraction, steps_done, steps)
+                step_delay = get_step_delay(vel)
+
             self.stepGripper(direction)
             steps_done += 1
             libc.usleep(step_delay)
@@ -344,14 +349,25 @@ class CubertMotor:
 
         
 
-    def moveBase(self, steps, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED):
+    def moveBase(self, steps, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+        # count steps completed
+        steps_done = 0
+
         # calculate step delay
         step_delay = get_step_delay(move_speed)
 
         # spin for given number of steps
         for _ in range(steps):
+
+            if acceleration:
+                vel = get_motor_velocity(move_speed, accel_fraction, steps_done, steps)
+                step_delay = get_step_delay(vel)
+
             self.stepBase(direction)
+            steps_done += 1
             libc.usleep(step_delay)
+
+        return steps_done
 
     def move(self, steps, direction:Direction, motor:MotorType, move_speed=_DEFAULT_MOVE_SPEED):
         # Calculate the delay time of the pulse
@@ -434,6 +450,8 @@ if __name__ == '__main__':
         motor.enable()
 
         motor.home()
+
+        motor.moveBase(19200, Direction.CCW, 75, True)
 
         motor.moveGripperToPos(GripperPosition.TOP,0)
         time.sleep(1)
