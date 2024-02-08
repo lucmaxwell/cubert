@@ -146,9 +146,9 @@ class CubertMotor:
 
     def homeGripper(self):
         print("Homing Gripper")
-        self.gripperMoveToPos(GripperPosition.BOTTOM, 20)
-        self._steps_total_travel = self.gripperMoveToPos(GripperPosition.TOP, 20)
-        self.gripperMoveToPos(GripperPosition.MIDDLE)
+        self.moveGripperToPos(GripperPosition.BOTTOM, 20)
+        self._steps_total_travel = self.moveGripperToPos(GripperPosition.TOP, 20)
+        self.moveGripperToPos(GripperPosition.MIDDLE)
 
     def homeBase(self):
         return
@@ -200,7 +200,7 @@ class CubertMotor:
             self.tmc_base.set_vactual_rpm(move_speed, revolutions=-1*correction, acceleration=acceleration)
 
 
-    def gripperMoveToPos(self, position:GripperPosition, move_speed=_DEFAULT_MOVE_SPEED):
+    def moveGripperToPos(self, position:GripperPosition, move_speed=_DEFAULT_MOVE_SPEED):
         endstop_to_check = False
         steps            = sys.maxsize
 
@@ -210,22 +210,23 @@ class CubertMotor:
         # calculate step delay
         step_delay = get_step_delay(move_speed)
 
-        print("Moving Gripper to {}", position)
-
         # check direction to step
         if position == GripperPosition.TOP:
+            print("Moving Gripper to Top")
 
             endstop_to_check = self._top_endstop_pressed
 
             direction = GripperDirection.UP
 
         elif position == GripperPosition.BOTTOM:
+            print("Moving Gripper to Bottom")
 
             endstop_to_check = self._bottom_endstop_pressed
 
             direction = GripperDirection.DOWN
         
         elif position == GripperPosition.MIDDLE:
+            print("Moving Gripper to Middle")
 
             endstop_to_check = self._gripper_endstop_pressed
 
@@ -246,11 +247,13 @@ class CubertMotor:
             steps_done += 1
             time.sleep(step_delay)
 
+        print("Movement Complete")
+
         self._current_gripper_pos = position
 
         return steps_done
     
-    def gripperMoveMM(self, mm_to_move, move_speed=_DEFAULT_MOVE_SPEED):
+    def moveGripperMM(self, mm_to_move, move_speed=_DEFAULT_MOVE_SPEED):
         return
 
 
@@ -381,15 +384,11 @@ if __name__ == '__main__':
     try:
         motor.enable()
 
-        motor.move(19200, Direction.CW, MotorType.BASE, 10)
+        # motor.home()
 
-        motor.moveBase(19200, Direction.CCW, 60)
-
-        motor.home()
-
-        motor.moveGripper(10000, GripperDirection.DOWN, 10)
+        motor.moveGripperToPos(GripperPosition.TOP,10)
         time.sleep(1)
-        motor.moveGripper(10000, GripperDirection.UP, 10)
+        motor.moveGripperToPos(GripperPosition.BOTTOM,10)
         time.sleep(1)
         motor.moveGripper(200, GripperDirection.CLOSE, 10)
         time.sleep(1)
@@ -399,13 +398,6 @@ if __name__ == '__main__':
 
         while True:
             # do nothing
-            motor.moveGripper(10000, GripperDirection.DOWN, 40)
-            time.sleep(1)
-            motor.moveGripper(10000, GripperDirection.UP, 50)
-            time.sleep(1)
-            motor.moveGripper(200, GripperDirection.CLOSE, 20)
-            time.sleep(1)
-            motor.moveGripper(10000, GripperDirection.OPEN, 30)
             time.sleep(10)
 
         # print("Spinning CW 180")
