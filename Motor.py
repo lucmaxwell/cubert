@@ -182,6 +182,7 @@ class CubertMotor:
         print("Homing Gripper")
         self.moveGripperToPos(GripperPosition.BOTTOM, 20)
         self._steps_total_travel = self.moveGripperToPos(GripperPosition.TOP, 20)
+        input()
         self.changeGripperPosition()
         self.moveGripperToPos(GripperPosition.MIDDLE)
 
