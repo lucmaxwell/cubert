@@ -194,12 +194,12 @@ class CubertMotor:
         self._base_homed = True
 
     def calibrateDistance(self):
-        self.moveGripperToPos(GripperPosition.BOTTOM, 20, True)
+        self.moveGripperToPos(GripperPosition.BOTTOM, 50, True)
         dist = input("Input Distance Measured Between Gripper and Base: ")
-        self._DISTANCE_AT_BOTTOM = int(dist)
-        self.moveGripperToPos(GripperPosition.TOP, 20, True)
+        self._DISTANCE_AT_BOTTOM = float(dist)
+        self.moveGripperToPos(GripperPosition.TOP, 50, True)
         dist = input("Input Distance Measured Between Gripper and Base: ")
-        self._DISTANCE_AT_TOP = int(dist)
+        self._DISTANCE_AT_TOP = float(dist)
 
 
     def top_endstop_callback(self, channel):
