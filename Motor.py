@@ -33,6 +33,11 @@ class GripperPosition(Enum):
     BOTTOM  = 2
     MIDDLE  = 3
 
+class BaseRotation(Enum):
+    QUARTER = 0
+    HALF    = 1
+    FULL    = 2
+
 def get_step_delay(velocity):
     v = max(min(velocity, 200), 1)
     x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100
@@ -66,14 +71,15 @@ class CubertMotor:
 
     _MAX_CURRENT    = 700   # max current draw of motors in mA
 
-    _DISTANCE_AT_BOTTOM             = 14.20
-    _DISTANCE_AT_TOP                = 64.22
+    _DISTANCE_AT_BOTTOM     = 14.20
+    _DISTANCE_AT_TOP        = 64.22
 
     _DEFAULT_MOVE_SPEED     = 10
-    _DEFAULT_SPEED_UP_FRAC  = 0.25
+    _DEFAULT_SPEED_UP_FRAC  = 0.10
 
     # derived class constants
-    _STEPS_PER_REV  = _ACTUAL_STEPS * _MICROSTEPS # number of steps per revolution
+    _STEPS_PER_REV      = _ACTUAL_STEPS * _MICROSTEPS   # number of steps per revolution of motor shaft
+    _STEPS_PER_BASE_REV = _STEPS_PER_REV * _GEAR_RATIO  # number of steps per revolution of cube base
 
     _DISTANCE_FROM_BOTTOM_TO_TOP    = _DISTANCE_AT_TOP - _DISTANCE_AT_BOTTOM    # distance from gripper travel bottom to top in mm
 
@@ -162,8 +168,10 @@ class CubertMotor:
 
 
     def home(self):
+        print("Begining Homing")
         self.homeGripper()
         self.homeBase()
+        print("Homing Finished")
 
     def homeGripper(self):
         print("Homing Gripper")
@@ -174,6 +182,7 @@ class CubertMotor:
         self._steps_per_mm = self._steps_total_travel / self._DISTANCE_FROM_BOTTOM_TO_TOP
 
     def homeBase(self):
+        print("Homing Base")
         return
 
 
@@ -222,6 +231,7 @@ class CubertMotor:
 
     def return_false(self):
         return False
+
 
     # depreciated spin base function
     def spinBaseDep(self, degrees_to_rotate, move_direction, move_speed, degrees_to_correct=0, acceleration=0):
@@ -290,7 +300,7 @@ class CubertMotor:
 
         print("Movement Complete")
 
-        self._current_gripper_pos = position
+        self.setGripperPosition(position)
 
         return steps_done
     
@@ -303,8 +313,6 @@ class CubertMotor:
             direction = GripperDirection.DOWN
 
         self.moveGripper(steps, direction, move_speed, acceleration, accel_fraction)
-
-        print("Distance is ", self._DISTANCE_AT_BOTTOM + mm_to_move)
 
     def moveGripper(self, steps, direction:GripperDirection, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
 
@@ -345,9 +353,63 @@ class CubertMotor:
             steps_done += 1
             libc.usleep(step_delay)
 
+        self.changeRelativeLocation(steps_done, direction)
+
         return steps_done
 
+
+    def setGripperPosition(self, position:GripperPosition):
+        if position == GripperPosition.TOP:
+            self._steps_from_bottom = self._steps_total_travel
         
+        elif position == GripperPosition.BOTTOM:
+            self._steps_from_bottom = 0
+
+        elif position == GripperPosition.MIDDLE:
+            self._steps_from_bottom = self._steps_total_travel/2
+
+    def changeRelativeLocation(self, steps, direction:GripperDirection):
+        if direction == GripperDirection.UP:
+            self._steps_from_bottom += steps
+        elif direction == GripperDirection.DOWN:
+            self._steps_from_bottom -= steps
+        
+        print("Gripper Position is %5.2fmm from Base" % (self._steps_from_bottom * self._steps_per_mm))
+
+    def spinBase(self, rotation:BaseRotation, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, degrees_to_correct=0, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+
+        if degrees_to_correct < 0:
+            print("CANNOT CORRECT NEGATIVE DEGREES!")
+
+            degrees_to_correct = 0
+
+        # rotate base
+        if rotation == BaseRotation.QUARTER:
+            print("Base Rotating 90 Degrees")
+            self.moveBaseDegrees(90 + degrees_to_correct, direction, move_speed, acceleration, accel_fraction)
+        elif rotation == BaseRotation.HALF:
+            print("Base Rotating 180 Degrees")
+            self.moveBaseDegrees(180 + degrees_to_correct, direction, move_speed, acceleration, accel_fraction)
+        elif rotation == BaseRotation.FULL:
+            print("Base Rotating 360 Degrees")
+            self.moveBaseDegrees(360 + degrees_to_correct, direction, move_speed, acceleration, accel_fraction)
+
+        # correct if required
+        if degrees_to_correct > 0:
+            
+            print("Correcting Base %2f Degrees" % (degrees_to_correct))
+
+            if direction == Direction.CCW:
+                correction_direction = Direction.CW
+            else:
+                correction_direction = Direction.CCW 
+
+            self.moveBaseDegrees(degrees_to_correct, correction_direction, move_speed, acceleration, accel_fraction)
+
+    def moveBaseDegrees(self, degrees_to_rotate, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+        steps = self._STEPS_PER_BASE_REV * degrees_to_rotate / 360
+
+        self.moveBase(steps, direction, move_speed, acceleration, accel_fraction)
 
     def moveBase(self, steps, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
         # count steps completed
@@ -368,6 +430,7 @@ class CubertMotor:
             libc.usleep(step_delay)
 
         return steps_done
+
 
     def move(self, steps, direction:Direction, motor:MotorType, move_speed=_DEFAULT_MOVE_SPEED):
         # Calculate the delay time of the pulse
@@ -469,6 +532,9 @@ if __name__ == '__main__':
         motor.home()
 
         motor.moveBase(19200, Direction.CCW, 75, True)
+
+        motor.moveBaseDegrees(30, Direction.CW, 50)
+        motor.moveBaseDegrees(180+30, Direction.CCW, 5)
 
         motor.moveGripperToPos(GripperPosition.TOP,0)
         time.sleep(1)
