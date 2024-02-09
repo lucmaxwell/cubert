@@ -58,7 +58,7 @@ def get_motor_velocity(move_speed, speed_up_fraction, curr_steps, total_steps):
 class CubertMotor:
 
     # class constants
-    _USE_UART = True
+    _USE_UART = False # DON'T USE UART VERY BROKEN RIGHT NOW!!!
 
     _ACTUAL_STEPS   = 400   # number of steps in motor
     _MICROSTEPS     = 8     # set microstep resolution
