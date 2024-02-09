@@ -335,6 +335,7 @@ class CubertMotor:
         elif mm_to_move_to < self._DISTANCE_AT_BOTTOM:
             print("DISTANCE BELOW BOTTOM ENDSTOP!")
         else:
+            print("Moving to %5.2fmm" % mm_to_move_to)
             mm_to_move = mm_to_move_to - self.getPositionInMM()
             self.moveGripperRelativeMM(mm_to_move, move_speed, acceleration, accel_fraction)
 
