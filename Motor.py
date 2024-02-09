@@ -383,7 +383,7 @@ class CubertMotor:
         if self._gripper_homed:
             print("Steps from Bottom: %d" % self._steps_from_bottom)
             print("Max Steps to Travel: %d" % self._steps_total_travel)
-            print("Gripper Position is %5.2fmm from Base" % (self._steps_from_bottom / self._steps_per_mm))
+            print("Gripper Position is %5.2fmm from Base" % ((self._steps_from_bottom / self._steps_per_mm) + self._DISTANCE_AT_BOTTOM))
 
     def spinBase(self, rotation:BaseRotation, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, degrees_to_correct=0, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
 
@@ -550,8 +550,10 @@ if __name__ == '__main__':
 
         motor.moveGripperToPos(GripperPosition.TOP,0)
         time.sleep(1)
+        input("Waiting")
         motor.moveGripperToPos(GripperPosition.BOTTOM,10)
         time.sleep(1)
+        input("Waiting")
         motor.moveGripperToPos(GripperPosition.MIDDLE,75,acceleration=True)
         time.sleep(1)
         # motor.moveGripper(200, GripperDirection.CLOSE, 10)
