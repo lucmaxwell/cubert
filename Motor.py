@@ -173,14 +173,14 @@ class CubertMotor:
 
 
     def home(self, calibrate_disstance=False):
-        print("Begining Homing")
+        print("Begining Homing\n\n")
         if calibrate_disstance: self.calibrateDistance()
         self.homeGripper()
         self.homeBase()
-        print("Homing Finished")
+        print("Homing Finished\n\n")
 
     def homeGripper(self):
-        print("Homing Gripper")
+        print("Homing Gripper\n")
         self.moveGripperToPos(GripperPosition.BOTTOM, 20)
         self._steps_total_travel = self.moveGripperToPos(GripperPosition.TOP, 20)
         self.changeRelativeLocation(0,None)
@@ -191,10 +191,11 @@ class CubertMotor:
         self._gripper_homed = True
 
     def homeBase(self):
-        print("Homing Base")
+        print("Homing Base\n")
         self._base_homed = True
 
     def calibrateDistance(self):
+        print("Calibrating Distance\n")
         self.moveGripperToPos(GripperPosition.BOTTOM, 50, True)
         dist = input("Input Distance Measured Between Gripper and Base: ")
         self._DISTANCE_AT_BOTTOM = float(dist)
