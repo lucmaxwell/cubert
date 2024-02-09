@@ -261,7 +261,7 @@ class CubertMotor:
 
     def moveGripperToPos(self, position:GripperPosition, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
         endstop_to_check = self.return_false
-        steps            = sys.maxsize
+        steps            = 2000#sys.maxsize
 
         if self._current_gripper_pos == position:
             print("Gripper Already at Position")
