@@ -193,6 +193,13 @@ class CubertMotor:
         print("Homing Base")
         self._base_homed = True
 
+    def calibrateDistance(self):
+        self.moveGripperToPos(GripperPosition.BOTTOM, 20, True)
+        dist = input("Input Distance Measured Between Gripper and Base: ")
+        self._DISTANCE_AT_BOTTOM = int(dist)
+        self.moveGripperToPos(GripperPosition.TOP, 20, True)
+        dist = input("Input Distance Measured Between Gripper and Base: ")
+        self._DISTANCE_AT_TOP = int(dist)
 
 
     def top_endstop_callback(self, channel):
@@ -576,6 +583,8 @@ if __name__ == '__main__':
     print("Running motor...")
     try:
         motor.enable()
+
+        motor.calibrateDistance()
 
         motor.home()
 
