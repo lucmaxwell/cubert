@@ -375,6 +375,8 @@ class CubertMotor:
         elif direction == GripperDirection.DOWN:
             self._steps_from_bottom -= steps
         
+        print(self._steps_from_bottom)
+        print(self._steps_total_travel)
         print("Gripper Position is %5.2fmm from Base" % (self._steps_from_bottom / self._steps_per_mm))
 
     def spinBase(self, rotation:BaseRotation, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, degrees_to_correct=0, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
@@ -398,7 +400,7 @@ class CubertMotor:
         # correct if required
         if degrees_to_correct > 0:
             
-            print("Correcting Base %2f Degrees" % (degrees_to_correct))
+            print("Correcting Base %2.0f Degrees" % (degrees_to_correct))
 
             if direction == Direction.CCW:
                 correction_direction = Direction.CW
@@ -532,12 +534,12 @@ if __name__ == '__main__':
 
         motor.home()
 
-        motor.moveBase(19200, Direction.CCW, 75, True)
+        # motor.moveBase(19200, Direction.CCW, 75, True)
 
-        motor.moveBaseDegrees(30, Direction.CW, 50)
-        motor.moveBaseDegrees(180+30, Direction.CCW, 5)
+        # motor.moveBaseDegrees(30, Direction.CW, 50)
+        # motor.moveBaseDegrees(180+30, Direction.CCW, 5)
 
-        motor.spinBase(BaseRotation.QUARTER, Direction.CCW, 50, 15)
+        # motor.spinBase(BaseRotation.QUARTER, Direction.CCW, 50, 15)
         motor.spinBase(BaseRotation.HALF, Direction.CCW, 50, 15, True)
 
         motor.moveGripperToPos(GripperPosition.TOP,0)
@@ -546,13 +548,13 @@ if __name__ == '__main__':
         time.sleep(1)
         motor.moveGripperToPos(GripperPosition.MIDDLE,75,acceleration=True)
         time.sleep(1)
-        motor.moveGripper(200, GripperDirection.CLOSE, 10)
-        time.sleep(1)
-        motor.moveGripper(10000, GripperDirection.OPEN, 10)
-        time.sleep(1)
-        motor.moveGripperToPos(GripperPosition.BOTTOM, 30)
-        time.sleep(1)
-        motor.moveGripperMM(20)
+        # motor.moveGripper(200, GripperDirection.CLOSE, 10)
+        # time.sleep(1)
+        # motor.moveGripper(10000, GripperDirection.OPEN, 10)
+        # time.sleep(1)
+        # motor.moveGripperToPos(GripperPosition.BOTTOM, 30)
+        # time.sleep(1)
+        # motor.moveGripperMM(20)
 
         print("Testing Complete!")
 
