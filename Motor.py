@@ -413,7 +413,7 @@ class CubertMotor:
         
         self.changeGripperPosition()
 
-        if self._gripper_homed:
+        if self._gripper_homed or True:
             print("Steps from Bottom: %d" % self._steps_from_bottom)
             print("Max Steps to Travel: %d" % self._steps_total_travel)
             print("Gripper Position is %5.2fmm from Base" % (self.getPositionInMM()))
