@@ -27,7 +27,7 @@ if __name__ == '__main__':
     end_stop_arm_lowerLimit_pin = 21  # GPIO number for arm lower limit end stop
 
     # initialize motor
-    motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin)
+    motor = Motor.CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin)
 
     actions = CubertActions(motor)
 
