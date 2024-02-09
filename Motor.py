@@ -254,6 +254,7 @@ class CubertMotor:
         steps            = sys.maxsize
 
         if self._current_gripper_pos == position:
+            print("Gripper Already at Position")
             return 0
 
         # tracks steps completed
