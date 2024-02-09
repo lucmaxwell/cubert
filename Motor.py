@@ -195,8 +195,6 @@ class CubertMotor:
     def top_endstop_callback(self, channel):
         if not GPIO.input(self._top_end_pin) and not self._top_endstop_pressed:
             self._top_endstop_pressed = True
-            self._current_gripper_pos = GripperPosition.TOP
-            self._steps_from_bottom = self._steps_total_travel
             print("Top Endstop Pressed")
 
         elif GPIO.input(self._top_end_pin) and self._top_endstop_pressed:
@@ -206,8 +204,6 @@ class CubertMotor:
     def bottom_endstop_callback(self, channel):
         if not GPIO.input(self._bottom_end_pin) and not self._bottom_endstop_pressed:
             self._bottom_endstop_pressed = True
-            self._current_gripper_pos = GripperPosition.BOTTOM
-            self._steps_from_bottom = 0
             print("Bottom Endstop Pressed")
 
         elif GPIO.input(self._bottom_end_pin) and self._bottom_endstop_pressed:
@@ -306,7 +302,6 @@ class CubertMotor:
         print("Movement Complete")
 
         self.changeRelativeLocation(steps_done, direction)
-        self.setGripperPosition(position)
 
         return steps_done
     
@@ -364,23 +359,31 @@ class CubertMotor:
         return steps_done
 
 
-    def setGripperPosition(self, position:GripperPosition):
-        if position == GripperPosition.TOP:
-            self._steps_from_bottom = self._steps_total_travel
-        
-        elif position == GripperPosition.BOTTOM:
-            self._steps_from_bottom = 0
+    def changeGripperPosition(self, position:GripperPosition):
+        if self._steps_from_bottom == 0:
+            self._current_gripper_pos = GripperPosition.BOTTOM
+        elif self._steps_from_bottom == self._steps_total_travel:
+            self._current_gripper_pos = GripperPosition.TOP
+        elif self._steps_from_bottom == self._steps_total_travel/2:
+            self._current_gripper_pos = GripperPosition.MIDDLE
+        else:
+            self._current_gripper_pos = GripperPosition.UNKNOWN
 
-        elif position == GripperPosition.MIDDLE:
-            self._steps_from_bottom = self._steps_total_travel/2
+        print("Current Gripper Position is ", self._current_gripper_pos)
 
     def changeRelativeLocation(self, steps, direction:GripperDirection):
-        if not (self._current_gripper_pos == GripperPosition.BOTTOM) and not (self._current_gripper_pos == GripperPosition.TOP):
+        if self._top_endstop_pressed:
+            self._steps_from_bottom = 0
+        elif self._bottom_endstop_pressed:
+            self._steps_from_bottom = self._steps_total_travel
+        else:
             if direction == GripperDirection.UP:
                 self._steps_from_bottom += steps
             elif direction == GripperDirection.DOWN:
                 self._steps_from_bottom -= steps
         
+        self.changeGripperPosition()
+
         if self._gripper_homed:
             print("Steps from Bottom: %d" % self._steps_from_bottom)
             print("Max Steps to Travel: %d" % self._steps_total_travel)
