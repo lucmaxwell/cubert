@@ -183,7 +183,7 @@ class CubertMotor:
         self.moveGripperToPos(GripperPosition.BOTTOM, 20)
         self._steps_total_travel = self.moveGripperToPos(GripperPosition.TOP, 20)
         input()
-        self.changeRelativeLocation()
+        self.changeRelativeLocation(0,None)
         self.moveGripperToPos(GripperPosition.MIDDLE)
 
         self._steps_per_mm = self._steps_total_travel / self._DISTANCE_FROM_BOTTOM_TO_TOP
