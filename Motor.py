@@ -172,8 +172,9 @@ class CubertMotor:
             tmc.stop()
 
 
-    def home(self):
+    def home(self, calibrate_disstance=False):
         print("Begining Homing")
+        if calibrate_disstance: self.calibrateDistance()
         self.homeGripper()
         self.homeBase()
         print("Homing Finished")
@@ -421,7 +422,7 @@ class CubertMotor:
         
         self.changeGripperPosition()
 
-        if self._gripper_homed or True:
+        if self._gripper_homed:
             print("Steps from Bottom: %d" % self._steps_from_bottom)
             print("Max Steps to Travel: %d" % self._steps_total_travel)
             print("Gripper Position is %5.2fmm from Base" % (self.getPositionInMM()))
@@ -583,8 +584,6 @@ if __name__ == '__main__':
     print("Running motor...")
     try:
         motor.enable()
-
-        motor.calibrateDistance()
 
         motor.home()
 
