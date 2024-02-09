@@ -375,7 +375,7 @@ class CubertMotor:
         elif direction == GripperDirection.DOWN:
             self._steps_from_bottom -= steps
         
-        print("Gripper Position is %5.2fmm from Base" % (self._steps_from_bottom * self._steps_per_mm))
+        print("Gripper Position is %5.2fmm from Base" % (self._steps_from_bottom / self._steps_per_mm))
 
     def spinBase(self, rotation:BaseRotation, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, degrees_to_correct=0, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
 
