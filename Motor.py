@@ -372,9 +372,9 @@ class CubertMotor:
         print("Current Gripper Position is ", self._current_gripper_pos)
 
     def changeRelativeLocation(self, steps, direction:GripperDirection):
-        if self._top_endstop_pressed:
+        if self._bottom_endstop_pressed:
             self._steps_from_bottom = 0
-        elif self._bottom_endstop_pressed:
+        elif self._top_endstop_pressed:
             self._steps_from_bottom = self._steps_total_travel
         else:
             if direction == GripperDirection.UP:
