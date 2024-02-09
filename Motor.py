@@ -253,6 +253,9 @@ class CubertMotor:
         endstop_to_check = self.return_false
         steps            = sys.maxsize
 
+        if self._current_gripper_pos == position:
+            return 0
+
         # tracks steps completed
         steps_done = 0
 
@@ -286,8 +289,18 @@ class CubertMotor:
                 steps = self._steps_total_travel/2
 
             if self._current_gripper_pos == GripperPosition.UNKNOWN:
-                endstop_to_check = True # exit loop
-                print("Position Currently Unknown: Cannot Determine Direction to Middle!")            
+
+                steps = self._steps_total_travel / 2 - self._steps_from_bottom
+
+                if steps > 0:
+                    direction = GripperDirection.UP
+
+                elif steps < 0:
+                    direction = GripperDirection.DOWN
+                    steps *= -1
+
+                # endstop_to_check = True # exit loop
+                # print("Position Currently Unknown: Cannot Determine Direction to Middle!")            
 
         while (not endstop_to_check()) and steps_done < steps:
 
@@ -554,19 +567,14 @@ if __name__ == '__main__':
 
         motor.moveGripperToPos(GripperPosition.TOP,0)
         time.sleep(1)
-        input("Waiting")
         motor.moveGripperToPos(GripperPosition.BOTTOM,10)
         time.sleep(1)
-        input("Waiting")
         motor.moveGripperToPos(GripperPosition.MIDDLE,75,acceleration=True)
         time.sleep(1)
-        input("Waiting")
         motor.moveGripperToPos(GripperPosition.BOTTOM,10)
         time.sleep(1)
-        input("Waiting")
         motor.moveGripperToPos(GripperPosition.TOP,75)
         time.sleep(1)
-        input("Waiting")
         motor.moveGripper(200, GripperDirection.CLOSE, 10)
         time.sleep(1)
         motor.moveGripper(10000, GripperDirection.OPEN, 10)
@@ -574,6 +582,12 @@ if __name__ == '__main__':
         motor.moveGripperToPos(GripperPosition.BOTTOM, 30)
         time.sleep(1)
         motor.moveGripperMM(20)
+        motor.moveGripperToPos(GripperPosition.MIDDLE,50)
+        motor.moveGripperToPos(GripperPosition.MIDDLE)
+        motor.moveGripperMM(20)
+        motor.moveGripperToPos(GripperPosition.MIDDLE)
+        motor.moveGripperMM(-10)
+        motor.moveGripperMM(100000)
 
         print("Testing Complete!")
 
