@@ -20,6 +20,9 @@ from ._TMC_2209_uart import TMC_UART as tmc_uart
 from ._TMC_2209_logger import TMC_logger, Loglevel
 from ._TMC_2209_move import MovementAbsRel, MovementPhase, StopMode
 from . import _TMC_2209_math as tmc_math
+import ctypes
+
+libc = ctypes.CDLL('libc.so.6')
 
 
 
@@ -414,6 +417,49 @@ class TMC_2209:
 
 
 
+    def set_vactual_dur_alt(self, vactual, duration=0, acceleration=0,
+                             show_stallguard_result=False, show_tstep=False):
+        """sets the register bit "VACTUAL" to to a given value
+        VACTUAL allows moving the motor by UART control.
+        It gives the motor velocity in +-(2^23)-1 [μsteps / t]
+        0: Normal operation. Driver reacts to STEP input
+
+        Args:
+            vactual (int): value for VACTUAL
+            duration (int): after this vactual will be set to 0 (Default value = 0)
+            acceleration (int): use this for a velocity ramp (Default value = 0)
+            show_stallguard_result (bool): prints StallGuard Result during movement
+                (Default value = False)
+            show_tstep (bool): prints TStep during movement (Default value = False)
+
+        Returns:
+            stop (enum): how the movement was finished
+        """
+        self._stop = StopMode.NO
+        current_vactual = 0
+        if vactual<0:
+            acceleration = -acceleration
+
+        if duration != 0:
+            self.tmc_logger.log(f"vactual: {vactual} for {duration} sec",
+                                Loglevel.INFO)
+        else:
+            self.tmc_logger.log(f"vactual: {vactual}", Loglevel.INFO)
+        self.tmc_logger.log(str(bin(vactual)), Loglevel.INFO)
+
+        self.tmc_logger.log("writing vactual", Loglevel.INFO)
+        if acceleration == 0:
+            self.set_vactual(int(round(vactual)))
+
+        if duration == 0:
+            return -1
+        
+        self.set_vactual(int(round(current_vactual)))
+        libc.usleep(duration)
+        self.set_vactual(0)
+
+        return self._stop
+
     def set_vactual_rps(self, rps, duration=0, revolutions=0, acceleration=0):
         """converts the rps parameter to a vactual value which represents
         rotation speed in revolutions per second
@@ -434,7 +480,7 @@ class TMC_2209:
             duration = abs(revolutions/rps)
         if revolutions<0:
             vactual = -vactual
-        return self.set_vactual_dur(vactual, duration, acceleration=acceleration)
+        return self.set_vactual_dur_alt(vactual, duration, acceleration=acceleration)
 
 
 

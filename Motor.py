@@ -379,7 +379,7 @@ class CubertMotor:
             libc.usleep(stepDelay)
 
 
-    def stepGripper(self, direction:GripperDirection, step_delay=0):
+    def stepGripper(self, direction:GripperDirection, step_delay):
 
         endstop_to_check = False
 
@@ -425,7 +425,7 @@ class CubertMotor:
             # self.tmc_left.make_a_step()
             # self.tmc_right.make_a_step()
 
-    def stepBase(self, direction:Direction, step_delay=0):
+    def stepBase(self, direction:Direction, step_delay):
         self.step(direction, MotorType.BASE, step_delay)
         # # set step direction
         # self.tmc_base.set_direction_pin(direction)
@@ -433,12 +433,11 @@ class CubertMotor:
         # # step base
         # self.tmc_base.make_a_step()
 
-    def step(self, direction:Direction, motor:MotorType, step_delay=0):
+    def step(self, direction:Direction, motor:MotorType, step_delay):
         if self._USE_UART:
-            dur = step_delay / 1_000_000
             rev_per_sec = self._STEPS_PER_REV * step_delay / 1_000_000
             if direction == Direction.CCW: rev_per_sec *= -1
-            self.tmc_list[motor].set_vactual_rps(rev_per_sec, duration=dur)
+            self.tmc_list[motor].set_vactual_rps(rev_per_sec, duration=step_delay)
             
         else:
             # set step direction
