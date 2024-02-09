@@ -359,7 +359,7 @@ class CubertMotor:
         return steps_done
 
 
-    def changeGripperPosition(self, position:GripperPosition):
+    def changeGripperPosition(self):
         if self._steps_from_bottom == 0:
             self._current_gripper_pos = GripperPosition.BOTTOM
         elif self._steps_from_bottom == self._steps_total_travel:
