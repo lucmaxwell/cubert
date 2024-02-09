@@ -375,10 +375,11 @@ class CubertMotor:
             self._steps_from_bottom = self._steps_total_travel/2
 
     def changeRelativeLocation(self, steps, direction:GripperDirection):
-        if direction == GripperDirection.UP:
-            self._steps_from_bottom += steps
-        elif direction == GripperDirection.DOWN:
-            self._steps_from_bottom -= steps
+        if not (self._current_gripper_pos == GripperPosition.BOTTOM) and not (self._current_gripper_pos == GripperPosition.TOP):
+            if direction == GripperDirection.UP:
+                self._steps_from_bottom += steps
+            elif direction == GripperDirection.DOWN:
+                self._steps_from_bottom -= steps
         
         if self._gripper_homed:
             print("Steps from Bottom: %d" % self._steps_from_bottom)
