@@ -300,6 +300,7 @@ class CubertMotor:
 
         print("Movement Complete")
 
+        self.changeRelativeLocation(steps_done, direction)
         self.setGripperPosition(position)
 
         return steps_done
@@ -535,6 +536,9 @@ if __name__ == '__main__':
 
         motor.moveBaseDegrees(30, Direction.CW, 50)
         motor.moveBaseDegrees(180+30, Direction.CCW, 5)
+
+        motor.spinBase(BaseRotation.QUARTER, Direction.CCW, 50, 15)
+        motor.spinBase(BaseRotation.HALF, Direction.CCW, 50, 15, True)
 
         motor.moveGripperToPos(GripperPosition.TOP,0)
         time.sleep(1)
