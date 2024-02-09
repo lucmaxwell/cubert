@@ -581,7 +581,7 @@ if __name__ == '__main__':
         # motor.spinBase(BaseRotation.QUARTER, Direction.CCW, 50, 15)
         motor.spinBase(BaseRotation.HALF, Direction.CCW, 50, 15, True)
 
-        motor.moveGripperToPos(GripperPosition.MIDDLE)
+        motor.moveGripperToPos(GripperPosition.BOTTOM)
         motor.moveGripperToPos(GripperPosition.MIDDLE)
         input()
         motor.moveGripperAbsoluteMM(14.35)
