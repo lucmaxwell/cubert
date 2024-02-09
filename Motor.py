@@ -77,6 +77,8 @@ class CubertMotor:
     _DEFAULT_MOVE_SPEED     = 10
     _DEFAULT_SPEED_UP_FRAC  = 0.10
 
+    _TOLERANCE              = 1 # Tolerance in steps for determining gripper location
+
     # derived class constants
     _STEPS_PER_REV      = _ACTUAL_STEPS * _MICROSTEPS   # number of steps per revolution of motor shaft
     _STEPS_PER_BASE_REV = _STEPS_PER_REV * _GEAR_RATIO  # number of steps per revolution of cube base
@@ -388,12 +390,15 @@ class CubertMotor:
             self._current_gripper_pos = GripperPosition.BOTTOM
         elif self._steps_from_bottom == self._steps_total_travel:
             self._current_gripper_pos = GripperPosition.TOP
-        elif self._steps_from_bottom == self._steps_total_travel/2:
+        elif self.checkIfInTolerance(self._steps_from_bottom, self._steps_total_travel/2):
             self._current_gripper_pos = GripperPosition.MIDDLE
         else:
             self._current_gripper_pos = GripperPosition.UNKNOWN
 
         print("Current Gripper Position is ", self._current_gripper_pos)
+
+    def checkIfInTolerance(self, value, target):
+        return value <= target + self._TOLERANCE and value >= target - self._TOLERANCE
 
     def changeRelativeLocation(self, steps, direction:GripperDirection):
         if self._bottom_endstop_pressed:
