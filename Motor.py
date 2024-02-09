@@ -96,6 +96,9 @@ class CubertMotor:
     _current_gripper_pos    = GripperPosition.UNKNOWN
     _current_hand_pos       = -1
 
+    _gripper_homed          = False
+    _base_homed             = False
+
 
     def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin):
 
@@ -181,9 +184,11 @@ class CubertMotor:
 
         self._steps_per_mm = self._steps_total_travel / self._DISTANCE_FROM_BOTTOM_TO_TOP
 
+        self._gripper_homed = True
+
     def homeBase(self):
         print("Homing Base")
-        return
+        self._base_homed = True
 
 
 
@@ -375,9 +380,10 @@ class CubertMotor:
         elif direction == GripperDirection.DOWN:
             self._steps_from_bottom -= steps
         
-        print(self._steps_from_bottom)
-        print(self._steps_total_travel)
-        print("Gripper Position is %5.2fmm from Base" % (self._steps_from_bottom / self._steps_per_mm))
+        if self._gripper_homed:
+            print("Steps from Bottom: %d" % self._steps_from_bottom)
+            print("Max Steps to Travel: %d" % self._steps_total_travel)
+            print("Gripper Position is %5.2fmm from Base" % (self._steps_from_bottom / self._steps_per_mm))
 
     def spinBase(self, rotation:BaseRotation, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, degrees_to_correct=0, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
 
