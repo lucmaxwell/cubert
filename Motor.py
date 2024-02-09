@@ -407,7 +407,7 @@ class CubertMotor:
             self.moveBaseDegrees(degrees_to_correct, correction_direction, move_speed, acceleration, accel_fraction)
 
     def moveBaseDegrees(self, degrees_to_rotate, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
-        steps = self._STEPS_PER_BASE_REV * degrees_to_rotate / 360
+        steps = round(self._STEPS_PER_BASE_REV * degrees_to_rotate / 360)
 
         self.moveBase(steps, direction, move_speed, acceleration, accel_fraction)
 
