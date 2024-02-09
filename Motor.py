@@ -319,7 +319,7 @@ class CubertMotor:
 
         return steps_done
     
-    def moveGripperMM(self, mm_to_move, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+    def moveGripperRelativeMM(self, mm_to_move, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
         steps = round(abs(mm_to_move) * self._steps_per_mm)
 
         if mm_to_move > 0:
@@ -328,6 +328,15 @@ class CubertMotor:
             direction = GripperDirection.DOWN
 
         self.moveGripper(steps, direction, move_speed, acceleration, accel_fraction)
+
+    def moveGripperAbsoluteMM(self, mm_to_move_to, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+        if mm_to_move_to > self._DISTANCE_AT_TOP:
+            print("DISTANCE ABOVE TOP ENDSTOP!")
+        elif mm_to_move_to < self._DISTANCE_AT_BOTTOM:
+            print("DISTANCE BELOW BOTTOM ENDSTOP!")
+        else:
+            mm_to_move = mm_to_move_to - self.getPositionInMM()
+            self.moveGripperRelativeMM(mm_to_move, move_speed, acceleration, accel_fraction)
 
     def moveGripper(self, steps, direction:GripperDirection, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
 
@@ -401,7 +410,12 @@ class CubertMotor:
         if self._gripper_homed:
             print("Steps from Bottom: %d" % self._steps_from_bottom)
             print("Max Steps to Travel: %d" % self._steps_total_travel)
-            print("Gripper Position is %5.2fmm from Base" % ((self._steps_from_bottom / self._steps_per_mm) + self._DISTANCE_AT_BOTTOM))
+            print("Gripper Position is %5.2fmm from Base" % (self.getPositionInMM()))
+
+    def getPositionInMM(self):
+        return (self._steps_from_bottom / self._steps_per_mm) + self._DISTANCE_AT_BOTTOM
+
+
 
     def spinBase(self, rotation:BaseRotation, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, degrees_to_correct=0, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
 
@@ -582,20 +596,31 @@ if __name__ == '__main__':
         time.sleep(1)
         motor.moveGripperToPos(GripperPosition.BOTTOM, 30)
         time.sleep(1)
-        motor.moveGripperMM(20)
+        motor.moveGripperRelativeMM(20)
         time.sleep(1)
         motor.moveGripperToPos(GripperPosition.MIDDLE,50)
         time.sleep(1)
         motor.moveGripperToPos(GripperPosition.MIDDLE)
         time.sleep(1)
-        motor.moveGripperMM(20)
+        motor.moveGripperRelativeMM(20)
         time.sleep(1)
         motor.moveGripperToPos(GripperPosition.MIDDLE)
         time.sleep(1)
-        motor.moveGripperMM(-10)
+        motor.moveGripperRelativeMM(-10)
         time.sleep(1)
-        motor.moveGripperMM(100000)
+        motor.moveGripperRelativeMM(100000)
         time.sleep(1)
+        motor.moveGripperAbsoluteMM(14.35)
+        time.sleep(1)
+        motor.moveGripperRelativeMM(62)
+        time.sleep(1)
+        motor.moveGripperRelativeMM(35)
+        time.sleep(1)
+        motor.moveGripperRelativeMM(-62)
+        time.sleep(1)
+        motor.moveGripperRelativeMM(1000)
+        time.sleep(1)
+
 
         print("Testing Complete!")
 
