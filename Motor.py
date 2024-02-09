@@ -174,7 +174,7 @@ class CubertMotor:
 
     def home(self, calibrate_distance=False):
         print("Begining Homing")
-        if calibrate_disstance: self.calibrateDistance()
+        if calibrate_distance: self.calibrateDistance()
         self.homeGripper()
         self.homeBase()
         print("Homing Finished")
