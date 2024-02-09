@@ -440,6 +440,8 @@ class TMC_2209:
         if vactual<0:
             acceleration = -acceleration
 
+        vactual = tmc_math.rps_to_vactual(tmc_math.steps_to_rps(1/duration, self._steps_per_rev))
+
         if duration != 0:
             self.tmc_logger.log(f"vactual: {vactual} for {duration} sec",
                                 Loglevel.INFO)
@@ -480,7 +482,7 @@ class TMC_2209:
             duration = abs(revolutions/rps)
         if revolutions<0:
             vactual = -vactual
-        return self.set_vactual_dur_alt(vactual, duration, acceleration=acceleration)
+        return self.set_vactual_dur(vactual, duration, acceleration=acceleration)
 
 
 

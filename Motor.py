@@ -437,7 +437,7 @@ class CubertMotor:
         if self._USE_UART:
             rev_per_sec = self._STEPS_PER_REV * step_delay / 1_000_000
             if direction == Direction.CCW: rev_per_sec *= -1
-            self.tmc_list[motor].set_vactual_rps(rev_per_sec, duration=step_delay)
+            self.tmc_list[motor].set_vactual(0, duration=step_delay)
             
         else:
             # set step direction
