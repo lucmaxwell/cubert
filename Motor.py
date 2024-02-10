@@ -188,6 +188,7 @@ class CubertMotor:
 
     def homeGripper(self):
         print("Homing Gripper")
+        self.openHand()
         self.moveGripperToPos(GripperPosition.BOTTOM, 20)
         self._steps_total_travel = self.moveGripperToPos(GripperPosition.TOP, 20)
         self.changeRelativeLocation(0,None)
