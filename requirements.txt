@@ -3,6 +3,7 @@ numpy==1.26.3
 opencv-contrib-python==4.5.5.62
 picamera==1.13
 pkg_resources==0.0.0
+pyserial==3.5
 RPi.GPIO==0.7.1
 scikit-learn==1.4.0
 scipy==1.12.0

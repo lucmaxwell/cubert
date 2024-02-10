@@ -1,25 +1,22 @@
-from Motor import *
+import Motor
 import time
 
 class CubertActions:
 
     _GRIP_STRENGTH  = 330
 
-    def __init__(self, motor:CubertMotor, calibrate_distance=False):
+    def __init__(self, motor:Motor.CubertMotor, calibrate_distance=False):
         self.motor = motor
 
         motor.enable()
 
         self.motor.home(calibrate_distance)
 
-    def __del__(self):
-        del self.motor
-
     def flip(self):
-        self.motor.moveGripperToPos(GripperPosition.BOTTOM)
-        self.motor.moveGripper(self._GRIP_STRENGTH, GripperDirection.CLOSE)
-        self.motor.moveGripperToPos(GripperPosition.TOP)
-        self.motor.moveGripper(self._GRIP_STRENGTH, GripperDirection.OPEN)
+        self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM)
+        self.motor.moveGripper(self._GRIP_STRENGTH, Motor.GripperDirection.CLOSE)
+        self.motor.moveGripperToPos(Motor.GripperPosition.TOP)
+        self.motor.moveGripper(self._GRIP_STRENGTH, Motor.GripperDirection.OPEN)
 
     
 
@@ -34,7 +31,7 @@ if __name__ == '__main__':
     end_stop_arm_lowerLimit_pin = 21  # GPIO number for arm lower limit end stop
 
     # initialize motor
-    motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin)
+    motor = Motor.CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin)
 
     actions = CubertActions(motor)
 
@@ -43,4 +40,5 @@ if __name__ == '__main__':
     actions.flip()
 
     del actions
+    del motor
 
