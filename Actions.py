@@ -8,6 +8,8 @@ class CubertActions:
     def __init__(self, motor:CubertMotor, calibrate_distance=False):
         self.motor = motor
 
+        motor.enable()
+
         self.motor.home(calibrate_distance)
 
     def flip(self):
