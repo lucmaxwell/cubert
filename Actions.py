@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     actions = CubertActions(motor)
 
-    time.sleep(10)
+    time.sleep(2)
 
     actions.flip()
     time.sleep(1)

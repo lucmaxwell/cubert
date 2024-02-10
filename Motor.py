@@ -328,6 +328,7 @@ class CubertMotor:
 
             else:
                 print("This Shouldn't Be Happening!")
+                print(self._current_gripper_pos)
 
         while (not endstop_to_check()) and steps_done < steps:
 
@@ -460,7 +461,7 @@ class CubertMotor:
         # move until enstop hit
         self.moveGripper(10000, GripperDirection.OPEN)
 
-        self._current_gripper_pos = HandState.OPEN
+        self._current_hand_state = HandState.OPEN
 
 
 
