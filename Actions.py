@@ -19,7 +19,7 @@ class CubertActions:
     def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction):
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE)
         self.motor.closeHand()
-        self.motor.spinBase(rotation, direction)
+        self.motor.spinBase(rotation, direction, degrees_to_correct=15)
         self.motor.openHand()
 
     def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction):
