@@ -33,6 +33,11 @@ class GripperPosition(Enum):
     BOTTOM  = 2
     MIDDLE  = 3
 
+class HandState(Enum):
+    UNKOWN  = 0
+    CLOSED  = 1
+    OPEN    = 2
+
 class BaseRotation(Enum):
     QUARTER = 0
     HALF    = 1
@@ -94,9 +99,10 @@ class CubertMotor:
     _steps_per_mm       = -1
     _steps_from_bottom  = -1
     _steps_total_travel = -1
+    _steps_to_close     = 330
 
     _current_gripper_pos    = GripperPosition.UNKNOWN
-    _current_hand_pos       = -1
+    _current_hand_state     = HandState.UNKOWN
 
     _gripper_homed          = False
     _base_homed             = False
@@ -226,6 +232,7 @@ class CubertMotor:
     def gripper_endstop_callback(self, channel):
         if not GPIO.input(self._grip_end_pin) and not self._gripper_endstop_pressed:
             self._gripper_endstop_pressed = True
+            self._current_hand_state = HandState.OPEN
             print("Gripper Endstop Pressed")
 
         elif GPIO.input(self._grip_end_pin) and self._gripper_endstop_pressed:
@@ -247,6 +254,7 @@ class CubertMotor:
         return False
 
 
+
     # depreciated spin base function
     def spinBaseDep(self, degrees_to_rotate, move_direction, move_speed, degrees_to_correct=0, acceleration=0):
         revolutions = _GEAR_RATIO * degrees_to_rotate  / 360.0
@@ -260,6 +268,7 @@ class CubertMotor:
 
         if abs(correction) > 0:
             self.tmc_base.set_vactual_rpm(move_speed, revolutions=-1*correction, acceleration=acceleration)
+
 
 
     def moveGripperToPos(self, position:GripperPosition, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
@@ -396,6 +405,7 @@ class CubertMotor:
         return steps_done
 
 
+
     def changeGripperPosition(self):
         if self._steps_from_bottom == 0:
             self._current_gripper_pos = GripperPosition.BOTTOM
@@ -431,6 +441,10 @@ class CubertMotor:
 
     def getPositionInMM(self):
         return (self._steps_from_bottom / self._steps_per_mm) + self._DISTANCE_AT_BOTTOM
+
+
+
+    def closeHand()
 
 
 
@@ -490,6 +504,7 @@ class CubertMotor:
         return steps_done
 
 
+
     def move(self, steps, direction:Direction, motor:MotorType, move_speed=_DEFAULT_MOVE_SPEED):
         # Calculate the delay time of the pulse
         stepDelay = get_step_delay(move_speed)
@@ -498,6 +513,7 @@ class CubertMotor:
         for _ in range(steps):
             self.step(direction, motor)
             libc.usleep(stepDelay)
+
 
 
     def stepGripper(self, direction:GripperDirection, step_delay):
