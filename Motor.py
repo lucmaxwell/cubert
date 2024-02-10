@@ -308,11 +308,11 @@ class CubertMotor:
                 direction = GripperDirection.DOWN
                 steps = self._steps_total_travel/2
 
-            if self._current_gripper_pos == GripperPosition.BOTTOM:
+            elif self._current_gripper_pos == GripperPosition.BOTTOM:
                 direction = GripperDirection.UP
                 steps = self._steps_total_travel/2
 
-            if self._current_gripper_pos == GripperPosition.UNKNOWN:
+            elif self._current_gripper_pos == GripperPosition.UNKNOWN:
 
                 steps = self._steps_total_travel / 2 - self._steps_from_bottom
 
@@ -325,6 +325,9 @@ class CubertMotor:
 
                 # endstop_to_check = True # exit loop
                 # print("Position Currently Unknown: Cannot Determine Direction to Middle!")            
+
+            else:
+                print("This Shouldn't Be Happening!")
 
         while (not endstop_to_check()) and steps_done < steps:
 
