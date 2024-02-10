@@ -38,11 +38,9 @@ class CubertActions:
 
     def zen(self):
         while True:
-            move = random.randint(1,9)
-
-            if move == 1:
-                self.flip()
-            elif move == 2:
+            move = random.randint(1,12)
+  
+            if move == 2:
                 self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
             elif move == 3:
                 self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
@@ -58,6 +56,8 @@ class CubertActions:
                 self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW)
             elif move == 9:
                 self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW)
+            else:
+                self.flip()
 
     
 
