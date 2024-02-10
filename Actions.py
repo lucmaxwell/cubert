@@ -3,7 +3,7 @@ import time
 
 class CubertActions:
 
-    _GRIP_STRENGTH  = 320
+    _GRIP_STRENGTH  = 330
 
     def __init__(self, motor:CubertMotor, calibrate_distance=False):
         self.motor = motor
@@ -37,6 +37,8 @@ if __name__ == '__main__':
     motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin)
 
     actions = CubertActions(motor)
+
+    time.sleep(10)
 
     actions.flip()
 

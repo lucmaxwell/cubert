@@ -152,6 +152,7 @@ class CubertMotor:
 
 
     def __del__(self):
+        print("Deleting Motor")
         self.disable()
 
         for tmc in self.tmc_list:
