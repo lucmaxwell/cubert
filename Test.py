@@ -20,17 +20,25 @@ motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_up
 
 actions = CubertActions(motor)
 
-def thread_function(sensor:CubertCurrentSensor):
+light_on = False
+
+def check_light(sensor:CubertCurrentSensor):
     print("Starting Current Sensing")
     
     while True:
         if sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT) > 100:
-            print("Base Light On!")
+            print("Light ON")
+            light_on = True
+        else:
+            light_on = False
+
 
 if __name__ == '__main__':
     print("Running Test Sciprt")
 
-    thread = threading.Thread(target=thread_function)
+    lightThread = threading.Thread(target=check_light)
+
+    lightThread.start()
 
     actions.rotateCube(BaseRotation.HALF, Direction.CCW)
 
