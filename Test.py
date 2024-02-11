@@ -52,6 +52,9 @@ baseThread = threading.Thread(target=spin_base)
 
 def sigint_handler(sig, frame):
     global _run_thread_1
+    global actions
+    global sensor
+    global motor
 
     _run_thread_1 = False
 
