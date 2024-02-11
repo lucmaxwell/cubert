@@ -22,12 +22,11 @@ actions = CubertActions(motor)
 
 light_on = False
 
-def check_light(sensor:CubertCurrentSensor):
+def check_light(ina3221:CubertCurrentSensor):
     print("Starting Current Sensing")
     
     while True:
-        if sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT) > 100:
-            print("Light ON")
+        if ina3221.getChannelCurrent(CurrentChannel.BASE_LIGHT) > 100:
             light_on = True
         else:
             light_on = False
@@ -36,7 +35,7 @@ def check_light(sensor:CubertCurrentSensor):
 if __name__ == '__main__':
     print("Running Test Sciprt")
 
-    lightThread = threading.Thread(target=check_light)
+    lightThread = threading.Thread(target=check_light, args=(1,))
 
     lightThread.start()
 
