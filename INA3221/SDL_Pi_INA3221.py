@@ -9,7 +9,7 @@
  
 from datetime import datetime
 
-import smbus
+import smbus2 as smbus
 
 # constants
 
