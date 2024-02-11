@@ -3,6 +3,7 @@ from CurrentSensor import *
 from Actions import *
 from Motor import *
 import threading
+import logging
 
 # Motor Pins
 motor_en_pin = 26
@@ -22,12 +23,13 @@ actions = CubertActions(motor)
 
 light_on = False
 
-def check_light(ina3221:CubertCurrentSensor):
-    print("Starting Current Sensing")
+def check_light():
+    logging.info("Starting Current Sensing")
     
     while True:
-        if ina3221.getChannelCurrent(CurrentChannel.BASE_LIGHT) > 100:
+        if sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT) > 100:
             light_on = True
+            logging.info("LIGHT ON")
         else:
             light_on = False
 
@@ -37,7 +39,7 @@ if __name__ == '__main__':
 
     lightThread = threading.Thread(target=check_light, args=(1,))
 
-    lightThread.start(sensor)
+    lightThread.start()
 
     actions.rotateCube(BaseRotation.HALF, Direction.CCW)
 
