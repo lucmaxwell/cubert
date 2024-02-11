@@ -3,7 +3,6 @@ from CurrentSensor import *
 from Actions import *
 from Motor import *
 import threading
-import logging
 
 # Motor Pins
 motor_en_pin = 26
@@ -26,6 +25,9 @@ light_on = False
 current = -1
 
 def check_light():
+
+    global current
+    global light_on
     
     while True:
         current = sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT)
