@@ -3,6 +3,9 @@ from CurrentSensor import *
 from Actions import *
 from Motor import *
 import threading
+import signal
+import RPi.GPIO as GPIO
+import sys
 
 # Motor Pins
 motor_en_pin = 26
@@ -24,12 +27,18 @@ light_on = False
 
 current = -1
 
+lightThread = threading.Thread(target=check_light)
+baseThread = threading.Thread(target=spin_base)
+
+_run_thread_1 = True
+
 def check_light():
 
     global current
     global light_on
+    global _run_thread_1
     
-    while True:
+    while _run_thread_1:
         current = sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT)
         if sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT) > 100:
             light_on = True
@@ -39,21 +48,32 @@ def check_light():
 def spin_base():
     actions.rotateCube(BaseRotation.HALF, Direction.CCW)
 
+def sigint_handler(sig, frame):
+    global _run_thread_1
+
+    _run_thread_1 = False
+
+    lightThread.join()
+    baseThread.join()
+
+    del actions
+    del motor
+    del sensor
+
+    GPIO.cleanup()
+    sys.exit(0)
 
 if __name__ == '__main__':
     print("Running Test Sciprt")
 
-    lightThread = threading.Thread(target=check_light)
-    baseThread = threading.Thread(target=spin_base)
+    signal.signal(signal.SIGINT, sigint_handler)
+
+    
 
     lightThread.start()
     baseThread.start()
 
     while True:
-        print(current)
         if light_on:
             print("LIGHT ON")
-
-    del actions
-    del motor
 
