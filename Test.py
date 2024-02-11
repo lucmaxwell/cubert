@@ -78,4 +78,5 @@ if __name__ == '__main__':
     while True:
         if light_on:
             print("LIGHT ON")
+        time.sleep(0.001)
 
