@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     lightThread = threading.Thread(target=check_light, args=(1,))
 
-    lightThread.start()
+    lightThread.start(sensor)
 
     actions.rotateCube(BaseRotation.HALF, Direction.CCW)
 
