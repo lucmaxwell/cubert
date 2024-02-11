@@ -37,7 +37,7 @@ def check_light():
 if __name__ == '__main__':
     print("Running Test Sciprt")
 
-    lightThread = threading.Thread(target=check_light, args=(1,))
+    lightThread = threading.Thread(target=check_light)
 
     lightThread.start()
 
