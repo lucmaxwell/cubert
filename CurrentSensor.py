@@ -7,7 +7,7 @@ class CurrentChannel(IntEnum):
     RIGHT_MOTOR = 2
     BASE_LIGHT  = 3
 
-class CurrentSensor():
+class CubertCurrentSensor():
 
     def __init__(self):
         self.sensor = INA3221.SDL_Pi_INA3221(addr=0x40)
@@ -19,7 +19,7 @@ class CurrentSensor():
 if __name__ == '__main__':
     print("Running Current Sensor Test")
 
-    sensor = CurrentSensor()
+    sensor = CubertCurrentSensor()
 
     while True:
         print("Base Light Current is %fmA" % sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT))

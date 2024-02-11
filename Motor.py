@@ -5,6 +5,7 @@ import time
 from enum import Enum, IntEnum
 from TMC2209MotorLib.src.TMC_2209.TMC_2209_StepperDriver import *
 import ctypes
+import CurrentSensor
 
 # Parameter
 MAX_SPEED = 3.3 # DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
@@ -108,7 +109,7 @@ class CubertMotor:
     _base_homed             = False
 
 
-    def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin):
+    def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin, current_sensor:CurrentSensor.CubertCurrentSensor):
 
         # setup GPIO
         GPIO.setmode(GPIO.BCM)
@@ -125,6 +126,9 @@ class CubertMotor:
 
         # used to index motors
         self.tmc_list = [self.tmc_base, self.tmc_left, self.tmc_right]
+
+        # store current sensor
+        self._current_sensor = current_sensor
 
         # setup motors
         for tmc in self.tmc_list:
