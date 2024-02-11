@@ -23,9 +23,12 @@ actions = CubertActions(motor)
 
 light_on = False
 
+current = -1
+
 def check_light():
     
     while True:
+        current = sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT)
         if sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT) > 100:
             light_on = True
         else:
@@ -45,6 +48,7 @@ if __name__ == '__main__':
     baseThread.start()
 
     while True:
+        print(current)
         if light_on:
             print("LIGHT ON")
 
