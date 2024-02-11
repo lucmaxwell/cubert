@@ -24,24 +24,29 @@ actions = CubertActions(motor)
 light_on = False
 
 def check_light():
-    logging.info("Starting Current Sensing")
     
     while True:
         if sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT) > 100:
             light_on = True
-            logging.info("LIGHT ON")
         else:
             light_on = False
+
+def spin_base():
+    actions.rotateCube(BaseRotation.HALF, Direction.CCW)
 
 
 if __name__ == '__main__':
     print("Running Test Sciprt")
 
     lightThread = threading.Thread(target=check_light)
+    baseThread = threading.Thread(target=spin_base)
 
     lightThread.start()
+    baseThread.start()
 
-    actions.rotateCube(BaseRotation.HALF, Direction.CCW)
+    while True:
+        if light_on:
+            print("LIGHT ON")
 
     del actions
     del motor
