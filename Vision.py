@@ -8,6 +8,7 @@ import glob
 from sklearn.cluster import KMeans
 import urllib.request
 import scipy.stats as stats
+import plotext as plt
 
 
 class CubertVision:
@@ -370,6 +371,9 @@ if __name__ == '__main__':
     vision = CubertVision()
 
     vision.capture()
+    plt.image_plot("./image.jpg")
+    plt.show()
+
 
     # Capture image
     # vision.camera.capture(vision.rawCapture, format="bgr")
