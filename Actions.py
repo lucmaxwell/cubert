@@ -30,7 +30,7 @@ def sigint_handler(sig, frame):
 
 class CubertActions:
 
-    _defaul_move_speed = 25
+    _defaul_move_speed = 40
 
     def __init__(self, motor:Motor.CubertMotor, calibrate_distance=False, default_move_speed=10):
         self.motor = motor
@@ -176,7 +176,7 @@ if __name__ == '__main__':
     time.sleep(1)
     actions.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW)
 
-    speed = input("Give Zen Mode Speed")
+    speed = input("Give Zen Mode Speed: ")
 
     actions.zen(int(speed))
 
