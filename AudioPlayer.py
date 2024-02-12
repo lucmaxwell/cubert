@@ -69,6 +69,6 @@ if __name__ == '__main__':
     # audio.chirp()
 
     # audio.visualizeWav("test.wav")
-    audio.play("test.wav")
+    audio.playWav("test.wav")
 
     del audio
