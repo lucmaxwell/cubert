@@ -6,6 +6,7 @@ from enum import Enum, IntEnum
 from TMC2209MotorLib.src.TMC_2209.TMC_2209_StepperDriver import *
 import ctypes
 import CurrentSensor
+import statistics
 
 # Parameter
 MAX_SPEED = 3.3 # DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
@@ -186,8 +187,8 @@ class CubertMotor:
     def home(self, calibrate_distance=False):
         print("Begining Homing")
         if calibrate_distance: self.calibrateDistance()
-        self.homeGripper()
         self.homeBase()
+        self.homeGripper()
         print("Homing Finished")
 
     def homeGripper(self):
@@ -204,6 +205,60 @@ class CubertMotor:
 
     def homeBase(self):
         print("Homing Base")
+
+        short_delay = 0
+        long_delay  = 600
+
+        queue_length = 289
+        queue = []
+        median = -1
+        divisor = 1
+
+        threshold = 110
+
+        times_crossed = 0
+
+        for i in range(queue_length):
+            queue[i] = self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT)
+            self.stepBase()
+            libc.usleep(short_delay)
+
+        median = statistics.median(queue)
+
+        while times_crossed < 40:
+
+            queue.pop(0)
+
+            self.stepBase()
+
+            queue[-1] = self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT)
+
+            median = statistics.median(queue)
+
+            if median > 105:
+                step_delay = long_delay
+
+            else:
+                step_delay = short_delay
+
+            if divisor % 13 == 0:
+                if median >= threshold:
+                    times_crossed += 1
+                elif median < 90:
+                    times_crossed = 0
+                    step_delay - short_delay
+
+                divisor = 1
+
+            else:
+                divisor += 1
+
+            libc.usleep(step_delay)
+
+        self.disable()
+        time.sleep(0.1)
+        self.enable()
+
         self._base_homed = True
 
     def calibrateDistance(self):
