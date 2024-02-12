@@ -80,9 +80,17 @@ if __name__ == '__main__':
     # motor.spinBase(BaseRotation.QUARTER, Direction.CCW, 50)
     motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
 
+    time.sleep(5)
+
     currentThread.start()
     
     motor.moveGripperToPos(GripperPosition.TOP, 50)
+    motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
+    motor.moveGripperToPos(GripperPosition.MIDDLE, 50)
+
+
+
+    # motor.moveGripper(1000, GripperDirection.)
     # motor.spinBase(BaseRotation.FULL, Direction.CCW, 1)
 
     time.sleep(0.001)
