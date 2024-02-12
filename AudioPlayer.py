@@ -25,6 +25,14 @@ class CubertAudioPlayer():
         time.sleep(1)
         self._pwm.stop()
 
+    def chirp(self):
+        self._pwm.ChangeFrequency(20)
+        self._pwm.start(5)
+        for freq in range(20, 80):
+            self._pwm.ChangeFrequency(freq)
+            time.sleep(0.01)
+        self._pwm.stop()
+
 
 if __name__ == '__main__':
     audio_pin = 12
@@ -32,5 +40,9 @@ if __name__ == '__main__':
     audio = CubertAudioPlayer(audio_pin)
 
     audio.play()
+
+    time.sleep(1)
+
+    audio.chirp()
 
     del audio
