@@ -25,8 +25,7 @@ actions = CubertActions(motor)
 
 light_on = False
 
-current = -1
-
+current = []
 
 
 _run_thread_1 = True
@@ -38,11 +37,8 @@ def check_light():
     global _run_thread_1
     
     while _run_thread_1:
-        current = sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT)
-        if sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT) > 100:
-            light_on = True
-        else:
-            light_on = False
+        current.append(sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT))
+
 
 def spin_base():
     actions.rotateCube(BaseRotation.HALF, Direction.CCW)
@@ -76,10 +72,16 @@ if __name__ == '__main__':
     
 
     lightThread.start()
-    baseThread.start()
+    
+    motor.spinBase(BaseRotation.FULL, Direction.CCW)
 
-    while True:
-        if light_on:
-            print("LIGHT ON")
-        time.sleep(0.001)
+    time.sleep(0.001)
+
+    _run_thread_1 = False
+
+    lightThread.join()
+
+    # plot stuff
+    plt.scatter(np.array(current))
+    plt.show()
 

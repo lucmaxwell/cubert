@@ -187,6 +187,8 @@ class CubertMotor:
     def home(self, calibrate_distance=False):
         print("Begining Homing")
         if calibrate_distance: self.calibrateDistance()
+        self.openHand()
+        self.moveGripperToPos(GripperPosition.TOP)
         self.homeBase()
         self.homeGripper()
         print("Homing Finished")
