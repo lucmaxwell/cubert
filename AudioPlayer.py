@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 import time
+from scipy.io import wavfile
 
 
 class CubertAudioPlayer():
