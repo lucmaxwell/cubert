@@ -249,6 +249,7 @@ class CubertMotor:
                     times_crossed += 1
                 elif median < 90:
                     times_crossed = 0
+                    print("Times Crossed: %d" % times_crossed)
                     step_delay - short_delay
 
                 divisor = 1
