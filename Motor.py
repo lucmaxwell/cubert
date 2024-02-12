@@ -219,7 +219,7 @@ class CubertMotor:
         times_crossed = 0
 
         for i in range(queue_length):
-            queue[i] = self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT)
+            queue.append(self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT))
             self.stepBase()
             libc.usleep(short_delay)
 
@@ -231,7 +231,7 @@ class CubertMotor:
 
             self.stepBase()
 
-            queue[-1] = self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT)
+            queue.append(self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT))
 
             median = statistics.median(queue)
 
