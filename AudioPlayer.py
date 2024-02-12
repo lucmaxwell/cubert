@@ -1,5 +1,5 @@
 import RPi.GPIO as GPIO
-
+import time
 
 
 class CubertAudioPlayer():
@@ -14,13 +14,23 @@ class CubertAudioPlayer():
 
         # setup pin
         GPIO.setup(pwm_pin, GPIO.OUT)
-        GPIO.PWM(pwm_pin, 20)
+        
+        self._pwm = GPIO.PWM(pwm_pin, 20)
 
     def __del__(self):
         GPIO.cleanup()
+
+    def play(self):
+        self._pwm.start(25)
+        time.sleep(1)
+        self._pwm.stop()
 
 
 if __name__ == '__main__':
     audio_pin = 12
 
     audio = CubertAudioPlayer(audio_pin)
+
+    audio.play()
+
+    del audio
