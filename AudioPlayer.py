@@ -32,7 +32,7 @@ class CubertAudioPlayer():
         self._pwm.start(5)
         for freq in range(20, 7000):
             self._pwm.ChangeFrequency(freq)
-            time.sleep(0.01)
+            time.sleep(0.001)
         self._pwm.stop()
 
     def visualizeWav(self, filename):
