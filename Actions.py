@@ -99,19 +99,19 @@ class CubertActions:
 
 
     def flip(self, move_speed=10):
-        self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM)
+        self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM, move_speed)
         self.motor.closeHand()
-        self.motor.moveGripperToPos(Motor.GripperPosition.TOP)
+        self.motor.moveGripperToPos(Motor.GripperPosition.TOP, move_speed)
         self.motor.openHand()
 
     def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed):
-        self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE)
+        self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed)
         self.motor.closeHand()
-        self.motor.spinBase(rotation, direction, degrees_to_correct=15)
+        self.motor.spinBase(rotation, direction, move_speed, degrees_to_correct=15)
         self.motor.openHand()
 
     def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed):
-        self.motor.spinBase(rotation, direction)
+        self.motor.spinBase(rotation, direction, move_speed)
 
     def zen(self, move_speed=10):
         while True:
