@@ -27,25 +27,31 @@ actions = CubertActions(motor)
 
 light_on = False
 
-current = []
+current_base = []
+current_left = []
+current_right = []
 
 
 _run_thread_1 = True
 
 def check_light():
 
-    global current
+    global current_base
+    global current_left
+    global current_right
     global light_on
     global _run_thread_1
     
     while _run_thread_1:
-        current.append(sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT))
+        # current_base.append(sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT))
+        current_left.append(sensor.getChannelCurrent(CurrentChannel.LEFT_MOTOR))
+        current_right.append(sensor.getChannelCurrent(CurrentChannel.RIGHT_MOTOR))
 
 
 def spin_base():
     actions.rotateCube(BaseRotation.HALF, Direction.CCW)
 
-lightThread = threading.Thread(target=check_light)
+currentThread = threading.Thread(target=check_light)
 baseThread = threading.Thread(target=spin_base)
 
 def sigint_handler(sig, frame):
@@ -56,7 +62,7 @@ def sigint_handler(sig, frame):
 
     _run_thread_1 = False
 
-    lightThread.join()
+    currentThread.join()
     baseThread.join()
 
     del actions
@@ -71,19 +77,22 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, sigint_handler)
 
-    motor.spinBase(BaseRotation.QUARTER, Direction.CCW, 50)
+    # motor.spinBase(BaseRotation.QUARTER, Direction.CCW, 50)
+    motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
 
-    lightThread.start()
+    currentThread.start()
     
-    motor.spinBase(BaseRotation.FULL, Direction.CCW, 1)
+    motor.moveGripperToPos(GripperPosition.TOP, 50)
+    # motor.spinBase(BaseRotation.FULL, Direction.CCW, 1)
 
     time.sleep(0.001)
 
     _run_thread_1 = False
 
-    lightThread.join()
+    currentThread.join()
 
     # plot stuff
-    plt.scatter(np.array(current))
+    plt.scatter(np.array(current_left))
+    plt.scatter(np.array(current_right))
     plt.show()
 
