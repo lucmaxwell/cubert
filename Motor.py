@@ -217,7 +217,7 @@ class CubertMotor:
 
         direction = Direction.CCW
 
-        threshold = 110
+        threshold = 100
 
         times_crossed = 0
 
