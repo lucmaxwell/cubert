@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
 
 
-    motor.moveGripper(350, GripperDirection.CLOSE)
+    motor.moveGripper(400, GripperDirection.CLOSE)
     # motor.spinBase(BaseRotation.FULL, Direction.CCW, 1)
 
     time.sleep(0.001)
@@ -100,7 +100,19 @@ if __name__ == '__main__':
     currentThread.join()
 
     # plot stuff
-    plt.scatter(np.array(current_left))
-    plt.scatter(np.array(current_right))
+    plt.scatter(np.array(current_left), label="Left Motor")
+    plt.scatter(np.array(current_right), label="Right Motor")
     plt.show()
+
+    _run_thread_1 = False
+
+    currentThread.join()
+    baseThread.join()
+
+    del actions
+    del motor
+    del sensor
+
+    GPIO.cleanup()
+    sys.exit(0)
 
