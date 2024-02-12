@@ -44,7 +44,7 @@ class CubertAudioPlayer():
         print(Fs)
 
     def playWav(self, filename):
-        self._pwm.ChangeFrequency(1000)
+        self._pwm.ChangeFrequency(8000)
 
         Fs, sig = wavfile.read(filename)
 
