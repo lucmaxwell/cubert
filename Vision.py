@@ -16,9 +16,7 @@ class CubertVision:
         self.camera = PiCamera()
 
         # Camera parameters
-        self.camera.resolution = self.camera.MAX_RESOLUTION
-        self.camera.framerate = 32
-        self.rawCapture = PiRGBArray(self.camera, size=(480, 640))
+        self.camera.resolution = (45, 45)
 
         # Allow the camera to startup
         time.sleep(2)
