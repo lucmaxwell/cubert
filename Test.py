@@ -84,13 +84,13 @@ if __name__ == '__main__':
 
     currentThread.start()
     
-    motor.moveGripperToPos(GripperPosition.TOP, 50)
-    motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
-    motor.moveGripperToPos(GripperPosition.MIDDLE, 50)
+    # motor.moveGripperToPos(GripperPosition.TOP, 50)
+    # motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
+    # motor.moveGripperToPos(GripperPosition.MIDDLE, 50)
 
 
 
-    # motor.moveGripper(1000, GripperDirection.)
+    motor.moveGripper(350, GripperDirection.CLOSE)
     # motor.spinBase(BaseRotation.FULL, Direction.CCW, 1)
 
     time.sleep(0.001)
