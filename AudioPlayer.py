@@ -52,9 +52,13 @@ class CubertAudioPlayer():
 
         delay = 1/Fs
 
+        self._pwm.start(5)
+
         for sample in sig:
             self._pwm.ChangeDutyCycle(sample)
             time.sleep(delay)
+
+        self._pwm.stop()
 
 
 if __name__ == '__main__':
