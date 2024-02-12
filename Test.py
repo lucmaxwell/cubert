@@ -6,6 +6,8 @@ import threading
 import signal
 import RPi.GPIO as GPIO
 import sys
+import numpy as np
+import plotext as plt
 
 # Motor Pins
 motor_en_pin = 26
