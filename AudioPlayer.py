@@ -66,9 +66,9 @@ if __name__ == '__main__':
 
     time.sleep(1)
 
-    # audio.chirp()
+    audio.chirp()
 
-    # audio.visualizeWav("test.wav")
-    audio.playWav("test.wav")
+    audio.visualizeWav("test.wav")
+    # audio.playWav("test.wav")
 
     del audio
