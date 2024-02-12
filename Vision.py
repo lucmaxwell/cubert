@@ -16,7 +16,7 @@ class CubertVision:
         self.camera = PiCamera()
 
         # Camera parameters
-        self.camera.resolution = (45, 45)
+        self.camera.resolution = (60, 45)
 
         # Allow the camera to startup
         time.sleep(2)
