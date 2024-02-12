@@ -30,108 +30,118 @@ def sigint_handler(sig, frame):
 
 class CubertActions:
 
-    def __init__(self, motor:Motor.CubertMotor, calibrate_distance=False):
+    _defaul_move_speed = 10
+
+    def __init__(self, motor:Motor.CubertMotor, calibrate_distance=False, default_move_speed=10):
         self.motor = motor
+        self._defaul_move_speed = default_move_speed
 
         motor.enable()
 
         self.motor.home(calibrate_distance)
 
-    def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation):
+    def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_defaul_move_speed):
 
         if move == CubertNotation.BACK_CCW:
-            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW)
+            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
             self.flip()
-            self.rotateFace(rotation, Motor.Direction.CCW)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
 
         elif move == CubertNotation.BACK_CW:
-            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW)
+            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
             self.flip()
-            self.rotateFace(rotation, Motor.Direction.CW)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
         elif move == CubertNotation.BOTTOM_CCW:
-            self.rotateFace(rotation, Motor.Direction.CCW)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
 
         elif move == CubertNotation.BOTTOM_CW:
-            self.rotateFace(rotation, Motor.Direction.CW)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
         elif move == CubertNotation.FRONT_CCW:
             self.flip()
-            self.rotateFace(rotation, Motor.Direction.CCW)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
 
         elif move == CubertNotation.BOTTOM_CW:
             self.flip()
-            self.rotateFace(rotation, Motor.Direction.CW)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
         elif move == CubertNotation.LEFT_CCW:
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed)
             self.flip()
-            self.rotateFace(rotation, Motor.Direction.CCW)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
             
         elif move == CubertNotation.LEFT_CW:
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed)
             self.flip()
-            self.rotateFace(rotation, Motor.Direction.CW)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
         elif move == CubertNotation.RIGHT_CCW:
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed)
             self.flip()
-            self.rotateFace(rotation, Motor.Direction.CCW)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
             
         elif move == CubertNotation.RIGHT_CW:
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed)
             self.flip()
-            self.rotateFace(rotation, Motor.Direction.CW)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
         elif move == CubertNotation.TOP_CCW:
             self.flip()
             self.flip()
-            self.rotateFace(rotation, Motor.Direction.CCW)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
 
         elif move == CubertNotation.TOP_CW:
             self.flip()
             self.flip()
-            self.rotateFace(rotation, Motor.Direction.CW)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
 
 
-    def flip(self):
+    def flip(self, move_speed=10):
         self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM)
         self.motor.closeHand()
         self.motor.moveGripperToPos(Motor.GripperPosition.TOP)
         self.motor.openHand()
 
-    def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction):
+    def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed):
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE)
         self.motor.closeHand()
         self.motor.spinBase(rotation, direction, degrees_to_correct=15)
         self.motor.openHand()
 
-    def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction):
+    def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed):
         self.motor.spinBase(rotation, direction)
 
-    def zen(self):
+    def zen(self, move_speed=10):
         while True:
-            move = random.randint(1,12)
-  
-            if move == 2:
-                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
-            elif move == 3:
-                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-            elif move == 4:
-                self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW)
-            elif move == 5:
-                self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
-            elif move == 6:
-                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
-            elif move == 7:
-                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-            elif move == 8:
-                self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW)
-            elif move == 9:
-                self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW)
+            move = random.randint(0,11)
+
+            if random.randint(0,1):
+                rotation = Motor.BaseRotation.QUARTER
             else:
-                self.flip()
+                rotation = Motor.BaseRotation.HALF
+
+            self.preformMove(move, rotation, move_speed)
+  
+            # if move == 2:
+            #     self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed)
+            # elif move == 3:
+            #     self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed)
+            # elif move == 4:
+            #     self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
+            # elif move == 5:
+            #     self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW, move_speed)
+            # elif move == 6:
+            #     self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed)
+            # elif move == 7:
+            #     self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed)
+            # elif move == 8:
+            #     self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
+            # elif move == 9:
+            #     self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW, move_speed)
+            # else:
+            #     self.flip()
 
     
 
@@ -152,7 +162,7 @@ if __name__ == '__main__':
     # initialize motor
     motor = Motor.CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin, current_sensor)
 
-    actions = CubertActions(motor)
+    actions = CubertActions(motor,)
 
     time.sleep(2)
 
