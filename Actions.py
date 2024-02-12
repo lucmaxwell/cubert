@@ -4,6 +4,7 @@ import signal
 import sys
 import RPi.GPIO as GPIO
 import random
+import CurrentSensor
 
 def sigint_handler(sig, frame):
     del actions
@@ -73,8 +74,10 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, sigint_handler)
 
+    current_sensor = CurrentSensor()
+
     # initialize motor
-    motor = Motor.CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin)
+    motor = Motor.CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin, current_sensor)
 
     actions = CubertActions(motor)
 
