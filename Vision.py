@@ -21,7 +21,7 @@ class CubertVision:
         self.rawCapture = PiRGBArray(self.camera, size=(480, 640))
 
         # Allow the camera to startup
-        time.sleep(0.1)
+        time.sleep(2)
 
     def capture(self):
         self.camera.capture("./image.jpg")
@@ -371,6 +371,7 @@ if __name__ == '__main__':
     vision = CubertVision()
 
     vision.capture()
+    vision.camera.start_preview()
     plt.image_plot("./image.jpg")
     plt.show()
 
