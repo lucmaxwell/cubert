@@ -28,9 +28,9 @@ class CubertAudioPlayer():
         self._pwm.stop()
 
     def chirp(self):
-        self._pwm.ChangeFrequency(20)
+        self._pwm.ChangeFrequency(10)
         self._pwm.start(5)
-        for freq in range(20, 80):
+        for freq in range(20, 7000):
             self._pwm.ChangeFrequency(freq)
             time.sleep(0.01)
         self._pwm.stop()
