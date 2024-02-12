@@ -21,7 +21,7 @@ class CubertAudioPlayer():
         GPIO.cleanup()
 
     def play(self):
-        self._pwm.start(25)
+        self._pwm.start(1)
         time.sleep(1)
         self._pwm.stop()
 
