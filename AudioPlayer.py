@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 from scipy.io import wavfile
+import plotext as plt
 
 
 class CubertAudioPlayer():
@@ -34,6 +35,14 @@ class CubertAudioPlayer():
             time.sleep(0.01)
         self._pwm.stop()
 
+    def visualizeWav(self, filename):
+        Fs, sig = wavfile.read(filename)
+
+        plt.scatter(sig)
+        plt.show()
+
+        print(Fs)
+
 
 if __name__ == '__main__':
     audio_pin = 12
@@ -45,5 +54,7 @@ if __name__ == '__main__':
     time.sleep(1)
 
     audio.chirp()
+
+    audio.visualizeWav("test.wav")
 
     del audio
