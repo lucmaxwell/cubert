@@ -30,7 +30,7 @@ def sigint_handler(sig, frame):
 
 class CubertActions:
 
-    _defaul_move_speed = 10
+    _defaul_move_speed = 25
 
     def __init__(self, motor:Motor.CubertMotor, calibrate_distance=False, default_move_speed=10):
         self.motor = motor
@@ -44,12 +44,12 @@ class CubertActions:
 
         if move == CubertNotation.BACK_CCW:
             self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
-            self.flip()
+            self.flip(move_speed)
             self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
 
         elif move == CubertNotation.BACK_CW:
             self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
-            self.flip()
+            self.flip(move_speed)
             self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
         elif move == CubertNotation.BOTTOM_CCW:
@@ -59,36 +59,36 @@ class CubertActions:
             self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
         elif move == CubertNotation.FRONT_CCW:
-            self.flip()
+            self.flip(move_speed)
             self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
 
         elif move == CubertNotation.BOTTOM_CW:
-            self.flip()
+            self.flip(move_speed)
             self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
         elif move == CubertNotation.LEFT_CCW:
             self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed)
-            self.flip()
+            self.flip(move_speed)
             self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
             
         elif move == CubertNotation.LEFT_CW:
             self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed)
-            self.flip()
+            self.flip(move_speed)
             self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
         elif move == CubertNotation.RIGHT_CCW:
             self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed)
-            self.flip()
+            self.flip(move_speed)
             self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
             
         elif move == CubertNotation.RIGHT_CW:
             self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed)
-            self.flip()
+            self.flip(move_speed)
             self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
         elif move == CubertNotation.TOP_CCW:
-            self.flip()
-            self.flip()
+            self.flip(move_speed)
+            self.flip(move_speed)
             self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
 
         elif move == CubertNotation.TOP_CW:
@@ -176,7 +176,9 @@ if __name__ == '__main__':
     time.sleep(1)
     actions.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW)
 
-    actions.zen()
+    speed = input("Give Zen Mode Speed")
+
+    actions.zen(int(speed))
 
 
     del actions
