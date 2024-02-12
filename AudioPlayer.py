@@ -15,13 +15,13 @@ class CubertAudioPlayer():
         # setup pin
         GPIO.setup(pwm_pin, GPIO.OUT)
         
-        self._pwm = GPIO.PWM(pwm_pin, 20)
+        self._pwm = GPIO.PWM(pwm_pin, 50)
 
     def __del__(self):
         GPIO.cleanup()
 
     def play(self):
-        self._pwm.start(1)
+        self._pwm.start(5)
         time.sleep(1)
         self._pwm.stop()
 
