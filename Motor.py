@@ -206,6 +206,7 @@ class CubertMotor:
     def homeBase(self):
         print("Homing Base")
 
+        step_delay = 0
         short_delay = 0
         long_delay  = 600
 
@@ -214,13 +215,15 @@ class CubertMotor:
         median = -1
         divisor = 1
 
+        direction = Direction.CCW
+
         threshold = 110
 
         times_crossed = 0
 
         for i in range(queue_length):
             queue.append(self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT))
-            self.stepBase()
+            self.stepBase(direction, short_delay)
             libc.usleep(short_delay)
 
         median = statistics.median(queue)
@@ -231,6 +234,7 @@ class CubertMotor:
 
             self.stepBase()
 
+            self.stepBase(direction, step_delay)
             queue.append(self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT))
 
             median = statistics.median(queue)
