@@ -71,11 +71,11 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, sigint_handler)
 
-    motor.spinBase(BaseRotation.QUARTER, Direction.CCW)
+    motor.spinBase(BaseRotation.QUARTER, Direction.CCW, 50)
 
     lightThread.start()
     
-    motor.spinBase(BaseRotation.FULL, Direction.CCW)
+    motor.spinBase(BaseRotation.FULL, Direction.CCW, 1)
 
     time.sleep(0.001)
 
