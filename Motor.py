@@ -232,9 +232,8 @@ class CubertMotor:
 
             queue.pop(0)
 
-            self.stepBase()
-
             self.stepBase(direction, step_delay)
+
             queue.append(self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT))
 
             median = statistics.median(queue)
