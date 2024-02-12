@@ -5,6 +5,21 @@ import sys
 import RPi.GPIO as GPIO
 import random
 from CurrentSensor import *
+from enum import IntEnum
+
+class CubertNotation(IntEnum):
+    BOTTOM_CW   = 0
+    BOTTOM_CCW  = 1
+    TOP_CW      = 2
+    TOP_CCW     = 3
+    FRONT_CW    = 4
+    FRONT_CCW   = 5
+    BACK_CW     = 6
+    BACK_CCW    = 7
+    LEFT_CW     = 8
+    LEFT_CCW    = 9
+    RIGHT_CW    = 10
+    RIGHT_CCW   = 11
 
 def sigint_handler(sig, frame):
     del actions
@@ -21,6 +36,64 @@ class CubertActions:
         motor.enable()
 
         self.motor.home(calibrate_distance)
+
+    def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation):
+
+        if move == CubertNotation.BACK_CCW:
+            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW)
+            self.flip()
+            self.rotateFace(rotation, Motor.Direction.CCW)
+
+        elif move == CubertNotation.BACK_CW:
+            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW)
+            self.flip()
+            self.rotateFace(rotation, Motor.Direction.CW)
+
+        elif move == CubertNotation.BOTTOM_CCW:
+            self.rotateFace(rotation, Motor.Direction.CCW)
+
+        elif move == CubertNotation.BOTTOM_CW:
+            self.rotateFace(rotation, Motor.Direction.CW)
+
+        elif move == CubertNotation.FRONT_CCW:
+            self.flip()
+            self.rotateFace(rotation, Motor.Direction.CCW)
+
+        elif move == CubertNotation.BOTTOM_CW:
+            self.flip()
+            self.rotateFace(rotation, Motor.Direction.CW)
+
+        elif move == CubertNotation.LEFT_CCW:
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+            self.flip()
+            self.rotateFace(rotation, Motor.Direction.CCW)
+            
+        elif move == CubertNotation.LEFT_CW:
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+            self.flip()
+            self.rotateFace(rotation, Motor.Direction.CW)
+
+        elif move == CubertNotation.RIGHT_CCW:
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+            self.flip()
+            self.rotateFace(rotation, Motor.Direction.CCW)
+            
+        elif move == CubertNotation.RIGHT_CW:
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+            self.flip()
+            self.rotateFace(rotation, Motor.Direction.CW)
+
+        elif move == CubertNotation.TOP_CCW:
+            self.flip()
+            self.flip()
+            self.rotateFace(rotation, Motor.Direction.CCW)
+
+        elif move == CubertNotation.TOP_CW:
+            self.flip()
+            self.flip()
+            self.rotateFace(rotation, Motor.Direction.CW)
+
+
 
     def flip(self):
         self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM)
