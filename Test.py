@@ -24,9 +24,9 @@ sensor = CubertCurrentSensor()
 
 motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin, sensor)
 
-actions = CubertActions(motor)
-
 vision = Vision.CubertVision()
+
+actions = CubertActions(motor, vision)
 
 light_on = False
 
