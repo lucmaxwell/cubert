@@ -29,7 +29,7 @@ class CubertVision:
         # Allow the camera to startup
         time.sleep(2)
 
-        # self.mask = self.loadMask(imagesFolder + maskName)
+        self.mask = self.loadMask(self.imagesFolder + self.maskName)
 
     def capture(self):
         self.camera.capture("./image.jpg")
@@ -47,8 +47,11 @@ class CubertVision:
 
         image = np.empty(size, dtype=np.uint8)
         self.camera.capture(image, 'rgb')
+        self.writeImage("0 original.png", image)
 
         image = resize(image, self.lowerResolution)
+        self.writeImage("1 resized.png", image)
+
 
         return image
 

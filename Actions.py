@@ -124,6 +124,9 @@ class CubertActions:
                 self.flip()
                 self.flip()
 
+            print('------------------------------------------- \n' + img.shape)
+            print('------------------------------------------- \n' + combinedImage.shape)
+
             combinedImage[0:height, i*height:(i+1)*height, 0:3] = img
             combinedMask[0:height, i*height:(i+1)*height, 0:3] = self.vision.mask
             
