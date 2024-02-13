@@ -112,7 +112,9 @@ class CubertActions:
 
         for i in range(6):
             
+            self.motor.closeHand()
             img = self.vision.getImage()
+            self.motor.openHand()
 
             if i == 0 or i == 1 or i == 2:
                 self.flip()
