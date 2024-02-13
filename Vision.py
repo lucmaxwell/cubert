@@ -147,7 +147,7 @@ class CubertVision:
         hue = np.copy(inlineHsv[:, 0]) * np.pi / 180 * 2 # For some reason OpenCV's hue values only go from 0 to 180 so we need to multiply by 2 to get the range 0 to 360
         sat = np.copy(inlineHsv[:, 1])
         val = np.copy(inlineHsv[:, 2])
-        inlineHsv = hsvToXyz(hue, sat, val)
+        inlineHsv = self.hsvToXyz(hue, sat, val)
 
         # Apply the mask to the flattened image before fitting kmeans
         kmeans = KMeans(n_clusters=numColours, n_init=10)
@@ -160,7 +160,7 @@ class CubertVision:
         labels = labels.reshape((height, width))
 
         colours_pred = kmeans.cluster_centers_
-        colours_pred = xyzToHsv(colours_pred[: ,0], colours_pred[:, 1], colours_pred[:, 2])
+        colours_pred = self.xyzToHsv(colours_pred[: ,0], colours_pred[:, 1], colours_pred[:, 2])
 
         # Print debugging images
         colours = np.zeros((numColours, labels.shape[0], labels.shape[1]))
@@ -170,7 +170,7 @@ class CubertVision:
             colours[i][maskedPixels] = 0
 
         if writeOutput:
-            writeImages(colours, outPath)
+            self.writeImages(colours, outPath)
 
         #############################################
         # Vision V1
