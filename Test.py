@@ -1,6 +1,5 @@
 import time
 from CurrentSensor import *
-from Actions import *
 from Motor import *
 import threading
 import signal
@@ -9,6 +8,7 @@ import sys
 import numpy as np
 import plotext as plt
 import Vision
+from Actions import *
 
 # Motor Pins
 motor_en_pin = 26
