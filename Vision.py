@@ -14,8 +14,8 @@ import plotext as plt
 class CubertVision:
 
     resolution = (64, 48)
-    resize = (45, 45, 3)
-    mask = np.full(resize, 1, dtype=np.uint8)
+    lowerResolution = (45, 45, 3)
+    mask = np.full(lowerResolution, 1, dtype=np.uint8)
 
     imagesFolder = "./images/"
     maskName = "mask.png"
@@ -48,7 +48,7 @@ class CubertVision:
         image = np.empty(size, dtype=np.uint8)
         self.camera.capture(image, 'rgb')
 
-        image = resize(image, self.resize)
+        image = resize(image, self.lowerResolution)
 
         return image
 
@@ -84,7 +84,7 @@ class CubertVision:
         imageMask = imageMask.astype(np.uint8)
         imageMask[imageMask != 255] = 0
         imageMask[imageMask == 255] = 1
-        imageMask = resize(imageMask, self.resize)
+        imageMask = resize(imageMask, self.lowerResolution)
         self.mask = imageMask
 
     def getAutoMask(self, rgbCube, min, max):
