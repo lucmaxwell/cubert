@@ -33,7 +33,7 @@ def sigint_handler(sig, frame):
 
 class CubertActions:
 
-    _defaul_move_speed = 100
+    _defaul_move_speed = 75
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=10, calibrate_distance=False):
         self.motor = motor
@@ -219,6 +219,18 @@ class CubertActions:
 
     def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=False):
         self.motor.spinBase(rotation, direction, move_speed, acceleration=acceleration)
+
+    def scramble(self, num_moves, move_speed=50):
+        for i in range(num_moves):
+            move = random.randint(0,11)
+
+            if random.randint(0,1):
+                rotation = Motor.BaseRotation.QUARTER
+            else:
+                rotation = Motor.BaseRotation.HALF
+
+            self.preformMove(move, rotation, move_speed)
+
 
     def zen(self, move_speed=10):
         while True:

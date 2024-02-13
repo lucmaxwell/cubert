@@ -81,6 +81,7 @@ def sigint_handler(sig, frame):
 if __name__ == '__main__':
     print("Running Test Sciprt")
 
+    actions.scramble(13)
     actions.solve(True)
 
     del actions
