@@ -102,7 +102,7 @@ class CubertActions:
             self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
     def getAllImages(self, writeConsole=False):
-        combinedShape = list(self.vision.lowerResolution)
+        combinedShape = list(self.vision.lowerResolution) + [3]
         combinedShape[1] = combinedShape[1] * 6
         combinedShape = tuple(combinedShape)
         height = combinedShape[0]
