@@ -29,7 +29,7 @@ class CubertVision:
         # Allow the camera to startup
         time.sleep(2)
 
-        self.mask = self.loadMask(self.imagesFolder + self.maskName)
+        self.loadMask(self.imagesFolder + self.maskName)
 
     def capture(self):
         self.camera.capture("./image.jpg")
