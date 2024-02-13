@@ -13,7 +13,7 @@ import plotext as plt
 
 class CubertVision:
 
-    resolution = (60, 45)
+    resolution = (64, 48)
     resize = (45, 45, 3)
     mask = np.full(resize, 1, dtype=np.uint8)
 
