@@ -12,7 +12,10 @@ class Solver:
         5: 'D',
     }
 
-    def get3x3Solution(imageArray, verbose=False):
+    def __init__(self):
+        pass
+
+    def get3x3Solution(self, imageArray, verbose=False):
         # imageToString at index i has the index of where the colour at index i belongs in the cubeString
         imageToString = np.array(
             [[45, 46, 47, 9, 10, 11, 18, 19, 20, 36, 37, 38, 2, 5, 8, 29, 32, 35],
@@ -31,7 +34,7 @@ class Solver:
         translation = np.array(['a', 'a', 'a', 'a', 'a', 'a'])
         for i in range(6):
             num = imageArray[1, 1 + 3*i]
-            translation[num] = FACE_ORDER[i]
+            translation[num] = self.FACE_ORDER[i]
 
         imageArray = imageArray.flatten()
 
@@ -65,11 +68,11 @@ class Solver:
 
         return sv.solve(cubeString, 0, 2)
 
-    def cubertify(solution, verbose=False):
+    def cubertify(self, solution, verbose=False):
         # Get the correct face facing down
         # P = yy
         # p = bb
-        
+
         ORIENTATE = {
             'D': "",
             'F': "X",
