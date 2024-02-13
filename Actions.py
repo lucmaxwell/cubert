@@ -33,7 +33,7 @@ def sigint_handler(sig, frame):
 
 class CubertActions:
 
-    _defaul_move_speed = 50
+    _defaul_move_speed = 100
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=10, calibrate_distance=False):
         self.motor = motor
@@ -205,19 +205,19 @@ class CubertActions:
                     
         print("Cube should be solved")
 
-    def flip(self, move_speed=_defaul_move_speed, acceleration=True):
+    def flip(self, move_speed=_defaul_move_speed, acceleration=False):
         self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM, move_speed, acceleration=acceleration)
         self.motor.closeHand()
         self.motor.moveGripperToPos(Motor.GripperPosition.TOP, move_speed, acceleration=acceleration)
         self.motor.openHand()
 
-    def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=True):
+    def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=False):
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
         self.motor.closeHand()
         self.motor.spinBase(rotation, direction, move_speed, degrees_to_correct=15, acceleration=acceleration)
         self.motor.openHand()
 
-    def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=True):
+    def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=False):
         self.motor.spinBase(rotation, direction, move_speed, acceleration=acceleration)
 
     def zen(self, move_speed=10):
