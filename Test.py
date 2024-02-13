@@ -27,9 +27,9 @@ motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_up
 
 vision = Vision.CubertVision()
 
-actions = CubertActions(motor, vision)
-
 solver = Solver.Solver()
+
+actions = CubertActions(motor, vision, solver)
 
 light_on = False
 
