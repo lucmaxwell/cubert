@@ -115,14 +115,14 @@ class CubertActions:
             img = self.vision.getImage()
 
             if i == 0 or i == 1 or i == 2:
-                CubertActions.flip()
+                self.flip()
             elif i == 3:
-                CubertActions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-                CubertActions.flip()
-                CubertActions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+                self.flip()
+                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
             elif i == 4:
-                CubertActions.flip()
-                CubertActions.flip()
+                self.flip()
+                self.flip()
 
             combinedImage[0:height, i*height:(i+1)*height, 0:3] = img
             combinedMask[0:height, i*height:(i+1)*height, 0:3] = self.vision.mask
@@ -255,7 +255,7 @@ class CubertActions:
             img = self.vision.getImage()
             average = np.average(img)
             lights[i] = average
-            CubertActions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
 
             if(i < 4):
                 time.sleep(0.25)
@@ -263,11 +263,11 @@ class CubertActions:
         # Spin to the lightest side
         spin = lights.argmax()
         if(spin == 1):
-            CubertActions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
         elif(spin == 2):
-            CubertActions.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
+            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
         elif(spin == 3):
-            CubertActions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
 
     
 
@@ -288,7 +288,7 @@ if __name__ == '__main__':
     # initialize motor
     motor = Motor.CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin, current_sensor)
 
-    actions = CubertActions(motor,)
+    actions = CubertActions(motor)
 
     time.sleep(2)
 
