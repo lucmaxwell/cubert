@@ -186,10 +186,10 @@ class CubertActions:
                 self.flip()
 
             elif move == 'y':
-                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, 120)
+                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, 120)
 
             elif move == 'Y':
-                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, 120)
+                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, 120)
 
             elif move == 'P':
                 self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW, 120)
