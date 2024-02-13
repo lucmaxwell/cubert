@@ -135,8 +135,8 @@ class CubertActions:
             self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
 
         elif move == CubertNotation.TOP_CW:
-            self.flip()
-            self.flip()
+            self.flip(move_speed)
+            self.flip(move_speed)
             self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
     def solve(self, writeImages=False):
