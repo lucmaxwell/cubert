@@ -102,7 +102,7 @@ class CubertActions:
             self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
     def getAllImages(self, writeConsole=False):
-        combinedShape = list(vision.resize)
+        combinedShape = list(self.vision.resize)
         combinedShape[1] = combinedShape[1] * 6
         combinedShape = tuple(combinedShape)
         height = combinedShape[0]
@@ -125,7 +125,7 @@ class CubertActions:
                 CubertActions.flip()
 
             combinedImage[0:height, i*height:(i+1)*height, 0:3] = img
-            combinedMask[0:height, i*height:(i+1)*height, 0:3] = vision.mask
+            combinedMask[0:height, i*height:(i+1)*height, 0:3] = self.vision.mask
             
             if(writeConsole):
                 print("Cube rotated, waiting 2 seconds for camera to stabilize")
@@ -252,7 +252,7 @@ class CubertActions:
 
         # Find the orientation with the highest lightness
         for i in range(4):
-            img = vision.getImage()
+            img = self.vision.getImage()
             average = np.average(img)
             lights[i] = average
             CubertActions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
