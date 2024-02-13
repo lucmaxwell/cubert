@@ -15,7 +15,7 @@ class CubertVision:
 
     resolution = (64, 48)
     lowerResolution = (45, 45)
-    mask = np.full(lowerResolution, 1, dtype=np.uint8)
+    mask = np.full(tuple(list(lowerResolution) + [3]), 1, dtype=np.uint8)
 
     imagesFolder = "./images/"
     maskName = "mask.png"
