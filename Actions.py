@@ -112,6 +112,7 @@ class CubertActions:
 
         for i in range(6):
             
+            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE)
             self.motor.closeHand()
             img = self.vision.getImage()
             self.motor.openHand()
