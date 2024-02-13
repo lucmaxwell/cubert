@@ -46,7 +46,7 @@ class CubertVision:
         size = tuple(list(self.resolution) + [3])
 
         image = np.empty(size, dtype=np.uint8)
-        camera.capture(image, 'rgb')
+        self.camera.capture(image, 'rgb')
 
         image = resize(image, self.resize)
 

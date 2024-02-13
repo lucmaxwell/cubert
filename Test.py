@@ -9,6 +9,7 @@ import numpy as np
 import plotext as plt
 import Vision
 from Actions import *
+import Solver
 
 # Motor Pins
 motor_en_pin = 26
@@ -27,6 +28,8 @@ motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_up
 vision = Vision.CubertVision()
 
 actions = CubertActions(motor, vision)
+
+solver = Solver.Solver()
 
 light_on = False
 

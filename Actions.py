@@ -9,7 +9,6 @@ from enum import IntEnum
 import Vision
 import Solver
 import numpy as np
-import cv2 as cv
 
 class CubertNotation(IntEnum):
     BOTTOM_CW   = 0
@@ -25,10 +24,6 @@ class CubertNotation(IntEnum):
     RIGHT_CW    = 10
     RIGHT_CCW   = 11
 
-
-vision = Vision.CubertVision()
-solver = Solver.Solver()
-
 def sigint_handler(sig, frame):
     del actions
     del motor
@@ -40,10 +35,11 @@ class CubertActions:
 
     _defaul_move_speed = 40
 
-    def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, default_move_speed=10, calibrate_distance=False):
+    def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=10, calibrate_distance=False):
         self.motor = motor
         self._defaul_move_speed = default_move_speed
         self.vision = vision
+        self.solver = solver
 
         motor.enable()
 
@@ -163,7 +159,7 @@ class CubertActions:
 
         # Find cube solution
         print("Finding solution")
-        solution = solver.get3x3Solution(cubeState)
+        solution = self.solver.get3x3Solution(cubeState)
         print("Found solution")
         print(solution)
         print()
@@ -175,7 +171,7 @@ class CubertActions:
         
         # Translate solution
         print("Translating to cubertish")
-        cubertSolution = solver.cubertify(solution)
+        cubertSolution = self.solver.cubertify(solution)
         print("Translated to cubertish")
         print(cubertSolution)
         print()
@@ -185,7 +181,7 @@ class CubertActions:
         for move in cubertSolution:
             if move == 'X':
                 self.flip()
-                
+
             elif move == 'y':
                 self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
 
