@@ -1,7 +1,7 @@
 import time
 from picamera import PiCamera
 from picamera.array import PiRGBArray
-import cv2 as cv
+from cv2 import imwrite, imread, resize, cvtColor, COLOR_BGR2HSV, COLOR_HSV2BGR, COLOR_BGR2RGB
 import numpy as np
 import os
 import glob
@@ -36,11 +36,11 @@ class CubertVision:
 
     def writeImages(self, colours, outPath):
         for i in range(colours.shape[0]):
-            cv.imwrite(outPath + f'{i}.png', colours[i])
+            imwrite(outPath + f'{i}.png', colours[i])
         return
 
     def writeImage(self, fileName, image):
-        cv.imwrite(self.imagesFolder + fileName, image)
+        imwrite(self.imagesFolder + fileName, image)
 
     def getImage(self):
         size = tuple(list(self.resolution) + [3])
@@ -48,7 +48,7 @@ class CubertVision:
         image = np.empty(size, dtype=np.uint8)
         camera.capture(image, 'rgb')
 
-        image = cv.resize(image, self.resize)
+        image = resize(image, self.resize)
 
         return image
 
@@ -80,15 +80,15 @@ class CubertVision:
         return np.full((height, width, 3), 1, dtype=np.uint8)
 
     def loadMask(self, maskPath):
-        imageMask = cv.imread(maskPath)
+        imageMask = imread(maskPath)
         imageMask = imageMask.astype(np.uint8)
         imageMask[imageMask != 255] = 0
         imageMask[imageMask == 255] = 1
-        imageMask = cv.resize(imageMask, self.resize)
+        imageMask = resize(imageMask, self.resize)
         self.mask = imageMask
 
     def getAutoMask(self, rgbCube, min, max):
-        hsvCube = cv.cvtColor(rgbCube, cv.COLOR_BGR2HSV)
+        hsvCube = cvtColor(rgbCube, COLOR_BGR2HSV)
         autoMask = np.full(hsvCube.shape, 1, dtype=np.uint8)
 
         autoMask[hsvCube[:, :, 2] <= min] = np.array([0, 0, 0])
@@ -97,7 +97,7 @@ class CubertVision:
         return autoMask
 
     def loadCube(self, imagePath):
-        return cv.imread(imagePath)
+        return imread(imagePath)
         
     def crop(self, image, y, x, height, width=-1):
         if(width == -1):
@@ -128,8 +128,8 @@ class CubertVision:
                 os.remove(f)
 
         rgbCube = rgbCube.astype(np.uint8)
-        hsv = cv.cvtColor(rgbCube, cv.COLOR_BGR2HSV)
-        rgb = cv.cvtColor(rgbCube, cv.COLOR_BGR2RGB)
+        hsv = cvtColor(rgbCube, COLOR_BGR2HSV)
+        rgb = cvtColor(rgbCube, COLOR_BGR2RGB)
 
         height = rgbCube.shape[0]
         width = rgbCube.shape[1]
@@ -340,13 +340,13 @@ class CubertVision:
 
         # Write results
         if writeOutput:
-            cv.imwrite(outPath + 'output.png', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
-            cv.imwrite(outPath + 'input.png', rgbCube)
-            cv.imwrite(outPath + 'mask.png', imageMask * 255)
-            cv.imwrite(outPath + 'masked.png', rgbCube * imageMask)
-            cv.imwrite(outPath + 'maskedRegions.png', regionsImage)
+            imwrite(outPath + 'output.png', cvtColor(outImage, COLOR_HSV2BGR))
+            imwrite(outPath + 'input.png', rgbCube)
+            imwrite(outPath + 'mask.png', imageMask * 255)
+            imwrite(outPath + 'masked.png', rgbCube * imageMask)
+            imwrite(outPath + 'maskedRegions.png', regionsImage)
 
-        outImage = cv.cvtColor(outImage, cv.COLOR_HSV2BGR)
+        outImage = cvtColor(outImage, COLOR_HSV2BGR)
         return solution, outImage
 
 # if __name__ == '__main__':
