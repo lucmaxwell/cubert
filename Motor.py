@@ -101,7 +101,7 @@ class CubertMotor:
     _steps_per_mm       = -1
     _steps_from_bottom  = -1
     _steps_total_travel = -2
-    _steps_to_close     = 400
+    _steps_to_close     = 375
 
     _current_gripper_pos    = GripperPosition.UNKNOWN
     _current_hand_state     = HandState.UNKOWN
