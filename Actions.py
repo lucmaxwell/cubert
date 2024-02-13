@@ -36,40 +36,6 @@ def sigint_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
-def getAllImages(writeConsole=False):
-    combinedShape = list(vision.resize)
-    combinedShape[1] = combinedShape[1] * 6
-    combinedShape = tuple(combinedShape)
-    height = combinedShape[0]
-
-    combinedImage = np.zeros(combinedShape, np.uint8)
-    combinedMask = np.zeros(combinedShape, np.uint8)
-
-    for i in range(6):
-        
-        img = vision.getImage()
-
-        if i == 0 or i == 1 or i == 2:
-            CubertActions.flip()
-        elif i == 3:
-            CubertActions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-            CubertActions.flip()
-            CubertActions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
-        elif i == 4:
-            CubertActions.flip()
-            CubertActions.flip()
-
-        combinedImage[0:height, i*height:(i+1)*height, 0:3] = img
-        combinedMask[0:height, i*height:(i+1)*height, 0:3] = vision.mask
-        
-        if(writeConsole):
-            print("Cube rotated, waiting 2 seconds for camera to stabilize")
-
-        if(i != 5):
-            time.sleep(2)
-
-    return combinedImage, combinedMask
-
 class CubertActions:
 
     _defaul_move_speed = 40
@@ -139,24 +105,58 @@ class CubertActions:
             self.flip()
             self.rotateFace(rotation, Motor.Direction.CW, move_speed)
 
+    def getAllImages(self, writeConsole=False):
+        combinedShape = list(vision.resize)
+        combinedShape[1] = combinedShape[1] * 6
+        combinedShape = tuple(combinedShape)
+        height = combinedShape[0]
+
+        combinedImage = np.zeros(combinedShape, np.uint8)
+        combinedMask = np.zeros(combinedShape, np.uint8)
+
+        for i in range(6):
+            
+            img = self.vision.getImage()
+
+            if i == 0 or i == 1 or i == 2:
+                CubertActions.flip()
+            elif i == 3:
+                CubertActions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+                CubertActions.flip()
+                CubertActions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+            elif i == 4:
+                CubertActions.flip()
+                CubertActions.flip()
+
+            combinedImage[0:height, i*height:(i+1)*height, 0:3] = img
+            combinedMask[0:height, i*height:(i+1)*height, 0:3] = vision.mask
+            
+            if(writeConsole):
+                print("Cube rotated, waiting 2 seconds for camera to stabilize")
+
+            if(i != 5):
+                time.sleep(2)
+
+        return combinedImage, combinedMask
+
     def solve(self, writeImages=False):
         print(f"Starting cube solving sequence")
 
         # Take images
         print("Taking images")
-        cube, mask = getAllImages(True)
+        cube, mask = self.getAllImages(True)
 
         # Write output images
         if(writeImages):
-            vision.writeImage("testingImage.png", cube)
-            vision.writeImage("testingmask.png", mask)
+            self.vision.writeImage("testingImage.png", cube)
+            self.vision.writeImage("testingmask.png", mask)
 
         print("Images taken")
         print()
         
         # Find cube state
         print("Finding cube state")
-        cubeState, outImage = vision.getCubeState(cube, mask, 3, 18, True)
+        cubeState, outImage = self.vision.getCubeState(cube, mask, 3, 18, True)
         print("Got cube state")
         print(cubeState)
         print()
@@ -183,27 +183,26 @@ class CubertActions:
         # Send instructions
         print("Sending instructions")
         for move in cubertSolution:
-            match move:
-                case 'X':
-                    self.flip()
+            if move == 'X':
+                self.flip()
+                
+            elif move == 'y':
+                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
 
-                case 'y':
-                    self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+            elif move == 'Y':
+                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
 
-                case 'Y':
-                    self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
-
-                case 'P':
-                    self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
-                    
-                case 'b':
-                    self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-                    
-                case 'B':
-                    self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
-                    
-                case 'b':
-                    self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW)
+            elif move == 'P':
+                self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
+                
+            elif move == 'b':
+                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+                
+            elif move == 'B':
+                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+                
+            elif move == 'b':
+                self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW)
                     
         print("Cube should be solved")
 
