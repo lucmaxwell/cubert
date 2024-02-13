@@ -25,6 +25,8 @@ class CubertVision:
 
         # Camera parameters
         self.camera.resolution = self.resolution
+        self.camera.awb_mode = 'off'
+        self.camera.awb_gains = (407/256, 311/256)
 
         # Allow the camera to startup
         time.sleep(2)
@@ -34,9 +36,9 @@ class CubertVision:
     def capture(self):
         self.camera.capture("./image.jpg")
 
-    def writeImages(self, colours, outPath):
+    def writeImages(self, colours):
         for i in range(colours.shape[0]):
-            cv.imwrite(outPath + f'{i}.png', colours[i])
+            cv.imwrite(self.imagesFolder + f'{i}.png', colours[i])
         return
 
     def writeImage(self, fileName, image):
@@ -107,25 +109,19 @@ class CubertVision:
         
         return image[y:y+height, x:x+width, :]
 
-    def getCubeState(self, rgbCube, mask, cubeletsVertical, cubeletsHorizontal, writeOutput=False, useOriginalAlgorithm=False, facesInImage=6): 
+    def getCubeState(self, rgbCube, mask, cubeletsVertical, cubeletsHorizontal, writeOutput=False, facesInImage=6): 
         # Parameters
         clearOutputDirectory = False
         edgeLength = cubeletsHorizontal
         edgeHeight = cubeletsVertical
         numColours = 6
 
-        useCentreCorrection = True
-
-        # Kind of also parameters but not really
-        basePath = os.getcwd() + "/CubeStateDetection/vision/"
-        outPath = basePath + "output/"
-
         # Create/clean output folder
-        if not os.path.exists(outPath):
-            os.makedirs(outPath)
+        if not os.path.exists(self.imagesFolder):
+            os.makedirs(self.imagesFolder)
 
         if clearOutputDirectory:
-            files = glob.glob(outPath + '*')
+            files = glob.glob(self.imagesFolder + '*')
             for f in files:
                 os.remove(f)
 
@@ -172,189 +168,118 @@ class CubertVision:
             colours[i][maskedPixels] = 0
 
         if writeOutput:
-            self.writeImages(colours, outPath)
+            self.writeImages(colours)
 
-        #############################################
-        # Vision V1
-        #############################################
+        # Solve the cube
+        solution = np.zeros((edgeHeight, edgeLength), dtype=np.uint8)
+        # outImage = np.zeros((edgeHeight, edgeLength, 3), dtype='uint8')
 
-        if useOriginalAlgorithm:
-            # Solve the cube
-            solution = np.zeros((edgeHeight, edgeLength), dtype=np.uint8)
-            outImage = np.zeros((edgeHeight, edgeLength, 3), dtype='uint8')
-            regionsImage = np.zeros((height, width, 3), dtype='uint8')
+        outOffset = hsv.shape[0]
+        outImage = np.zeros((hsv.shape[0] * 2, hsv.shape[1], hsv.shape[2]), dtype='uint8')
+        outImage[0:outOffset, 0:] = hsv
 
-            # Centre correction requires some tracking
-            if useCentreCorrection:
-                centreCounts = np.zeros((6, 6), dtype=np.int32)
-                centreIndicies = np.array([1, 4, 7, 10, 13, 16])
+        regionsImage = np.zeros((height, width, 3), dtype='uint8')
 
-            for i in range(edgeHeight):
-                for j in range(edgeLength):
+        # Get the pixel count of all numColours colours for each cubelet
+        pixelCounts = np.zeros((edgeHeight, edgeLength, numColours), dtype=np.int32)
+        for i in range(edgeHeight):
+            for j in range(edgeLength):
 
-                    # Mask off one of the squares on the cube face
-                    mask = np.zeros((height, width), dtype='uint8')
-                    mask[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = 255
+                # Mask off one of the squares on the cube face
+                mask = np.zeros((height, width), dtype='uint8')
+                mask[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = 255
 
-                    # Mask off pixels from the pixels from the image mask
-                    mask[maskedPixels] = 0
+                # Mask off pixels from the pixels from the image mask
+                mask[maskedPixels] = 0
 
-                    # Find the colour that has the most pixels in that area
-                    id = stats.mode(labels[mask == 255]).mode
+                # Track the centre stats for centre correction
+                for k in range(numColours):
+                    pixelCounts[i, j, k] = (labels[mask == 255] == k).sum()
+        
+        # Total number of centres, corners, and edges on each face of the cube
+        maxCentres = 1
+        maxCorners = 4
+        maxEdges = edgeHeight * (edgeLength // facesInImage) - maxCentres - maxCorners
 
-                    # Track the centre stats for centre correction
-                    if(i == 1 and j in centreIndicies and useCentreCorrection):
-                        index = (np.where(centreIndicies == j))[0][0]
-                        for k in range(6):
-                            centreCounts[index, k] = (labels[mask == 255] == k).sum()
+        # These arrays contain the number of cubelets left to be assigned
+        # When they reach 0 there are no more cubelets of that colour in that position remaining
+        centreCounts = np.zeros(numColours,dtype=np.int32)
+        edgeCounts = np.zeros(numColours, dtype=np.int32)
+        cornerCounts = np.zeros(numColours, dtype=np.int32)
 
-                    solution[i][j] = id
-                    # print(f"({i}, {j}): {id}")
+        centres = np.zeros((edgeHeight, edgeLength), dtype=np.uint32)
+        edges = np.zeros((edgeHeight, edgeLength), dtype=np.uint32)
+        corners = np.zeros((edgeHeight, edgeLength), dtype=np.uint32)
+
+        # Centres and corners are defined by having special positions 
+        centre = np.floor(edgeHeight/2)
+        corner = [0, edgeHeight-1]
+
+        # Label all the cubelets centre, corner, or edge
+        for i in range(edgeHeight):
+            for j in range(edgeLength):
+                if(i == centre and (j % edgeHeight) == centre):
+                    # print(f"Centre i:{i}, j:{j}")
+                    centres[i, j] = 1
+                elif(i in corner and (j % edgeHeight) in corner):
+                    corners[i, j] = 1  
+                    # print(f"Corner i:{i}, j:{j}")
+                else:
+                    edges[i, j] = 1
+                    # print(f"Edge i:{i}, j:{j}")
+                
+        # Solve the cube
+        for i in range(edgeHeight):
+            for j in range(edgeLength):
+                colourCount = 0
+                maxCount = -1
+
+                while colourCount > maxCount:
+                    # Find the cubelet that is most confident in its colour
+                    highest = np.unravel_index(pixelCounts.argmax(), pixelCounts.shape)
                     
-                    # Output
-                    regionsImage[mask != 0] = [255/edgeHeight * i, 255/edgeLength * j, 255]
-                    outImage[i, j] = colours_pred[id]
+                    y = highest[0]
+                    x = highest[1]
+                    colour = highest[2]
 
-            # Apply the centre correction
-            if(useCentreCorrection):
-                results = np.full(6, -1, dtype=np.int16)
-                for i in range(6):
-                    winner = results[0] # There is no do-while loop in python so instead do this to make the while condition always fail
-
-                    while winner in results:
-                        highest = np.unravel_index(centreCounts.argmax(), centreCounts.shape)
-                        centreCounts[highest] = -1
-                        centreNum = highest[0]
-                        winner = highest[1]
-
-                    results[i] = winner
-                    centreCounts[highest[0]] = [-1, -1, -1, -1, -1, -1]
-                    solution[1][1 + 3*centreNum] = winner
-                    outImage[1, 1 + 3*centreNum] = colours_pred[winner]
-
-        #############################################
-        # Vision V2
-        #############################################
-
-        else:
-            # Solve the cube
-            solution = np.zeros((edgeHeight, edgeLength), dtype=np.uint8)
-            # outImage = np.zeros((edgeHeight, edgeLength, 3), dtype='uint8')
-
-            outOffset = hsv.shape[0]
-            outImage = np.zeros((hsv.shape[0] * 2, hsv.shape[1], hsv.shape[2]), dtype='uint8')
-            outImage[0:outOffset, 0:] = hsv
-
-            regionsImage = np.zeros((height, width, 3), dtype='uint8')
-
-            # Get the pixel count of all numColours colours for each cubelet
-            pixelCounts = np.zeros((edgeHeight, edgeLength, numColours), dtype=np.int32)
-            for i in range(edgeHeight):
-                for j in range(edgeLength):
-
-                    # Mask off one of the squares on the cube face
-                    mask = np.zeros((height, width), dtype='uint8')
-                    mask[(height//edgeHeight) * i:(height//edgeHeight) * (i+1), (width//edgeLength)*j:(width//edgeLength)*(j+1)] = 255
-
-                    # Mask off pixels from the pixels from the image mask
-                    mask[maskedPixels] = 0
-
-                    # Track the centre stats for centre correction
-                    for k in range(numColours):
-                        pixelCounts[i, j, k] = (labels[mask == 255] == k).sum()
-            
-            # Total number of centres, corners, and edges on each face of the cube
-            maxCentres = 1
-            maxCorners = 4
-            maxEdges = edgeHeight * (edgeLength // facesInImage) - maxCentres - maxCorners
-
-            # These arrays contain the number of cubelets left to be assigned
-            # When they reach 0 there are no more cubelets of that colour in that position remaining
-            centreCounts = np.zeros(numColours,dtype=np.int32)
-            edgeCounts = np.zeros(numColours, dtype=np.int32)
-            cornerCounts = np.zeros(numColours, dtype=np.int32)
-
-            centres = np.zeros((edgeHeight, edgeLength), dtype=np.uint32)
-            edges = np.zeros((edgeHeight, edgeLength), dtype=np.uint32)
-            corners = np.zeros((edgeHeight, edgeLength), dtype=np.uint32)
-
-            # Centres and corners are defined by having special positions 
-            centre = np.floor(edgeHeight/2)
-            corner = [0, edgeHeight-1]
-
-            # Label all the cubelets centre, corner, or edge
-            for i in range(edgeHeight):
-                for j in range(edgeLength):
-                    if(i == centre and (j % edgeHeight) == centre):
-                        # print(f"Centre i:{i}, j:{j}")
-                        centres[i, j] = 1
-                    elif(i in corner and (j % edgeHeight) in corner):
-                        corners[i, j] = 1  
-                        # print(f"Corner i:{i}, j:{j}")
+                    # Determine if this cubelet is a centre, corner, or edge 
+                    # (determine its position)
+                    if(centres[y, x] == 1):
+                        position = centres
+                        maxCount = maxCentres
+                        counts = centreCounts    
+                        # print(f"Centre y:{y}, x:{x}")
+                    elif(corners[y, x] == 1):
+                        position = corners
+                        maxCount = maxCorners
+                        counts = cornerCounts    
+                        # print(f"Corner y:{y}, x:{x}")
                     else:
-                        edges[i, j] = 1
-                        # print(f"Edge i:{i}, j:{j}")
-                    
-            # Solve the cube
-            for i in range(edgeHeight):
-                for j in range(edgeLength):
-                    colourCount = 0
-                    maxCount = -1
+                        position = edges
+                        maxCount = maxEdges
+                        counts = edgeCounts
+                        # print(f"Edge y:{y}, x:{x}")
 
-                    while colourCount > maxCount:
-                        # Find the cubelet that is most confident in its colour
-                        highest = np.unravel_index(pixelCounts.argmax(), pixelCounts.shape)
-                        
-                        y = highest[0]
-                        x = highest[1]
-                        colour = highest[2]
+                    counts[colour] += 1
+                    colourCount = counts[colour]
 
-                        # Determine if this cubelet is a centre, corner, or edge 
-                        # (determine its position)
-                        if(centres[y, x] == 1):
-                            position = centres
-                            maxCount = maxCentres
-                            counts = centreCounts    
-                            # print(f"Centre y:{y}, x:{x}")
-                        elif(corners[y, x] == 1):
-                            position = corners
-                            maxCount = maxCorners
-                            counts = cornerCounts    
-                            # print(f"Corner y:{y}, x:{x}")
-                        else:
-                            position = edges
-                            maxCount = maxEdges
-                            counts = edgeCounts
-                            # print(f"Edge y:{y}, x:{x}")
-
-                        counts[colour] += 1
-                        colourCount = counts[colour]
-
-                        # Remove all of this colour at this position if there's been too many
-                        if(counts[colour] >= maxCount):
-                            pixelCounts[position == 1, colour] = np.full(maxCount * facesInImage, -1)
-                    
-                    # Remove this cubelet's pixel counts, save this cubelet's colour
-                    pixelCounts[y, x] = np.full(numColours, -1)
-                    solution[y, x] = colour
-                    # outImage[y, x] = colours_pred[colour]                
-                    outImage[outOffset + y*(hsv.shape[0] // cubeletsVertical):outOffset + (y+1)*(hsv.shape[0] // cubeletsVertical), x * (hsv.shape[1] // cubeletsHorizontal): (x+1) * (hsv.shape[1] // cubeletsHorizontal)] = colours_pred[colour]                
+                    # Remove all of this colour at this position if there's been too many
+                    if(counts[colour] >= maxCount):
+                        pixelCounts[position == 1, colour] = np.full(maxCount * facesInImage, -1)
+                
+                # Remove this cubelet's pixel counts, save this cubelet's colour
+                pixelCounts[y, x] = np.full(numColours, -1)
+                solution[y, x] = colour
+                # outImage[y, x] = colours_pred[colour]                
+                outImage[outOffset + y*(hsv.shape[0] // cubeletsVertical):outOffset + (y+1)*(hsv.shape[0] // cubeletsVertical), x * (hsv.shape[1] // cubeletsHorizontal): (x+1) * (hsv.shape[1] // cubeletsHorizontal)] = colours_pred[colour]                
 
         # Write results
         if writeOutput:
-            cv.imwrite(outPath + 'output.png', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
-            cv.imwrite(outPath + 'input.png', rgbCube)
-            cv.imwrite(outPath + 'mask.png', imageMask * 255)
-            cv.imwrite(outPath + 'masked.png', rgbCube * imageMask)
-            cv.imwrite(outPath + 'maskedRegions.png', regionsImage)
+            cv.imwrite(self.imagesFolder + 'output.png', cv.cvtColor(outImage, cv.COLOR_HSV2BGR))
+            cv.imwrite(self.imagesFolder + 'input.png', rgbCube)
+            cv.imwrite(self.imagesFolder + 'usedMask.png', imageMask * 255)
+            cv.imwrite(self.imagesFolder + 'masked.png', rgbCube * imageMask)
+            cv.imwrite(self.imagesFolder + 'maskedRegions.png', regionsImage)
 
         outImage = cv.cvtColor(outImage, cv.COLOR_HSV2BGR)
         return solution, outImage
-
-# if __name__ == '__main__':
-#     vision = CubertVision()
-
-#     vision.capture()
-#     vision.camera.start_preview()
-#     plt.image_plot("./image.jpg")
-#     plt.show()
