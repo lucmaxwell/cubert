@@ -45,10 +45,8 @@ class CubertVision:
     def getImage(self):
         size = (self.resolution[1], self.resolution[0], 3)
 
-        # self.camera.capture("./image.jpg")
-        # image = cv.imread("./image.jpg")
         image = np.empty(size, dtype=np.uint8)
-        self.camera.capture(image, 'rgb')
+        self.camera.capture(image, 'bgr')
         self.writeImage("0 original.png", image)
 
         image = cv.resize(image, self.lowerResolution)
