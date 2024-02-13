@@ -33,7 +33,7 @@ def sigint_handler(sig, frame):
 
 class CubertActions:
 
-    _defaul_move_speed = 80
+    _defaul_move_speed = 50
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=10, calibrate_distance=False):
         self.motor = motor
@@ -134,7 +134,7 @@ class CubertActions:
                 print("Cube rotated, waiting 2 seconds for camera to stabilize")
 
             if(i != 5):
-                time.sleep(2)
+                time.sleep(0.5)
 
         return combinedImage, combinedMask
 
@@ -170,7 +170,6 @@ class CubertActions:
         # Abort if the solver had an error
         if(solution.startswith("Error: ")):
             print("Aborting solution attempt")
-            self.zen(100)
             return
         
         # Translate solution
