@@ -115,14 +115,14 @@ class CubertActions:
             img = self.vision.getImage()
 
             if i == 0 or i == 1 or i == 2:
-                self.flip()
+                self.flip(10)
             elif i == 3:
                 self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-                self.flip()
+                self.flip(10)
                 self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
             elif i == 4:
-                self.flip()
-                self.flip()
+                self.flip(10)
+                self.flip(10)
 
             combinedImage[0:height, i*height:(i+1)*height, 0:3] = img
             combinedMask[0:height, i*height:(i+1)*height, 0:3] = self.vision.mask
