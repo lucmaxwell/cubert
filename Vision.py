@@ -14,7 +14,7 @@ import plotext as plt
 class CubertVision:
 
     resolution = (64, 48)
-    lowerResolution = (45, 45, 3)
+    lowerResolution = (45, 45)
     mask = np.full(lowerResolution, 1, dtype=np.uint8)
 
     imagesFolder = "./images/"
