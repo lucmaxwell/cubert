@@ -167,6 +167,7 @@ class CubertActions:
         # Abort if the solver had an error
         if(solution.startswith("Error: ")):
             print("Aborting solution attempt")
+            self.solve(True)
             return
         
         # Translate solution
