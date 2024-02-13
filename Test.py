@@ -8,6 +8,7 @@ import RPi.GPIO as GPIO
 import sys
 import numpy as np
 import plotext as plt
+import Vision
 
 # Motor Pins
 motor_en_pin = 26
@@ -24,6 +25,8 @@ sensor = CubertCurrentSensor()
 motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin, sensor)
 
 actions = CubertActions(motor)
+
+vision = Vision.CubertVision()
 
 light_on = False
 
@@ -75,39 +78,7 @@ def sigint_handler(sig, frame):
 if __name__ == '__main__':
     print("Running Test Sciprt")
 
-    signal.signal(signal.SIGINT, sigint_handler)
-
-    # motor.spinBase(BaseRotation.QUARTER, Direction.CCW, 50)
-    motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
-
-    time.sleep(5)
-
-    currentThread.start()
-    
-    # motor.moveGripperToPos(GripperPosition.TOP, 50)
-    # motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
-    # motor.moveGripperToPos(GripperPosition.MIDDLE, 50)
-
-
-
-    motor.moveGripper(400, GripperDirection.CLOSE)
-    # motor.spinBase(BaseRotation.FULL, Direction.CCW, 1)
-
-    time.sleep(0.001)
-
-    _run_thread_1 = False
-
-    currentThread.join()
-
-    # plot stuff
-    plt.scatter(np.array(current_left), label="Left Motor")
-    plt.scatter(np.array(current_right), label="Right Motor")
-    plt.show()
-
-    _run_thread_1 = False
-
-    currentThread.join()
-    baseThread.join()
+    actions.solve(True)
 
     del actions
     del motor

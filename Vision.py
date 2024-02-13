@@ -12,64 +12,47 @@ import plotext as plt
 
 
 class CubertVision:
+
+    resolution = (60, 45)
+    resize = (45, 45, 3)
+    mask = np.full(resize, 1, dtype=np.uint8)
+
+    imagesFolder = "./images/"
+    maskName = "mask.png"
+
     def __init__(self):
         self.camera = PiCamera()
 
         # Camera parameters
-        self.camera.resolution = (60, 45)
+        self.camera.resolution = self.resolution
 
         # Allow the camera to startup
         time.sleep(2)
 
+        # self.mask = self.loadMask(imagesFolder + maskName)
+
     def capture(self):
         self.camera.capture("./image.jpg")
 
-    def check_red_stripe(image, aoi):
-        # Crop to the Area of Interest (AOI)
-        x, y, w, h = aoi
-        cropped_image = image[y:y + h, x:x + w]
-
-        # Convert to HSV color space
-        hsv = cv.cvtColor(cropped_image, cv.COLOR_BGR2HSV)
-
-        # Define range for red color
-        lower_red = np.array([0, 120, 70])
-        upper_red = np.array([10, 255, 255])
-        lower_red2 = np.array([170, 120, 70])
-        upper_red2 = np.array([180, 255, 255])
-
-        # Create a mask for red color
-        mask1 = cv.inRange(hsv, lower_red, upper_red)
-        mask2 = cv.inRange(hsv, lower_red2, upper_red2)
-        mask = mask1 + mask2
-
-        # Check if there is a red stripe in the middle of the AOI
-        height, width = cropped_image.shape[:2]
-        middle = height // 2
-        tolerance = 10  # Adjust tolerance for the thickness of the stripe
-
-        # Extract the middle section of the mask
-        middle_section = mask[middle - tolerance:middle + tolerance, :]
-
-        # Check if there's a significant amount of red in the middle section
-        if np.sum(middle_section) > (tolerance * width * 255 * 0.5):  # 50% red in the stripe area
-            return True
-        else:
-            return False
-
-
-    def writeImages(colours, outPath):
+    def writeImages(self, colours, outPath):
         for i in range(colours.shape[0]):
             cv.imwrite(outPath + f'{i}.png', colours[i])
         return
 
-    def getImage(url):
-        req = urllib.request.urlopen(url)
-        arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
-        img = cv.imdecode(arr, -1) # 'Load it as it is'
-        return img
+    def writeImage(self, fileName, image):
+        cv.imwrite(self.imagesFolder + fileName, image)
 
-    def hsvToXyz(hue, saturation, value):
+    def getImage(self):
+        size = tuple(list(self.resolution) + [3])
+
+        image = np.empty(size, dtype=np.uint8)
+        camera.capture(image, 'rgb')
+
+        image = cv.resize(image, self.resize)
+
+        return image
+
+    def hsvToXyz(self, hue, saturation, value):
         x = np.zeros(hue.size)
         y = np.zeros(hue.size)
         z = np.zeros(hue.size)
@@ -80,7 +63,7 @@ class CubertVision:
         
         return np.array([x, y, z]).T
 
-    def xyzToHsv(x, y, z):
+    def xyzToHsv(self, x, y, z):
         val = z
         hue = np.arctan2(x, y)
         
@@ -91,19 +74,20 @@ class CubertVision:
         
         return np.array([hue, sat, val]).T
 
-    def getBlankMask(height, width=-1):
+    def getBlankMask(self, height, width=-1):
         if(width == -1):
             width = height
         return np.full((height, width, 3), 1, dtype=np.uint8)
 
-    def loadMask(maskPath):
+    def loadMask(self, maskPath):
         imageMask = cv.imread(maskPath)
         imageMask = imageMask.astype(np.uint8)
         imageMask[imageMask != 255] = 0
         imageMask[imageMask == 255] = 1
-        return imageMask
+        imageMask = cv.resize(imageMask, self.resize)
+        self.mask = imageMask
 
-    def getAutoMask(rgbCube, min, max):
+    def getAutoMask(self, rgbCube, min, max):
         hsvCube = cv.cvtColor(rgbCube, cv.COLOR_BGR2HSV)
         autoMask = np.full(hsvCube.shape, 1, dtype=np.uint8)
 
@@ -112,16 +96,16 @@ class CubertVision:
 
         return autoMask
 
-    def loadCube(imagePath):
+    def loadCube(self, imagePath):
         return cv.imread(imagePath)
         
-    def crop(image, y, x, height, width=-1):
+    def crop(self, image, y, x, height, width=-1):
         if(width == -1):
             width = height
         
         return image[y:y+height, x:x+width, :]
 
-    def getCubeState(rgbCube, mask, cubeletsVertical, cubeletsHorizontal, writeOutput=False, useOriginalAlgorithm=False, facesInImage=6): 
+    def getCubeState(self, rgbCube, mask, cubeletsVertical, cubeletsHorizontal, writeOutput=False, useOriginalAlgorithm=False, facesInImage=6): 
         # Parameters
         clearOutputDirectory = False
         edgeLength = cubeletsHorizontal
@@ -365,20 +349,10 @@ class CubertVision:
         outImage = cv.cvtColor(outImage, cv.COLOR_HSV2BGR)
         return solution, outImage
 
-if __name__ == '__main__':
-    vision = CubertVision()
+# if __name__ == '__main__':
+#     vision = CubertVision()
 
-    vision.capture()
-    vision.camera.start_preview()
-    plt.image_plot("./image.jpg")
-    plt.show()
-
-
-    # Capture image
-    # vision.camera.capture(vision.rawCapture, format="bgr")
-    # image = vision.rawCapture.array
-
-    # Check for red stripe
-    # result = vision.check_red_stripe(image)
-    # print("Red stripe in the middle:", result)
-    
+#     vision.capture()
+#     vision.camera.start_preview()
+#     plt.image_plot("./image.jpg")
+#     plt.show()
