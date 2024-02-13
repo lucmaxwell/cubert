@@ -202,7 +202,7 @@ class CubertActions:
                     
         print("Cube should be solved")
 
-    def flip(self, move_speed=10):
+    def flip(self, move_speed=_defaul_move_speed):
         self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM, move_speed)
         self.motor.closeHand()
         self.motor.moveGripperToPos(Motor.GripperPosition.TOP, move_speed)

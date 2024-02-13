@@ -17,10 +17,16 @@ class Solver:
 
     def get3x3Solution(self, imageArray, verbose=False):
         # imageToString at index i has the index of where the colour at index i belongs in the cubeString
+        # imageToString = np.array(
+        #     [[45, 46, 47, 9, 10, 11, 18, 19, 20, 36, 37, 38, 2, 5, 8, 29, 32, 35],
+        #     [48, 49, 50, 12, 13, 14, 21, 22, 23, 39, 40, 41, 1, 4, 7, 28, 31, 34],
+        #     [51, 52, 53, 15, 16, 17, 24, 25, 26, 42, 43, 44, 0, 3, 6, 27, 30, 33]])
+        
+        # flipped 180 for the new camera
         imageToString = np.array(
-            [[45, 46, 47, 9, 10, 11, 18, 19, 20, 36, 37, 38, 2, 5, 8, 29, 32, 35],
-            [48, 49, 50, 12, 13, 14, 21, 22, 23, 39, 40, 41, 1, 4, 7, 28, 31, 34],
-            [51, 52, 53, 15, 16, 17, 24, 25, 26, 42, 43, 44, 0, 3, 6, 27, 30, 33]])
+            [[53, 52, 51, 17, 16, 15, 26, 25, 24, 44, 43, 42, 6, 3, 0, 33, 30, 27],
+             [50, 49, 48, 14, 13, 12, 23, 22, 21, 41, 40, 39, 7, 4, 1, 34, 31, 28],
+             [47, 46, 45, 11, 10,  9, 20, 19, 18, 38, 37, 36, 8, 5, 2, 35, 32, 29]])
 
         # These next lines flip imageToString such that at index i, imageToString contains the index that should be at index i in cubeString 
         flat = imageToString.flatten()
