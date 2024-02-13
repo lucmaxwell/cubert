@@ -43,16 +43,14 @@ class CubertVision:
         cv.imwrite(self.imagesFolder + fileName, image)
 
     def getImage(self):
-        # size = tuple(list(self.resolution) + [3])
+        size = (self.resolution[1], self.resolution[0], 3)
 
-        self.camera.capture("./image.jpg")
-        image = cv.imread("./image.jpg")
-        # image = np.empty((), dtype=np.uint8)
-        # self.camera.capture(image, 'rgb')
+        image = np.empty(size, dtype=np.uint8)
+        self.camera.capture(image, 'bgr')
         self.writeImage("0 original.png", image)
 
         image = cv.resize(image, self.lowerResolution)
-        self.writeImage("1 cv.resized.png", image)
+        self.writeImage("1 resized.png", image)
 
         return image
 

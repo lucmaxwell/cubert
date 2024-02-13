@@ -81,7 +81,7 @@ class CubertMotor:
     _DISTANCE_AT_BOTTOM     = 14.20
     _DISTANCE_AT_TOP        = 64.22
 
-    _DEFAULT_MOVE_SPEED     = 40
+    _DEFAULT_MOVE_SPEED     = 80
     _DEFAULT_SPEED_UP_FRAC  = 0.10
 
     _TOLERANCE              = 1 # Tolerance in steps for determining gripper location
@@ -101,7 +101,7 @@ class CubertMotor:
     _steps_per_mm       = -1
     _steps_from_bottom  = -1
     _steps_total_travel = -2
-    _steps_to_close     = 330
+    _steps_to_close     = 400
 
     _current_gripper_pos    = GripperPosition.UNKNOWN
     _current_hand_state     = HandState.UNKOWN

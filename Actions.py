@@ -33,7 +33,7 @@ def sigint_handler(sig, frame):
 
 class CubertActions:
 
-    _defaul_move_speed = 40
+    _defaul_move_speed = 80
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=10, calibrate_distance=False):
         self.motor = motor
