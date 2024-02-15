@@ -241,8 +241,10 @@ class CubertActions:
 
         if self._cube_face_spun:
             # the Noah manuever
+            self.motor.closeHand()
             self.motor.moveBaseDegrees(30, Motor.Direction.CCW)
             self.motor.moveBaseDegrees(30, Motor.Direction.CW)
+            self.motor.openHand()
 
     def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=False):
         """
