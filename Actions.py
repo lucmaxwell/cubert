@@ -244,7 +244,8 @@ class CubertActions:
             self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
             self.motor.closeHand()
             self.motor.moveBaseDegrees(30, Motor.Direction.CCW)
-            self.motor.moveBaseDegrees(30, Motor.Direction.CW)
+            self.motor.moveBaseDegrees(45, Motor.Direction.CW)
+            self.motor.moveBaseDegrees(15, Motor.Direction.CCW)
             self.motor.openHand()
 
             self._cube_face_spun = False
