@@ -241,6 +241,7 @@ class CubertActions:
 
         if self._cube_face_spun:
             # the Noah manuever
+            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
             self.motor.closeHand()
             self.motor.moveBaseDegrees(30, Motor.Direction.CCW)
             self.motor.moveBaseDegrees(30, Motor.Direction.CW)
