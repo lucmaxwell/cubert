@@ -11,6 +11,7 @@ import Solver
 import numpy as np
 
 class CubertNotation(IntEnum):
+    """List of Face Spins"""
     BOTTOM_CW   = 0
     BOTTOM_CCW  = 1
     TOP_CW      = 2
@@ -24,28 +25,45 @@ class CubertNotation(IntEnum):
     RIGHT_CW    = 10
     RIGHT_CCW   = 11
 
-def sigint_handler(sig, frame):
-    del actions
-    del motor
-
-    GPIO.cleanup()
-    sys.exit(0)
-
 class CubertActions:
 
-    _defaul_move_speed = 75
+    _defaul_move_speed  = 75        # Default motor speed
+    _cube_face_spun     = False     # tracks if cube state was spun recently
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=10, calibrate_distance=False):
+        """
+        Purpose: Setup CubertAction Class
+
+        Inputs:
+            - motor:                CubertMotor to enable actuation
+            - vision:               CubertVision module to process images
+            - solver:               Solver module to determine solution
+            - default_move_speed:   To update default move speed
+            - calibrate_distance:   If True begins distance calibration
+        """
+        
+        # save object references
         self.motor = motor
-        self._defaul_move_speed = default_move_speed
         self.vision = vision
         self.solver = solver
 
+        # change default move speed
+        self._defaul_move_speed = default_move_speed
+
+        # enable and home motors
         motor.enable()
 
         self.motor.home(calibrate_distance)
 
     def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_defaul_move_speed):
+        """
+        Purpose: Preform a given move on the Rubik's cube
+
+        Inputs:
+            - move:         CubertNotation of move to make
+            - rotation:     BaseRotation to specify amount to rotate
+            - move_speed:   Speed to preform movement
+        """
 
         if move == CubertNotation.BACK_CCW:
             self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
@@ -109,6 +127,8 @@ class CubertActions:
 
         combinedImage = np.zeros(combinedShape, np.uint8)
         combinedMask = np.zeros(combinedShape, np.uint8)
+
+        self.motor.homeBase()
 
         for i in range(6):
             
@@ -206,23 +226,65 @@ class CubertActions:
         print("Cube should be solved")
 
     def flip(self, move_speed=_defaul_move_speed, acceleration=False):
+        """
+        Purpose: Flip the Rubik's cube
+
+        Inputs:
+            - move_speed:   Speed to preform flip
+            - acceleration: If True acceleration enabled
+        """
+
         self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM, move_speed, acceleration=acceleration)
         self.motor.closeHand()
         self.motor.moveGripperToPos(Motor.GripperPosition.TOP, move_speed, acceleration=acceleration)
         self.motor.openHand()
 
+        if self._cube_face_spun:
+            # the Noah manuever
+            self.motor.moveBaseDegrees(30, Motor.Direction.CCW)
+            self.motor.moveBaseDegrees(30, Motor.Direction.CW)
+
     def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=False):
+        """
+        Purpose: Rotate a face of the Rubik's cube in the given direction
+
+        Inputs:
+            - rotation:     BaseRotation to specify amount to rotate
+            - direction:    Direction to rotate in
+            - move_speed:   Speed to preform rotation
+            - acceleration: If True acceleration enabled
+        """
+
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
         self.motor.closeHand()
         self.motor.spinBase(rotation, direction, move_speed, degrees_to_correct=15, acceleration=acceleration)
         self.motor.openHand()
 
+        self._cube_face_spun = True
+
     def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=False):
+        """
+        Purpose: Rotate the entire Rubik's cube in the given direction
+
+        Inputs:
+            - rotation:     BaseRotation to specify amount to rotate
+            - direction:    Direction to rotate in
+            - move_speed:   Speed to preform rotation
+            - acceleration: If True acceleration enabled
+        """
+
         self.motor.spinBase(rotation, direction, move_speed, acceleration=acceleration)
 
     def scramble(self, num_moves, move_speed=50):
+        """
+        Purpose: Scramble the Rubik's Cube
+
+        Inputs:
+            - num_moves:    Number of times to scramble
+            - move_speed:   Speed to preform movements
+        """
         for i in range(num_moves):
-            move = random.randint(0,11)
+            move = random.randint(2,11)
 
             if random.randint(0,1):
                 rotation = Motor.BaseRotation.QUARTER
@@ -233,6 +295,12 @@ class CubertActions:
 
 
     def zen(self, move_speed=10):
+        """
+        Purpose: Slowly preform random moves
+
+        Inputs:
+            - move_speed: For those who would like less inner peace with their zen
+        """
         while True:
             move = random.randint(0,11)
 
@@ -242,25 +310,6 @@ class CubertActions:
                 rotation = Motor.BaseRotation.HALF
 
             self.preformMove(move, rotation, move_speed)
-  
-            # if move == 2:
-            #     self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed)
-            # elif move == 3:
-            #     self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed)
-            # elif move == 4:
-            #     self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
-            # elif move == 5:
-            #     self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW, move_speed)
-            # elif move == 6:
-            #     self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed)
-            # elif move == 7:
-            #     self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed)
-            # elif move == 8:
-            #     self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
-            # elif move == 9:
-            #     self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW, move_speed)
-            # else:
-            #     self.flip()
 
     def enableLights(self, imageUrl, client, writeConsole=False):
         lights = np.zeros(4)
@@ -285,6 +334,12 @@ class CubertActions:
             self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
 
     
+def sigint_handler(sig, frame):
+    del actions
+    del motor
+
+    GPIO.cleanup()
+    sys.exit(0)
 
 if __name__ == '__main__':
     motor_en_pin = 26
