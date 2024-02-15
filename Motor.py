@@ -12,48 +12,62 @@ import statistics
 MAX_SPEED = 3.3 # DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
 MIN_SPEED = 0.000001
 
+# library contains usleep
 libc = ctypes.CDLL('libc.so.6')
 
+# Define enumerations
 class Direction(IntEnum):
+    """Determines direction of motor spin"""
     CCW = 0
     CW  = 1
 
 class GripperDirection(Enum):
+    """Dicatets the way to move the gripper assembly"""
     UP      = 0
     DOWN    = 1
     OPEN    = 2
     CLOSE   = 3
 
 class MotorType(IntEnum):
+    """Identifies the motor to access"""
     BASE    = 0
     LEFT    = 1
     RIGHT   = 2
 
 class GripperPosition(Enum):
+    """Used in determining and labeling current gripper position in gauntry"""
     UNKNOWN = 0
     TOP     = 1
     BOTTOM  = 2
     MIDDLE  = 3
 
 class HandState(Enum):
+    """Used in determining and labeling current gripper hand state"""
     UNKOWN  = 0
     CLOSED  = 1
     OPEN    = 2
 
 class BaseRotation(Enum):
+    """Dictates amount of rotation"""
     QUARTER = 0
     HALF    = 1
     FULL    = 2
 
+# ported vebatum from ESP code
 def get_step_delay(velocity):
+    """
+    Purpose: detemine delay between steps for desired speed
+
+    Inputs:
+        - velocity: percentage of maximum speed between 0 and 200
+    
+    Output:
+        - Integer number of microseconds to delay
+    """
     v = max(min(velocity, 200), 1)
     x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100
     delay_duration = 1 / (0.0003 * x) / 10
     return round(delay_duration)
-
-def sigint_handler(sig, frame):
-    GPIO.cleanup()
-    sys.exit(0)
 
 def get_motor_velocity(move_speed, speed_up_fraction, curr_steps, total_steps):
     point1 = total_steps * speed_up_fraction
@@ -72,19 +86,19 @@ class CubertMotor:
     # class constants
     _USE_UART = False # DON'T USE UART VERY BROKEN RIGHT NOW!!!
 
-    _ACTUAL_STEPS   = 400   # number of steps in motor
-    _MICROSTEPS     = 8     # set microstep resolution
-    _GEAR_RATIO     = 6     # cube base gear ratio
+    _ACTUAL_STEPS   = 400               # number of steps in motor
+    _MICROSTEPS     = 8                 # set microstep resolution
+    _GEAR_RATIO     = 6                 # cube base gear ratio
 
-    _MAX_CURRENT    = 700   # max current draw of motors in mA
+    _MAX_CURRENT    = 700               # max current draw of motors in mA
 
-    _DISTANCE_AT_BOTTOM     = 14.20
-    _DISTANCE_AT_TOP        = 64.22
+    _DISTANCE_AT_BOTTOM     = 14.20     # distance from base to gripper when at bottom position in mm
+    _DISTANCE_AT_TOP        = 64.22     # distance from base to gripper when at top position in mm
 
-    _DEFAULT_MOVE_SPEED     = 50
-    _DEFAULT_SPEED_UP_FRAC  = 0.10
+    _DEFAULT_MOVE_SPEED     = 50        # default speed to preform moves at
+    _DEFAULT_SPEED_UP_FRAC  = 0.10      # default point at which max speed is reached
 
-    _TOLERANCE              = 1 # Tolerance in steps for determining gripper location
+    _TOLERANCE              = 1         # Tolerance in steps for determining gripper location
 
     # derived class constants
     _STEPS_PER_REV      = _ACTUAL_STEPS * _MICROSTEPS   # number of steps per revolution of motor shaft
@@ -98,19 +112,35 @@ class CubertMotor:
     _gripper_endstop_pressed    = False
 
     # class variables
-    _steps_per_mm       = -1
-    _steps_from_bottom  = -1
-    _steps_total_travel = -2
-    _steps_to_close     = 350
+    _steps_per_mm       = -1                            # number of steps to move gripper 1mm
+    _steps_from_bottom  = -1                            # current number of step to get to the bottom endstop
+    _steps_total_travel = -2                            # number to steps to travel from enstop to endstop in gauntry
+    _steps_to_close     = 350                           # number of steps until gripper is considered closed
 
-    _current_gripper_pos    = GripperPosition.UNKNOWN
-    _current_hand_state     = HandState.UNKOWN
+    _current_gripper_pos    = GripperPosition.UNKNOWN   # tracks the current gripper state
+    _current_hand_state     = HandState.UNKOWN          # tracks the current gripper hand state
 
-    _gripper_homed          = False
-    _base_homed             = False
+    _motor_dir_base         = Direction.CCW             # tracks base motor direction
+    _motor_dir_left         = Direction.CCW             # tracks left motor direction
+    _motor_dir_right        = Direction.CCW             # tracks right motor direction
+
+    _gripper_homed          = False                     # False if gripper requires homing
+    _base_homed             = False                     # False if base requires homing
 
 
     def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin, current_sensor:CurrentSensor.CubertCurrentSensor):
+        """
+        Purpose: Initialiser function
+
+        Inputs:
+            - enable_pin:       the pin number which enables all stepper motors
+            - step_pin_list:    list of step pins for base, left and right motors (in that order)
+            - dir_pin_list:     list of dir pins for base, left and right motors (in that order)
+            - top_end_pin:      the pin number connected to the top endstop
+            - bottom_end_pin:   the pin number connected to the bottom endstop
+            - grip_end_pin:     the pin number connected to the gripper endstop
+            - current_sensor:   CubertCurrentSensor object for measuring currents
+        """
 
         # setup GPIO
         GPIO.setmode(GPIO.BCM)
@@ -136,6 +166,7 @@ class CubertMotor:
             tmc.set_current(700)
             tmc.set_microstepping_resolution(self._MICROSTEPS)
             tmc.set_interpolation(True)
+            tmc.set_direction_pin(Direction.CCW)
 
         # store enstop pins
         self._top_end_pin       = top_end_pin
@@ -159,55 +190,103 @@ class CubertMotor:
                               callback=self.bottom_endstop_callback)
         GPIO.add_event_detect(grip_end_pin, GPIO.BOTH,
                               callback=self.gripper_endstop_callback)
+        
+        print("Motor Initialized")
 
 
 
     def __del__(self):
+        """
+        Purpose: Clean up resources
+        """
         print("Deleting Motor")
+
+        # disable stepper motors
         self.disable()
 
+        # remove tmc objects
         for tmc in self.tmc_list:
             del(tmc)
 
+        # cleanup gpio pins
         GPIO.cleanup()
 
 
 
     def enable(self):
+        """
+        Purpose: Enable stepper motors
+        """
         self.tmc_base.set_motor_enabled(True)
 
     def disable(self):
+        """
+        Purpose: Disable stepper motors
+        """
         self.tmc_base.set_motor_enabled(False)
 
     def stop(self):
+        """
+        Purpose: Stop all stepper motors from running
+
+        ***NOTE: ONLY WORKS WITH UART***
+        """
         for tmc in self.tmc_list:
             tmc.stop()
 
 
+    # define calibration functions
     def home(self, calibrate_distance=False):
+        """
+        Purpose: Home all motors
+
+        Inputs:
+            - calibrate_distance: Boolean to determine if distance should be changed from defaults
+        """
         print("Begining Homing")
+
         if calibrate_distance: self.calibrateDistance()
+
+        # move gripper away from base
         self.openHand()
         self.moveGripperToPos(GripperPosition.TOP)
+
+        # home components
         self.homeBase()
         self.homeGripper()
+
         print("Homing Finished")
 
     def homeGripper(self):
+        """
+        Purpose: Home the gripper and determine steps to travers gauntry
+        """
         print("Homing Gripper")
+
         self.openHand()
+
+        # determine steps to traverse gauntry
         self.moveGripperToPos(GripperPosition.BOTTOM, 20)
         self._steps_total_travel = self.moveGripperToPos(GripperPosition.TOP, 20)
+
+        # update gripper position in steps
         self.changeRelativeLocation(0,None)
+
+        # center gripper
         self.moveGripperToPos(GripperPosition.MIDDLE)
 
+        # determine steps require per mm
         self._steps_per_mm = self._steps_total_travel / self._DISTANCE_FROM_BOTTOM_TO_TOP
 
         self._gripper_homed = True
 
     def homeBase(self):
+        """
+        Purpose: Home the gripper and determine steps to travers gauntry
+        """
         print("Homing Base")
 
+        # setup function variables
         step_delay = 0
         short_delay = 0
         long_delay  = 600
@@ -223,6 +302,11 @@ class CubertMotor:
 
         times_crossed = 0
 
+        # if suspected in transfer coil get away from coil
+        if self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT) > threshold:
+            self.spinBase(BaseRotation.QUARTER, Direction.CW)
+
+        # fill queue
         for i in range(queue_length):
             queue.append(self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT))
             self.stepBase(direction, short_delay)
@@ -230,22 +314,25 @@ class CubertMotor:
 
         median = statistics.median(queue)
 
-        while times_crossed < 40:
-
-            queue.pop(0)
+        # find transfer coil
+        while times_crossed < 40:          
 
             self.stepBase(direction, step_delay)
 
+            # cycle queue
             queue.append(self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT))
+            queue.pop(0)
 
             median = statistics.median(queue)
 
+            # check if fine scanning required
             if median > 105:
                 step_delay = long_delay
 
             else:
                 step_delay = short_delay
 
+            # detect if in transfer coil
             if divisor % 13 == 0:
                 if median >= threshold:
                     times_crossed += 1
@@ -262,6 +349,7 @@ class CubertMotor:
 
             libc.usleep(step_delay)
 
+        # settle in nearest real step
         self.disable()
         time.sleep(0.1)
         self.enable()
@@ -269,16 +357,27 @@ class CubertMotor:
         self._base_homed = True
 
     def calibrateDistance(self):
+        """
+        Purpose: Change system defaults to properly reflect gauntry dimensions
+        """
         print("Calibrating Distance")
+
         self.moveGripperToPos(GripperPosition.BOTTOM, 50, True)
+
         dist = input("Input Distance Measured Between Gripper and Base: ")
         self._DISTANCE_AT_BOTTOM = float(dist)
+
         self.moveGripperToPos(GripperPosition.TOP, 50, True)
+
         dist = input("Input Distance Measured Between Gripper and Base: ")
         self._DISTANCE_AT_TOP = float(dist)
 
 
+    # define callback functions
     def top_endstop_callback(self, channel):
+        """
+        Purpose: Callback for when top enstop hit or released
+        """
         if not GPIO.input(self._top_end_pin) and not self._top_endstop_pressed:
             self._top_endstop_pressed = True
             print("Top Endstop Pressed")
@@ -288,6 +387,9 @@ class CubertMotor:
             print("Top Endstop Released")
 
     def bottom_endstop_callback(self, channel):
+        """
+        Purpose: Callback for when bottom enstop hit or released
+        """
         if not GPIO.input(self._bottom_end_pin) and not self._bottom_endstop_pressed:
             self._bottom_endstop_pressed = True
             print("Bottom Endstop Pressed")
@@ -297,6 +399,9 @@ class CubertMotor:
             print("Bottom Endstop Released")
 
     def gripper_endstop_callback(self, channel):
+        """
+        Purpose: Callback for when gripper enstop hit or released
+        """
         if not GPIO.input(self._grip_end_pin) and not self._gripper_endstop_pressed:
             self._gripper_endstop_pressed = True
             self._current_hand_state = HandState.OPEN
@@ -307,23 +412,48 @@ class CubertMotor:
             print("Gripper Endstop Released")
 
 
-
+    # define pseudo-pointer functions
     def get_top_endstop_pressed(self):
+        """
+        Purpose: Pseudo-pointer for _top_enstop_pressed variable
+
+        Output:
+            - Boolean: self._top_endstop_pressed
+        """
         return self._top_endstop_pressed
     
     def get_bottom_endstop_pressed(self):
+        """
+        Purpose: Pseudo-pointer for _bottom_enstop_pressed variable
+
+        Output:
+            - Boolean: self._bottom_endstop_pressed
+        """
         return self._bottom_endstop_pressed
     
     def get_gripper_endstop_pressed(self):
+        """
+        Purpose: Pseudo-pointer for _gripper_enstop_pressed variable
+
+        Output:
+            - Boolean: self._gripper_endstop_pressed
+        """
         return self._gripper_endstop_pressed
 
     def return_false(self):
+        """
+        Purpose: Required because of other Pseudo-pointers
+
+        Output:
+            - Boolean: False
+        """
         return False
 
 
 
     # depreciated spin base function
     def spinBaseDep(self, degrees_to_rotate, move_direction, move_speed, degrees_to_correct=0, acceleration=0):
+        """JUST DON"T USE!!!"""
         revolutions = _GEAR_RATIO * degrees_to_rotate  / 360.0
         correction  = _GEAR_RATIO * degrees_to_correct / 360.0
 
@@ -337,11 +467,25 @@ class CubertMotor:
             self.tmc_base.set_vactual_rpm(move_speed, revolutions=-1*correction, acceleration=acceleration)
 
 
-
+    # define gripper movement functions
     def moveGripperToPos(self, position:GripperPosition, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
-        endstop_to_check = self.return_false
-        steps            = 2000#sys.maxsize
+        """
+        Purpose: Move the gripper to a specified position in the gauntry
 
+        Inputs:
+            - position:         GripperPosition that the gripper should move to
+            - move_speed:       Speed at which the gripper should move at
+            - acceleration:     If True acceleration is enabled
+            - accel_fraction:   Point at which gripper hits max speed
+
+        Output:
+            - number of steps completed
+        """
+        
+        endstop_to_check = self.return_false    # set to false
+        steps            = 4000                 # a reasonably large number of steps
+
+        # check if gripper needs to move
         if self._current_gripper_pos == position:
             print("Gripper Already at Position")
             return 0
@@ -352,7 +496,7 @@ class CubertMotor:
         # calculate step delay
         step_delay = get_step_delay(move_speed)
 
-        # check direction to step
+        # check direction to step and which enstop to check if required
         if position == GripperPosition.TOP:
             print("Moving Gripper to Top")
 
@@ -371,10 +515,12 @@ class CubertMotor:
             print("Moving Gripper to Middle")
 
             if self._current_gripper_pos == GripperPosition.TOP:
+                endstop_to_check = self.get_bottom_endstop_pressed
                 direction = GripperDirection.DOWN
                 steps = self._steps_total_travel/2
 
             elif self._current_gripper_pos == GripperPosition.BOTTOM:
+                endstop_to_check = self.get_top_endstop_pressed
                 direction = GripperDirection.UP
                 steps = self._steps_total_travel/2
 
@@ -383,19 +529,19 @@ class CubertMotor:
                 steps = self._steps_total_travel / 2 - self._steps_from_bottom
 
                 if steps > 0:
+                    endstop_to_check = self.get_top_endstop_pressed
                     direction = GripperDirection.UP
 
                 elif steps < 0:
+                    endstop_to_check = self.get_bottom_endstop_pressed
                     direction = GripperDirection.DOWN
-                    steps *= -1
-
-                # endstop_to_check = True # exit loop
-                # print("Position Currently Unknown: Cannot Determine Direction to Middle!")            
+                    steps *= -1        
 
             else:
                 print("This Shouldn't Be Happening!")
                 print(self._current_gripper_pos)
 
+        # step motors
         while (not endstop_to_check()) and steps_done < steps:
 
             if acceleration:
@@ -408,13 +554,26 @@ class CubertMotor:
 
         print("Movement Complete")
 
+        # update gripper location
         self.changeRelativeLocation(steps_done, direction)
 
         return steps_done
     
     def moveGripperRelativeMM(self, mm_to_move, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+        """
+        Purpose: Move the gripper a number of mm in specified direction
+
+        Inputs:
+            - mm_to_move:       Number of mm to move, negaive moves gripper down
+            - move_speed:       Speed to move the gripper at
+            - acceleration:     If True acceleration enabled
+            - accel_fraction:   Point at which max speed is reached
+        """
+        
+        # get steps to move
         steps = round(abs(mm_to_move) * self._steps_per_mm)
 
+        # determine move direction
         if mm_to_move > 0:
             direction = GripperDirection.UP
         elif mm_to_move < 0:
@@ -423,6 +582,15 @@ class CubertMotor:
         self.moveGripper(steps, direction, move_speed, acceleration, accel_fraction)
 
     def moveGripperAbsoluteMM(self, mm_to_move_to, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+        """
+        Purpose: Move the gripper ato specified distance from base
+
+        Inputs:
+            - mm_to_move_to:    mm from base to move to
+            - move_speed:       Speed to move the gripper at
+            - acceleration:     If True acceleration enabled
+            - accel_fraction:   Point at which max speed is reached
+        """
         if mm_to_move_to > self._DISTANCE_AT_TOP:
             print("DISTANCE ABOVE TOP ENDSTOP!")
         elif mm_to_move_to < self._DISTANCE_AT_BOTTOM:
@@ -433,7 +601,18 @@ class CubertMotor:
             self.moveGripperRelativeMM(mm_to_move, move_speed, acceleration, accel_fraction)
 
     def moveGripper(self, steps, direction:GripperDirection, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+        """
+        Purpose: move the gripper a specified number of spet in the given direction
 
+        Inputs:
+            - steps:            number of steps to preform
+            - direction:        GripperDirection to move in
+            - move_speed:       Speed to move gripper at
+            - acceleration:     If True acceleration enabled
+            - accel_fraction:   Point at which max speed is reached
+        """
+        
+        # no enstop to check
         endstop_to_check = self.return_false
 
         # tracks steps completed
@@ -461,6 +640,7 @@ class CubertMotor:
         elif direction == GripperDirection.CLOSE:
             print("Closing Gripper")
 
+        # move gripper
         while (not endstop_to_check()) and steps_done < steps:
 
             if acceleration:
@@ -471,57 +651,100 @@ class CubertMotor:
             steps_done += 1
             libc.usleep(step_delay)
 
+        # track location
         self.changeRelativeLocation(steps_done, direction)
 
         return steps_done
 
 
-
+    # define state updating functions
     def changeGripperPosition(self):
+        """
+        Purpose: Sets _current_gripper_pos to proper state
+        """
         if self._steps_from_bottom == 0:
             self._current_gripper_pos = GripperPosition.BOTTOM
+
         elif self._steps_from_bottom == self._steps_total_travel:
             self._current_gripper_pos = GripperPosition.TOP
+
         elif self.checkIfInTolerance(self._steps_from_bottom, self._steps_total_travel/2):
             self._current_gripper_pos = GripperPosition.MIDDLE
+
         else:
             self._current_gripper_pos = GripperPosition.UNKNOWN
 
         print("Current Gripper Position is ", self._current_gripper_pos)
 
     def checkIfInTolerance(self, value, target):
+        """
+        Purpose: Used to check if variable is within acceptable range
+
+        Inputs:
+            - value: value to check
+            - target: target value to be in range of
+        """
         return value <= target + self._TOLERANCE and value >= target - self._TOLERANCE
 
     def changeRelativeLocation(self, steps, direction:GripperDirection):
+        """
+        Purpose: Change number of step to bottom to reflect position change
+
+        Inputs:
+            - steps: number of steps made
+            - direction: GripperDirection of movement
+        """
+
+        # check endstops and movement direction
         if self._bottom_endstop_pressed:
             self._steps_from_bottom = 0
+
         elif self._top_endstop_pressed:
             self._steps_from_bottom = self._steps_total_travel
+
         else:
             if direction == GripperDirection.UP:
                 self._steps_from_bottom += steps
+
             elif direction == GripperDirection.DOWN:
                 self._steps_from_bottom -= steps
         
+        # update gripper position
         self.changeGripperPosition()
 
+        # debug info
         if self._gripper_homed:
             print("Steps from Bottom: %d" % self._steps_from_bottom)
             print("Max Steps to Travel: %d" % self._steps_total_travel)
             print("Gripper Position is %5.2fmm from Base" % (self.getPositionInMM()))
 
     def getPositionInMM(self):
+        """
+        Purpose: Determine the position in mm from base
+
+        Output:
+            - position in mm from base
+        """
         return (self._steps_from_bottom / self._steps_per_mm) + self._DISTANCE_AT_BOTTOM
 
 
-
+    # define gripper hand functions
     def closeHand(self):
+        """
+        Purpose: Close gripper fingers on cube
+        """
+
         print("Closing Hand")
+
+        # only close if hand state known to be open
         if self._current_hand_state == HandState.OPEN:
             self.moveGripper(self._steps_to_close, GripperDirection.CLOSE, 30)
             self._current_hand_state = HandState.CLOSED
 
     def openHand(self):
+        """
+        Purpose: Open gripper fingers on cube
+        """
         print("Opening Hand")
 
         # move until enstop hit
@@ -531,30 +754,50 @@ class CubertMotor:
 
 
 
-
+    # define cubert base spinning functions
     def spinBase(self, rotation:BaseRotation, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, degrees_to_correct=0, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+        """
+        Purpose: Spin cube base fraction of turn
 
+        Inputs:
+            - rotation:             BaseRotation specifying amount to turn
+            - direction:            Direction to rotate cube base
+            - move_speed:           Speed to preform rotation
+            - degrees_to_correct:   Number of degrees to preform correction
+            - acceleration:         If True acceleration enabled
+            - accel_fraction:       Point at which max speed is reached 
+        """
+
+        # verify valid number of degrees
         if degrees_to_correct < 0:
             print("CANNOT CORRECT NEGATIVE DEGREES!")
-
             degrees_to_correct = 0
 
         # rotate base
         if rotation == BaseRotation.QUARTER:
             print("Base Rotating 90 Degrees")
-            self.moveBaseDegrees(90 + degrees_to_correct, direction, move_speed, acceleration, accel_fraction)
+            degrees = 90 + degrees_to_correct
+
         elif rotation == BaseRotation.HALF:
             print("Base Rotating 180 Degrees")
-            self.moveBaseDegrees(180 + degrees_to_correct, direction, move_speed, acceleration, accel_fraction)
+            degrees = 180 + degrees_to_correct
+
         elif rotation == BaseRotation.FULL:
             print("Base Rotating 360 Degrees")
-            self.moveBaseDegrees(360 + degrees_to_correct, direction, move_speed, acceleration, accel_fraction)
+            degrees = 360 + degrees_to_correct
+
+        else:
+            print("ERROR: Could not find specified rotation type!")
+
+        # rotate base
+        self.moveBaseDegrees(degrees, direction, move_speed, acceleration, accel_fraction)
 
         # correct if required
         if degrees_to_correct > 0:
             
             print("Correcting Base %2.0f Degrees" % (degrees_to_correct))
 
+            # reverse direction
             if direction == Direction.CCW:
                 correction_direction = Direction.CW
             else:
@@ -563,11 +806,35 @@ class CubertMotor:
             self.moveBaseDegrees(degrees_to_correct, correction_direction, move_speed, acceleration, accel_fraction)
 
     def moveBaseDegrees(self, degrees_to_rotate, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+        """
+        Purpose: Rotate the cube base a specified number of degrees
+
+        Inputs:
+            - degrees_to_rotate:    Number of degrees to rotate
+            - direction:            Direction to rotate cube base
+            - move_speed:           Speed to preform rotation
+            - acceleration:         If True acceleration enabled
+            - accel_fraction:       Point at which max speed is reached 
+        """
+        
+        # convert degrees to steps
         steps = round(self._STEPS_PER_BASE_REV * degrees_to_rotate / 360)
+
 
         self.moveBase(steps, direction, move_speed, acceleration, accel_fraction)
 
     def moveBase(self, steps, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+        """
+        Purpose: Rotate the cube base a specified number of steps
+
+        Inputs:
+            - steps:            Number of steps to preform
+            - direction:        Direction to rotate cube base
+            - move_speed:       Speed to preform rotation
+            - acceleration:     If True acceleration enabled
+            - accel_fraction:   Point at which max speed is reached 
+        """
+
         # count steps completed
         steps_done = 0
 
@@ -588,8 +855,18 @@ class CubertMotor:
         return steps_done
 
 
-
+    # define other movement functions
     def move(self, steps, direction:Direction, motor:MotorType, move_speed=_DEFAULT_MOVE_SPEED):
+        """
+        Purpose: Rotate the given motor a specified number of steps
+
+        Inputs:
+            - steps:            Number of steps to preform
+            - direction:        Direction to rotate cube base
+            - motor:            MotorType to actuate
+            - move_speed:       Speed to preform rotation
+        """
+
         # Calculate the delay time of the pulse
         stepDelay = get_step_delay(move_speed)
 
@@ -601,6 +878,13 @@ class CubertMotor:
 
 
     def stepGripper(self, direction:GripperDirection, step_delay):
+        """
+        Purpose: Move gripper one step in specified direction
+
+        Inputs:
+            - direction:    GripperDirection to move in
+            - delay:        Number of microseconds to delay
+        """
 
         endstop_to_check = False
 
@@ -608,32 +892,24 @@ class CubertMotor:
         if direction == GripperDirection.UP:
             left_dir = Direction.CCW
             right_dir = Direction.CW
-            # self.tmc_left.set_direction_pin(Direction.CCW)
-            # self.tmc_right.set_direction_pin(Direction.CW)
 
             endstop_to_check = self._top_endstop_pressed
 
         elif direction == GripperDirection.DOWN:
             left_dir = Direction.CW
             right_dir = Direction.CCW
-            # self.tmc_left.set_direction_pin(Direction.CW)
-            # self.tmc_right.set_direction_pin(Direction.CCW)
 
             endstop_to_check = self._bottom_endstop_pressed
         
         elif direction == GripperDirection.OPEN:
             left_dir = Direction.CCW
             right_dir = Direction.CCW
-            # self.tmc_left.set_direction_pin(Direction.CCW)
-            # self.tmc_right.set_direction_pin(Direction.CCW)
 
             endstop_to_check = self._gripper_endstop_pressed
         
         elif direction == GripperDirection.CLOSE:
             left_dir = Direction.CW
             right_dir = Direction.CW
-            # self.tmc_left.set_direction_pin(Direction.CW)
-            # self.tmc_right.set_direction_pin(Direction.CW)
             
         else:
             print("ERROR: Direction does not exist!")
@@ -643,29 +919,58 @@ class CubertMotor:
         if not endstop_to_check:
             self.step(left_dir, MotorType.LEFT, step_delay)
             self.step(right_dir, MotorType.RIGHT, step_delay)
-            # self.tmc_left.make_a_step()
-            # self.tmc_right.make_a_step()
 
     def stepBase(self, direction:Direction, step_delay):
-        self.step(direction, MotorType.BASE, step_delay)
-        # # set step direction
-        # self.tmc_base.set_direction_pin(direction)
+        """
+        Purpose: Move cube base on step in given direction
 
-        # # step base
-        # self.tmc_base.make_a_step()
+        Inputs:
+            - direction:    Direction to step in
+            - step_delay:   Number of microseconds to delay
+        """
+        self.step(direction, MotorType.BASE, step_delay)
 
     def step(self, direction:Direction, motor:MotorType, step_delay):
+        """
+        Purpose: Move given motor one step in specified direction
+
+        Inputs:
+            - direction:    Direction to spin in
+            - motor:        MotorType to rotate
+            - step_delay:   Number of microseconds to delay
+        """
+        direction_changed = False
+
         if self._USE_UART:
             rev_per_sec = self._STEPS_PER_REV * step_delay / 1_000_000
             if direction == Direction.CCW: rev_per_sec *= -1
             self.tmc_list[motor].set_vactual_dur_alt(0, duration=step_delay)
             
         else:
-            # set step direction
-            self.tmc_list[motor].set_direction_pin(direction)
+            # set step direction if required
+            if motor == MotorType.BASE and direction != self._motor_dir_base:
+                self._motor_dir_base = not self._motor_dir_base
+                direction_changed = True
+            
+            elif motor == MotorType.LEFT and direction != self._motor_dir_left:
+                self._motor_dir_left = not self._motor_dir_left
+                direction_changed = True
+
+            elif motor == MotorType.RIGHT and direction != self._motor_dir_right:
+                self._motor_dir_right = not self._motor_dir_right
+                direction_changed = True
+            
+
+            if direction_changed:
+                self.tmc_list[motor].set_direction_pin(direction)
 
             # step motor
             self.tmc_list[motor].make_a_step()
+
+# testing functionality
+def sigint_handler(sig, frame):
+    GPIO.cleanup()
+    sys.exit(0)
 
 if __name__ == '__main__':
     motor_en_pin = 26

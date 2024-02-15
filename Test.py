@@ -61,15 +61,9 @@ currentThread = threading.Thread(target=check_light)
 baseThread = threading.Thread(target=spin_base)
 
 def sigint_handler(sig, frame):
-    global _run_thread_1
     global actions
     global sensor
     global motor
-
-    _run_thread_1 = False
-
-    currentThread.join()
-    baseThread.join()
 
     del actions
     del motor
@@ -81,7 +75,9 @@ def sigint_handler(sig, frame):
 if __name__ == '__main__':
     print("Running Test Sciprt")
 
-    actions.scramble(13)
+    signal.signal(signal.SIGINT, sigint_handler)
+
+    # actions.scramble(13)
     actions.solve(True)
 
     del actions
