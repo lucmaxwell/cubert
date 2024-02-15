@@ -247,6 +247,8 @@ class CubertActions:
             self.motor.moveBaseDegrees(30, Motor.Direction.CW)
             self.motor.openHand()
 
+            self._cube_face_spun = False
+
     def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=False):
         """
         Purpose: Rotate a face of the Rubik's cube in the given direction
