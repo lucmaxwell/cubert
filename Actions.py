@@ -27,12 +27,14 @@ class CubertNotation(IntEnum):
 
 class CubertActions:
 
-    _defaul_move_speed  = 280       # Default motor speed
+    _defaul_move_speed  = 120       # Default motor speed
+    _default_base_speed = 120
     _base_accel_frac    = 0.05      # Base Max Speed Point 
+    _default_arm_speed  = 80
     _arm_accel_frac     = 0.20      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
-    def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=10, calibrate_distance=False):
+    def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=_defaul_move_speed, calibrate_distance=False):
         """
         Purpose: Setup CubertAction Class
 
@@ -57,7 +59,7 @@ class CubertActions:
 
         self.motor.home(calibrate_distance)
 
-    def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_defaul_move_speed):
+    def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_default_base_speed):
         """
         Purpose: Preform a given move on the Rubik's cube
 
@@ -227,7 +229,7 @@ class CubertActions:
                     
         print("Cube should be solved")
 
-    def flip(self, move_speed=_defaul_move_speed, acceleration=True):
+    def flip(self, move_speed=_default_arm_speed, acceleration=True):
         """
         Purpose: Flip the Rubik's cube
 
@@ -252,7 +254,7 @@ class CubertActions:
 
             self._cube_face_spun = False
 
-    def doubleFlip(self, move_speed=_defaul_move_speed, acceleration=True):
+    def doubleFlip(self, move_speed=_default_arm_speed, acceleration=True):
         """
         Purpose: Flip the Rubik's cube twice
 
@@ -276,7 +278,7 @@ class CubertActions:
 
         self.flip(move_speed, acceleration)
 
-    def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=True):
+    def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_default_base_speed, acceleration=True):
         """
         Purpose: Rotate a face of the Rubik's cube in the given direction
 
@@ -294,7 +296,7 @@ class CubertActions:
 
         self._cube_face_spun = True
 
-    def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=True):
+    def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_default_base_speed, acceleration=True):
         """
         Purpose: Rotate the entire Rubik's cube in the given direction
 
