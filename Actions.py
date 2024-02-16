@@ -243,8 +243,8 @@ class CubertActions:
             # the Noah manuever
             self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
             self.motor.closeHand()
-            self.motor.moveBaseDegrees(30, Motor.Direction.CCW)
-            self.motor.moveBaseDegrees(45, Motor.Direction.CW)
+            self.motor.moveBaseDegrees(45, Motor.Direction.CCW)
+            self.motor.moveBaseDegrees(60, Motor.Direction.CW)
             self.motor.moveBaseDegrees(15, Motor.Direction.CCW)
             self.motor.openHand()
 

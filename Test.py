@@ -85,7 +85,7 @@ if __name__ == '__main__':
         actions.solve(True)
         time.sleep(15)
 
-        if int(stress_test) == 1:
+        if int(stress_test) != 1:
             break
 
     del actions

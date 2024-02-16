@@ -722,6 +722,12 @@ class CubertMotor:
         elif self._steps_from_bottom == self._steps_total_travel:
             self._current_gripper_pos = GripperPosition.TOP_ENDSTOP
 
+        elif self.checkIfInTolerance(self._steps_from_bottom, self._steps_total_travel - self._ENDSTOP_OFFSET_GAUNTRY):
+            self._current_gripper_pos = GripperPosition.TOP
+
+        elif self.checkIfInTolerance(self._steps_from_bottom, self._ENDSTOP_OFFSET_GAUNTRY):
+            self._current_gripper_pos = GripperPosition.BOTTOM
+
         elif self.checkIfInTolerance(self._steps_from_bottom, self._steps_total_travel/2):
             self._current_gripper_pos = GripperPosition.MIDDLE
 
