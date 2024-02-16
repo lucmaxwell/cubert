@@ -281,7 +281,7 @@ class CubertActions:
 
         self.motor.spinBase(rotation, direction, move_speed, acceleration=acceleration)
 
-    def scramble(self, num_moves, move_speed=50):
+    def scramble(self, num_moves, move_speed=_defaul_move_speed):
         """
         Purpose: Scramble the Rubik's Cube
 
