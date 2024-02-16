@@ -90,7 +90,7 @@ class CubertMotor:
     _USE_UART = False # DON'T USE UART VERY BROKEN RIGHT NOW!!!
 
     _ACTUAL_STEPS   = 400               # number of steps in motor
-    _MICROSTEPS     = 4                 # set microstep resolution
+    _MICROSTEPS     = 8                 # set microstep resolution
     _GEAR_RATIO     = 6                 # cube base gear ratio
 
     _MAX_CURRENT    = 700               # max current draw of motors in mA
@@ -98,7 +98,7 @@ class CubertMotor:
     _DISTANCE_AT_BOTTOM     = 14.20     # distance from base to gripper when at bottom position in mm
     _DISTANCE_AT_TOP        = 64.22     # distance from base to gripper when at top position in mm
 
-    _ENDSTOP_OFFSET_GAUNTRY = 50       # number of steps to stop at to avoid hitting top and bottom endstops
+    _ENDSTOP_OFFSET_GAUNTRY = 100       # number of steps to stop at to avoid hitting top and bottom endstops
     _ENDSTOP_OFFSET_GRIPPER = 35        # number of steps to stop at to avoid hitting gripper endstop
 
     _DEFAULT_MOVE_SPEED     = 50        # default speed to preform moves at
@@ -322,7 +322,7 @@ class CubertMotor:
         median = statistics.median(queue)
 
         # find transfer coil
-        while times_crossed < 20:          
+        while times_crossed < 40:          
 
             self.stepBase(direction, step_delay)
 
@@ -925,8 +925,14 @@ class CubertMotor:
         # count steps completed
         steps_done = 0
 
+        print("Move speed is %f" % move_speed)
+
         # calculate step delay
         step_delay = get_step_delay(move_speed)
+
+        last_speed = 0
+        curr_speed = 0
+        peak_hit   = False
 
         # spin for given number of steps
         for _ in range(steps):
@@ -934,6 +940,13 @@ class CubertMotor:
             if acceleration:
                 vel = get_motor_velocity(move_speed, accel_fraction, steps_done, steps)
                 step_delay = get_step_delay(vel)
+                last_speed = curr_speed
+                curr_speed = step_delay
+
+            if curr_speed - last_speed > 0 and not peak_hit:
+                print(last_speed)
+                peak_hit = True
+
 
             self.stepBase(direction, step_delay)
             steps_done += 1
