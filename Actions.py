@@ -28,6 +28,8 @@ class CubertNotation(IntEnum):
 class CubertActions:
 
     _defaul_move_speed  = 150        # Default motor speed
+    _gripper_speed_factor   = 1
+    _cube_base_speed_factor = 1.5
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=10, calibrate_distance=False):
@@ -250,6 +252,30 @@ class CubertActions:
 
             self._cube_face_spun = False
 
+    def doubleFlip(self, move_speed=_defaul_move_speed, acceleration=False):
+        """
+        Purpose: Flip the Rubik's cube twice
+
+        Inputs:
+            - move_speed:   Speed to preform flip
+            - acceleration: If True acceleration enabled
+        """
+
+        self.flip(move_speed, acceleration)
+
+        if self._cube_face_spun:
+            # the Noah manuever
+            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
+            self.motor.closeHand()
+            self.motor.moveBaseDegrees(30, Motor.Direction.CCW)
+            self.motor.moveBaseDegrees(40, Motor.Direction.CW)
+            self.motor.moveBaseDegrees(10, Motor.Direction.CCW)
+            self.motor.openHand()
+
+            self._cube_face_spun = False
+
+        self.flip(move_speed, acceleration)
+
     def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=False):
         """
         Purpose: Rotate a face of the Rubik's cube in the given direction
@@ -263,7 +289,7 @@ class CubertActions:
 
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
         self.motor.closeHand()
-        self.motor.spinBase(rotation, direction, move_speed, degrees_to_correct=15, acceleration=acceleration)
+        self.motor.spinBase(rotation, direction, move_speed*self._cube_base_speed_factor, degrees_to_correct=15, acceleration=acceleration)
         self.motor.openHand()
 
         self._cube_face_spun = True
@@ -279,7 +305,7 @@ class CubertActions:
             - acceleration: If True acceleration enabled
         """
 
-        self.motor.spinBase(rotation, direction, move_speed, acceleration=acceleration)
+        self.motor.spinBase(rotation, direction, move_speed*self._cube_base_speed_factor, acceleration=acceleration)
 
     def scramble(self, num_moves, move_speed=_defaul_move_speed):
         """
