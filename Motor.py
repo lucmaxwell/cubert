@@ -1083,25 +1083,7 @@ if __name__ == '__main__':
 
         motor.moveBase(19200, Direction.CCW, 75, True)
 
-        motor.moveBaseDegrees(30, Direction.CW, 50)
-        motor.moveBaseDegrees(180+30, Direction.CCW, 5)
-
-        motor.spinBase(BaseRotation.QUARTER, Direction.CCW, 50, 15)
-        motor.spinBase(BaseRotation.HALF, Direction.CCW, 50, 15, True)
-
-        motor.moveGripperToPos(GripperPosition.MIDDLE)
-        motor.moveGripperToPos(GripperPosition.TOP_ENDSTOP)
-        motor.moveGripperToPos(GripperPosition.MIDDLE)
-        motor.moveGripperAbsoluteMM(14.35)
-        time.sleep(1)
-        motor.moveGripperAbsoluteMM(62)
-        time.sleep(1)
-        motor.moveGripperAbsoluteMM(35)
-        time.sleep(1)
-        motor.moveGripperAbsoluteMM(-62)
-        time.sleep(1)
-        motor.moveGripperAbsoluteMM(1000)
-        time.sleep(1)
+        motor.moveBase(19200, Direction.CCW, 200, True)
 
 
         print("Testing Complete!")
