@@ -28,10 +28,10 @@ class CubertNotation(IntEnum):
 class CubertActions:
 
     _defaul_move_speed  = 120       # Default motor speed
-    _default_base_speed = 280
+    _default_base_speed = 350
     _base_accel_frac    = 0.05      # Base Max Speed Point 
-    _default_arm_speed  = 150
-    _arm_accel_frac     = 0.20      # Arm Max Speed Point
+    _default_arm_speed  = 200
+    _arm_accel_frac     = 0.15      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=_defaul_move_speed, calibrate_distance=False):
