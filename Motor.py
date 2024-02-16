@@ -578,7 +578,7 @@ class CubertMotor:
                 direction = GripperDirection.UP
                 steps = self._steps_total_travel/2
 
-            elif self._current_gripper_pos == GripperPosition.UNKNOWN:
+            elif self._current_gripper_pos == GripperPosition.UNKNOWN or self._current_gripper_pos == GripperPosition.TOP or self._current_gripper_pos == GripperPosition.BOTTOM:
 
                 steps = self._steps_total_travel / 2 - self._steps_from_bottom
 
