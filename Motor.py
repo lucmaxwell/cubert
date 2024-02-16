@@ -99,6 +99,7 @@ class CubertMotor:
     _DEFAULT_SPEED_UP_FRAC  = 0.10      # default point at which max speed is reached
 
     _TOLERANCE              = 1         # Tolerance in steps for determining gripper location
+    _SANITY_STEP            = 100       # Tolerance for sanity checking _steps_from_bottom
 
     # derived class constants
     _STEPS_PER_REV      = _ACTUAL_STEPS * _MICROSTEPS   # number of steps per revolution of motor shaft
@@ -696,6 +697,10 @@ class CubertMotor:
 
         elif self.checkIfInTolerance(self._steps_from_bottom, self._steps_total_travel/2):
             self._current_gripper_pos = GripperPosition.MIDDLE
+
+        elif self._steps_from_bottom < -self._SANITY_STEP or self._steps_from_bottom > self._steps_total_travel + self._SANITY_STEP:
+            GPIO.cleanup()
+            sys.exit(-1)
 
         else:
             self._current_gripper_pos = GripperPosition.UNKNOWN
