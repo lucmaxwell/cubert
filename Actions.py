@@ -208,22 +208,22 @@ class CubertActions:
                 self.flip()
 
             elif move == 'y':
-                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, 120)
+                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
 
             elif move == 'Y':
-                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, 120)
+                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
 
             elif move == 'P':
-                self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW, 120)
+                self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
                 
             elif move == 'b':
-                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, 60)
+                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
                 
             elif move == 'B':
-                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, 60)
+                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
                 
             elif move == 'p':
-                self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW, 60)
+                self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW)
                     
         print("Cube should be solved")
 
