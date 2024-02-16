@@ -27,9 +27,7 @@ class CubertNotation(IntEnum):
 
 class CubertActions:
 
-    _defaul_move_speed  = 150        # Default motor speed
-    _gripper_speed_factor   = 1
-    _cube_base_speed_factor = 1.5
+    _defaul_move_speed  = 200        # Default motor speed
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=10, calibrate_distance=False):
@@ -227,7 +225,7 @@ class CubertActions:
                     
         print("Cube should be solved")
 
-    def flip(self, move_speed=_defaul_move_speed, acceleration=False):
+    def flip(self, move_speed=_defaul_move_speed, acceleration=True):
         """
         Purpose: Flip the Rubik's cube
 
@@ -252,7 +250,7 @@ class CubertActions:
 
             self._cube_face_spun = False
 
-    def doubleFlip(self, move_speed=_defaul_move_speed, acceleration=False):
+    def doubleFlip(self, move_speed=_defaul_move_speed, acceleration=True):
         """
         Purpose: Flip the Rubik's cube twice
 
@@ -276,7 +274,7 @@ class CubertActions:
 
         self.flip(move_speed, acceleration)
 
-    def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=False):
+    def rotateFace(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=True):
         """
         Purpose: Rotate a face of the Rubik's cube in the given direction
 
@@ -289,12 +287,12 @@ class CubertActions:
 
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
         self.motor.closeHand()
-        self.motor.spinBase(rotation, direction, move_speed*self._cube_base_speed_factor, degrees_to_correct=15, acceleration=acceleration)
+        self.motor.spinBase(rotation, direction, move_speed, degrees_to_correct=8, acceleration=acceleration)
         self.motor.openHand()
 
         self._cube_face_spun = True
 
-    def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=False):
+    def rotateCube(self, rotation:Motor.BaseRotation, direction:Motor.Direction, move_speed=_defaul_move_speed, acceleration=True):
         """
         Purpose: Rotate the entire Rubik's cube in the given direction
 
@@ -305,7 +303,7 @@ class CubertActions:
             - acceleration: If True acceleration enabled
         """
 
-        self.motor.spinBase(rotation, direction, move_speed*self._cube_base_speed_factor, acceleration=acceleration)
+        self.motor.spinBase(rotation, direction, move_speed, acceleration=acceleration)
 
     def scramble(self, num_moves, move_speed=_defaul_move_speed):
         """

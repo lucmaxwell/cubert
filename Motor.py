@@ -102,7 +102,7 @@ class CubertMotor:
     _ENDSTOP_OFFSET_GRIPPER = 35        # number of steps to stop at to avoid hitting gripper endstop
 
     _DEFAULT_MOVE_SPEED     = 50        # default speed to preform moves at
-    _DEFAULT_SPEED_UP_FRAC  = 0.10      # default point at which max speed is reached
+    _DEFAULT_SPEED_UP_FRAC  = 0.05      # default point at which max speed is reached
 
     _TOLERANCE              = 1         # Tolerance in steps for determining gripper location
     _SANITY_STEP            = 100       # Tolerance for sanity checking _steps_from_bottom
