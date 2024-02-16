@@ -90,7 +90,7 @@ class CubertMotor:
     _USE_UART = False # DON'T USE UART VERY BROKEN RIGHT NOW!!!
 
     _ACTUAL_STEPS   = 400               # number of steps in motor
-    _MICROSTEPS     = 8                 # set microstep resolution
+    _MICROSTEPS     = 4                 # set microstep resolution
     _GEAR_RATIO     = 6                 # cube base gear ratio
 
     _MAX_CURRENT    = 700               # max current draw of motors in mA
@@ -98,10 +98,10 @@ class CubertMotor:
     _DISTANCE_AT_BOTTOM     = 14.20     # distance from base to gripper when at bottom position in mm
     _DISTANCE_AT_TOP        = 64.22     # distance from base to gripper when at top position in mm
 
-    _ENDSTOP_OFFSET_GAUNTRY = 100       # number of steps to stop at to avoid hitting top and bottom endstops
+    _ENDSTOP_OFFSET_GAUNTRY = 50       # number of steps to stop at to avoid hitting top and bottom endstops
     _ENDSTOP_OFFSET_GRIPPER = 35        # number of steps to stop at to avoid hitting gripper endstop
 
-    _DEFAULT_MOVE_SPEED     = 200        # default speed to preform moves at
+    _DEFAULT_MOVE_SPEED     = 50        # default speed to preform moves at
     _DEFAULT_SPEED_UP_FRAC  = 0.05      # default point at which max speed is reached
 
     _TOLERANCE              = 1         # Tolerance in steps for determining gripper location
