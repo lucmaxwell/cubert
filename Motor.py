@@ -122,7 +122,7 @@ class CubertMotor:
     _steps_per_mm       = -1                            # number of steps to move gripper 1mm
     _steps_from_bottom  = -1                            # current number of step to get to the bottom endstop
     _steps_total_travel = -2                            # number to steps to travel from enstop to endstop in gauntry
-    _steps_to_close     = 350                           # number of steps until gripper is considered closed
+    _steps_to_close     = 345                           # number of steps until gripper is considered closed
 
     _current_gripper_pos    = GripperPosition.UNKNOWN   # tracks the current gripper state
     _current_hand_state     = HandState.UNKOWN          # tracks the current gripper hand state
@@ -825,7 +825,7 @@ class CubertMotor:
 
         # only close if hand state known to be open
         if self._current_hand_state == HandState.OPEN_MAX:
-            self.moveGripper(self._steps_to_close, GripperDirection.CLOSE, 30)
+            self.moveGripper(self._steps_to_close, GripperDirection.CLOSE, 75)
             self._current_hand_state = HandState.CLOSED
 
     def openHand(self):
@@ -835,7 +835,7 @@ class CubertMotor:
         print("Opening Hand")
 
         # move until enstop hit
-        self.moveGripper(10000, GripperDirection.OPEN, 30)
+        self.moveGripper(10000, GripperDirection.OPEN, 75)
 
         self._current_hand_state = HandState.OPEN_MAX
 

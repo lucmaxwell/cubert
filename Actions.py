@@ -207,25 +207,25 @@ class CubertActions:
         print("Sending instructions")
         for move in cubertSolution:
             if move == 'X':
-                self.flip()
+                self.flip(acceleration=False)
 
             elif move == 'y':
-                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
 
             elif move == 'Y':
-                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, acceleration=False)
 
             elif move == 'P':
-                self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
+                self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW, acceleration=False)
                 
             elif move == 'b':
-                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, acceleration=False)
                 
             elif move == 'B':
-                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
                 
             elif move == 'p':
-                self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW)
+                self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW, acceleration=False)
                     
         print("Cube should be solved")
 
