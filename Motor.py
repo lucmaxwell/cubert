@@ -67,7 +67,7 @@ def get_step_delay(velocity):
     Output:
         - Integer number of microseconds to delay
     """
-    v = max(min(velocity, 200), 1)
+    v = max(min(velocity, 400), 1)
     x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100
     delay_duration = (1 / (0.0003 * x)) / 10
     return round(delay_duration)
