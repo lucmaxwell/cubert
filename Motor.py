@@ -813,6 +813,8 @@ class CubertMotor:
 
         return delta_steps, direction
 
+
+
     # define gripper hand functions
     def closeHand(self):
         """

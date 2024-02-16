@@ -27,7 +27,7 @@ class CubertNotation(IntEnum):
 
 class CubertActions:
 
-    _defaul_move_speed  = 75        # Default motor speed
+    _defaul_move_speed  = 150        # Default motor speed
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, default_move_speed=10, calibrate_distance=False):
@@ -243,9 +243,9 @@ class CubertActions:
             # the Noah manuever
             self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
             self.motor.closeHand()
-            self.motor.moveBaseDegrees(45, Motor.Direction.CCW)
-            self.motor.moveBaseDegrees(60, Motor.Direction.CW)
-            self.motor.moveBaseDegrees(15, Motor.Direction.CCW)
+            self.motor.moveBaseDegrees(30, Motor.Direction.CCW)
+            self.motor.moveBaseDegrees(40, Motor.Direction.CW)
+            self.motor.moveBaseDegrees(10, Motor.Direction.CCW)
             self.motor.openHand()
 
             self._cube_face_spun = False
