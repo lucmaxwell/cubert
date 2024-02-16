@@ -77,8 +77,16 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, sigint_handler)
 
-    # actions.scramble(13)
-    actions.solve(True)
+    stress_test = input("Input 1 for Stress Testing: ")
+
+    while True:
+        actions.scramble(random.randint(1,24))
+        time.sleep(5)
+        actions.solve(True)
+        time.sleep(15)
+
+        if int(stress_test) == 1:
+            break
 
     del actions
     del motor
