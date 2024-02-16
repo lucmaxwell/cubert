@@ -128,7 +128,7 @@ class CubertActions:
         combinedImage = np.zeros(combinedShape, np.uint8)
         combinedMask = np.zeros(combinedShape, np.uint8)
 
-        self.motor.homeBase()
+        self.motor.homeLight()
 
         for i in range(6):
             

@@ -356,6 +356,32 @@ class CubertMotor:
 
         self._base_homed = True
 
+    def homeLight(self):
+        """
+        Purpose: Find the transfer coil and turn the light on
+        """
+        
+        if self._base_homed:
+            queue = []
+            threshold = 100
+            light_found = False
+            attempts = 0
+
+            while attempts < 4:
+                for i in range(10):
+                    queue.append(self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT))
+
+                if statistics.median(queue) > threshold:
+                    return
+                
+                else:
+                    queue.clear()
+                    self.spinBase(BaseRotation.QUARTER, Direction.CCW)
+
+        
+        self.homeBase()
+
+
     def calibrateDistance(self):
         """
         Purpose: Change system defaults to properly reflect gauntry dimensions
