@@ -69,7 +69,7 @@ def get_step_delay(velocity):
     """
     v = max(min(velocity, 200), 1)
     x = MIN_SPEED + v * (MAX_SPEED - MIN_SPEED) / 100
-    delay_duration = 1 / (0.0003 * x) / 10
+    delay_duration = (1 / (0.0003 * x)) / 10
     return round(delay_duration)
 
 def get_motor_velocity(move_speed, speed_up_fraction, curr_steps, total_steps):
