@@ -1082,9 +1082,9 @@ if __name__ == '__main__':
 
         motor.home()
 
-        motor.moveBase(19200/4, Direction.CCW, 75, True)
+        motor.moveBase(round(19200/4), Direction.CCW, 75, True)
 
-        motor.moveBase(19200/4, Direction.CCW, 200, True)
+        motor.moveBase(round(19200/4), Direction.CCW, 200, True)
 
 
         print("Testing Complete!")
