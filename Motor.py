@@ -547,14 +547,23 @@ class CubertMotor:
         elif position == GripperPosition.TOP:
             print("Moving Gripper to Top")
 
-            endstop_to_check = self.get_top_endstop_pressed
-
             steps, direction = self.getStepsAndDirection(self._steps_total_travel - self._ENDSTOP_OFFSET_GAUNTRY)
 
             if direction == GripperDirection.UP:
                 endstop_to_check = self.get_top_endstop_pressed
             elif direction == GripperDirection.DOWN:
                 endstop_to_check = self.get_bottom_endstop_pressed
+
+        elif position == GripperPosition.BOTTOM:
+            print("Moving Gripper to Bottom")
+
+            steps, direction = self.getStepsAndDirection(self._ENDSTOP_OFFSET_GAUNTRY)
+
+            if direction == GripperDirection.UP:
+                endstop_to_check = self.get_top_endstop_pressed
+            elif direction == GripperDirection.DOWN:
+                endstop_to_check = self.get_bottom_endstop_pressed  
+
         
         elif position == GripperPosition.MIDDLE:
             print("Moving Gripper to Middle")
