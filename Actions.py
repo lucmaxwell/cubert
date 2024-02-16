@@ -265,7 +265,7 @@ class CubertActions:
 
         if self._cube_face_spun:
             # the Noah manuever
-            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac))
+            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
             self.motor.closeHand()
             self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
             self.motor.moveBaseDegrees(40, Motor.Direction.CW, move_speed)
@@ -287,7 +287,7 @@ class CubertActions:
             - acceleration: If True acceleration enabled
         """
 
-        self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac))
+        self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
         self.motor.closeHand()
         self.motor.spinBase(rotation, direction, move_speed, degrees_to_correct=8, acceleration=acceleration, accel_fraction=self._base_accel_frac)
         self.motor.openHand()
@@ -305,7 +305,7 @@ class CubertActions:
             - acceleration: If True acceleration enabled
         """
 
-        self.motor.spinBase(rotation, direction, move_speed, acceleration=acceleration, self._base_accel_frac)
+        self.motor.spinBase(rotation, direction, move_speed, acceleration=acceleration, accel_fraction=self._base_accel_frac)
 
     def scramble(self, num_moves, move_speed=_defaul_move_speed):
         """
