@@ -28,9 +28,9 @@ class CubertNotation(IntEnum):
 class CubertActions:
 
     _defaul_move_speed  = 120       # Default motor speed
-    _default_base_speed = 350
+    _default_base_speed = 250
     _base_accel_frac    = 0.05      # Base Max Speed Point 
-    _default_arm_speed  = 200
+    _default_arm_speed  = 100
     _arm_accel_frac     = 0.15      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
 

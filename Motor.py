@@ -89,8 +89,8 @@ class CubertMotor:
     # class constants
     _USE_UART = False # DON'T USE UART VERY BROKEN RIGHT NOW!!!
 
-    _ACTUAL_STEPS   = 400               # number of steps in motor
-    _MICROSTEPS     = 8                 # set microstep resolution
+    _ACTUAL_STEPS   = 200               # number of steps in motor
+    _MICROSTEPS     = 16                 # set microstep resolution
     _GEAR_RATIO     = 6                 # cube base gear ratio
 
     _MAX_CURRENT    = 700               # max current draw of motors in mA
@@ -298,7 +298,7 @@ class CubertMotor:
         short_delay = 0
         long_delay  = 600
 
-        queue_length = 289
+        queue_length = 145
         queue = []
         median = -1
         divisor = 1
@@ -322,7 +322,7 @@ class CubertMotor:
         median = statistics.median(queue)
 
         # find transfer coil
-        while times_crossed < 40:          
+        while times_crossed < 20:          
 
             self.stepBase(direction, step_delay)
 
@@ -340,7 +340,7 @@ class CubertMotor:
                 step_delay = short_delay
 
             # detect if in transfer coil
-            if divisor % 13 == 0:
+            if divisor % 7 == 0:
                 if median >= threshold:
                     times_crossed += 1
                 elif median < 90:
