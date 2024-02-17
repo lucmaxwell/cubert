@@ -400,6 +400,20 @@ class CubertMotor:
         
         self.homeBase()
 
+    def calibrateGripStrength(self):
+        """
+        Purpose: Determine a acceptable grip strength for grabbiing the cube
+        """
+
+        step_delay = get_step_delay(60)
+        steps_done = 0
+
+        while not CurrentSensor.MOTOR_SKIPPED:
+            self.stepGripper(GripperDirection.CLOSE, step_delay)
+            steps_done += 1
+
+        self._steps_to_close = steps_done + 3
+
 
     def calibrateDistance(self):
         """
@@ -868,7 +882,7 @@ class CubertMotor:
         print("Closing Hand")
 
         # only close if hand state known to be open
-        if self._current_hand_state == HandState.OPEN_MAX:
+        if self._current_hand_state == HandState.OPEN_MAX or self._current_hand_state == OPEN:
             self.moveGripper(self._steps_to_close, GripperDirection.CLOSE, 75)
             self._current_hand_state = HandState.CLOSED
 
@@ -879,9 +893,9 @@ class CubertMotor:
         print("Opening Hand")
 
         # move until enstop hit
-        self.moveGripper(10000, GripperDirection.OPEN, 75)
+        self.moveGripper(self._steps_to_close - self._ENDSTOP_OFFSET_GRIPPER, GripperDirection.OPEN, 75)
 
-        self._current_hand_state = HandState.OPEN_MAX
+        self._current_hand_state = HandState.OPEN
 
 
 
