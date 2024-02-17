@@ -28,9 +28,9 @@ class HandAction(Enum):
 
 
 class ArmPosition(Enum):
-    BOTTOM = 0
+    BOTTOM_ENDSTOP = 0
     MIDDLE = 1
-    TOP = 2
+    TOP_ENDSTOP = 2
     DROP_OFF = 3
 
 
@@ -143,7 +143,7 @@ class Arm:
     def move_arm_to(self, position, move_speed):
         # Get the target position ratio
         target_arm_position_ratio = 0.0
-        if position == ArmPosition.TOP:
+        if position == ArmPosition.TOP_ENDSTOP:
             target_arm_position_ratio = 1.0
         elif position == ArmPosition.MIDDLE:
             target_arm_position_ratio = ARM_MIDDLE_POSITION_RATIO

@@ -135,7 +135,7 @@ class Cubert:
     #     step_delay = self.get_delay(self.spin_speed)
     #     degrees_to_rotate = 90
     #
-    #     if self.arm_location != 'TOP' and self.arm_location != 'MIDDLE' and self.gripper_functional:
+    #     if self.arm_location != 'TOP_ENDSTOP' and self.arm_location != 'MIDDLE' and self.gripper_functional:
     #         self.open_hand()
     #         self.move_arm_to('MIDDLE')
     #
@@ -180,13 +180,13 @@ class Cubert:
 
     def grip_and_flip(self):
         # Move arm to the bottom
-        self.arm.move_arm_to(ArmPosition.BOTTOM, self.arm_speed)
+        self.arm.move_arm_to(ArmPosition.BOTTOM_ENDSTOP, self.arm_speed)
 
         # Grip the cube
         self.arm.close_hand(self.hand_open_close_speed)
 
         # Move arm to the top
-        self.arm.move_arm_to(ArmPosition.TOP, self.arm_speed)
+        self.arm.move_arm_to(ArmPosition.TOP_ENDSTOP, self.arm_speed)
 
         # Move arm to the drop off point
         self.arm.move_arm_to(ArmPosition.DROP_OFF, self.arm_speed)
@@ -264,9 +264,9 @@ class Cubert:
         #     self.vision.capture()
 
         # if self.manual_buttons[0].pressed():
-        #     self.arm.move_arm_to(ArmPosition.TOP, 60)
+        #     self.arm.move_arm_to(ArmPosition.TOP_ENDSTOP, 60)
         # if self.manual_buttons[1].pressed():
-        #     self.arm.move_arm_to(ArmPosition.BOTTOM, 60)
+        #     self.arm.move_arm_to(ArmPosition.BOTTOM_ENDSTOP, 60)
 
         # if self.command_button.pressed():
         #     self.arm.open_hand(120)

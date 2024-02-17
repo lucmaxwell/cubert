@@ -59,7 +59,7 @@ class CubertActions:
 
         self.motor.home(calibrate_distance)
 
-    def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_default_base_speed):
+    def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_default_base_speed, acceleration=True):
         """
         Purpose: Preform a given move on the Rubik's cube
 
@@ -70,58 +70,58 @@ class CubertActions:
         """
 
         if move == CubertNotation.BACK_CCW:
-            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
-            self.flip(move_speed)
-            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
+            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed, acceleration)
+            self.flip(move_speed, acceleration)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed, acceleration)
 
         elif move == CubertNotation.BACK_CW:
-            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed)
-            self.flip(move_speed)
-            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
+            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW, move_speed, acceleration)
+            self.flip(move_speed, acceleration)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed, acceleration)
 
         elif move == CubertNotation.BOTTOM_CCW:
-            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed, acceleration)
 
         elif move == CubertNotation.BOTTOM_CW:
-            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed, acceleration)
 
         elif move == CubertNotation.FRONT_CCW:
-            self.flip(move_speed)
-            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
+            self.flip(move_speed, acceleration)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed, acceleration)
 
         elif move == CubertNotation.BOTTOM_CW:
-            self.flip(move_speed)
-            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
+            self.flip(move_speed, acceleration)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed, acceleration)
 
         elif move == CubertNotation.LEFT_CCW:
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed)
-            self.flip(move_speed)
-            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed, acceleration)
+            self.flip(move_speed, acceleration)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed, acceleration)
             
         elif move == CubertNotation.LEFT_CW:
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed)
-            self.flip(move_speed)
-            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed, acceleration)
+            self.flip(move_speed, acceleration)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed, acceleration)
 
         elif move == CubertNotation.RIGHT_CCW:
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed)
-            self.flip(move_speed)
-            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed, acceleration)
+            self.flip(move_speed, acceleration)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed, acceleration)
             
         elif move == CubertNotation.RIGHT_CW:
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed)
-            self.flip(move_speed)
-            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
+            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed, acceleration)
+            self.flip(move_speed, acceleration)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed, acceleration)
 
         elif move == CubertNotation.TOP_CCW:
-            self.flip(move_speed)
-            self.flip(move_speed)
-            self.rotateFace(rotation, Motor.Direction.CCW, move_speed)
+            self.flip(move_speed, acceleration)
+            self.flip(move_speed, acceleration)
+            self.rotateFace(rotation, Motor.Direction.CCW, move_speed, acceleration)
 
         elif move == CubertNotation.TOP_CW:
-            self.flip(move_speed)
-            self.flip(move_speed)
-            self.rotateFace(rotation, Motor.Direction.CW, move_speed)
+            self.flip(move_speed, acceleration)
+            self.flip(move_speed, acceleration)
+            self.rotateFace(rotation, Motor.Direction.CW, move_speed, acceleration)
 
     def getAllImages(self, writeConsole=False):
         combinedShape = list(self.vision.lowerResolution) + [3]
@@ -238,9 +238,10 @@ class CubertActions:
             - acceleration: If True acceleration enabled
         """
 
-        self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
+        self.motor.moveGripperToPos(Motor.GripperPosition.PICKUP, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
         self.motor.closeHand()
-        self.motor.moveGripperToPos(Motor.GripperPosition.TOP, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
+        self.motor.moveGripperToPos(Motor.GripperPosition.FLIP_TOP, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
+        self.motor.moveGripperToPos(Motor.GripperPosition.DROPOFF, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
         self.motor.openHand()
 
         if self._cube_face_spun:
@@ -289,9 +290,9 @@ class CubertActions:
             - acceleration: If True acceleration enabled
         """
 
-        self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
+        self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
         self.motor.closeHand()
-        self.motor.spinBase(rotation, direction, move_speed, degrees_to_correct=8, acceleration=acceleration, accel_fraction=self._base_accel_frac)
+        self.motor.moveBaseSpin(rotation, direction, move_speed, degrees_to_correct=8, acceleration=acceleration, accel_fraction=self._base_accel_frac)
         self.motor.openHand()
 
         self._cube_face_spun = True
@@ -307,7 +308,7 @@ class CubertActions:
             - acceleration: If True acceleration enabled
         """
 
-        self.motor.spinBase(rotation, direction, move_speed, acceleration=acceleration, accel_fraction=self._base_accel_frac)
+        self.motor.moveBaseSpin(rotation, direction, move_speed, acceleration=acceleration, accel_fraction=self._base_accel_frac)
 
     def scramble(self, num_moves, move_speed=_defaul_move_speed):
         """

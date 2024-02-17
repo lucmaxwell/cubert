@@ -40,8 +40,12 @@ class GripperPosition(Enum):
     TOP_ENDSTOP     = 1
     BOTTOM_ENDSTOP  = 2
     MIDDLE          = 3
-    TOP             = 4
-    BOTTOM          = 5
+    MIDDLE_CUBE     = 4
+    TOP             = 5
+    BOTTOM          = 6
+    DROPOFF         = 7
+    PICKUP          = 8
+    FLIP_TOP        = 9
 
 class HandState(Enum):
     """Used in determining and labeling current gripper hand state"""
@@ -98,11 +102,11 @@ class CubertMotor:
     _DISTANCE_AT_BOTTOM     = 14.20     # distance from base to gripper when at bottom position in mm
     _DISTANCE_AT_TOP        = 64.22     # distance from base to gripper when at top position in mm
 
-    _ENDSTOP_OFFSET_GAUNTRY = 100       # number of steps to stop at to avoid hitting top and bottom endstops
+    _ENDSTOP_OFFSET_GAUNTRY = 2         # number of mm to stop at to avoid hitting top and bottom endstops
     _ENDSTOP_OFFSET_GRIPPER = 35        # number of steps to stop at to avoid hitting gripper endstop
 
     _DEFAULT_MOVE_SPEED     = 50        # default speed to preform moves at
-    _DEFAULT_SPEED_UP_FRAC  = 0.05      # default point at which max speed is reached
+    _DEFAULT_SPEED_UP_FRAC  = 0.10      # default point at which max speed is reached
 
     _TOLERANCE              = 1         # Tolerance in steps for determining gripper location
     _SANITY_STEP            = 100       # Tolerance for sanity checking _steps_from_bottom
@@ -119,10 +123,12 @@ class CubertMotor:
     _gripper_endstop_pressed    = False
 
     # class variables
-    _steps_per_mm       = -1                            # number of steps to move gripper 1mm
-    _steps_from_bottom  = -1                            # current number of step to get to the bottom endstop
-    _steps_total_travel = -2                            # number to steps to travel from enstop to endstop in gauntry
-    _steps_to_close     = 345                           # number of steps until gripper is considered closed
+    _steps_per_mm           = -1                        # number of steps to move gripper 1mm
+    _steps_from_bottom      = -1                        # current number of step to get to the bottom endstop
+    _steps_total_travel     = -2                        # number to steps to travel from enstop to endstop in gauntry
+    _steps_to_close         = 345                       # number of steps until gripper is considered closed
+
+    _cubelet_size           = 17                        # cublet size in mm
 
     _current_gripper_pos    = GripperPosition.UNKNOWN   # tracks the current gripper state
     _current_hand_state     = HandState.UNKOWN          # tracks the current gripper hand state
@@ -133,6 +139,12 @@ class CubertMotor:
 
     _gripper_homed          = False                     # False if gripper requires homing
     _base_homed             = False                     # False if base requires homing
+
+    # derive class variables
+    _dropoff_height         = _DISTANCE_AT_BOTTOM + 2 * _cubelet_size           # height in mm to release cube at
+    _cube_middle_height     = _DISTANCE_AT_BOTTOM + 1.5 * _cubelet_size         # height of cube center
+    _flip_apex_height       = _DISTANCE_AT_BOTTOM + 2.5 * _cubelet_size         # highest point when flipping cube
+    _pickup_height          = _DISTANCE_AT_BOTTOM + _cubelet_size / 2           # height to grab cube at
 
 
     def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin, current_sensor:CurrentSensor.CubertCurrentSensor):
@@ -311,7 +323,7 @@ class CubertMotor:
 
         # if suspected in transfer coil get away from coil
         if self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT) > threshold:
-            self.spinBase(BaseRotation.QUARTER, Direction.CW)
+            self.moveBaseSpin(BaseRotation.QUARTER, Direction.CW)
 
         # fill queue
         for i in range(queue_length):
@@ -383,7 +395,7 @@ class CubertMotor:
                 
                 else:
                     queue.clear()
-                    self.spinBase(BaseRotation.QUARTER, Direction.CCW)
+                    self.moveBaseSpin(BaseRotation.QUARTER, Direction.CCW)
 
         
         self.homeBase()
@@ -547,53 +559,85 @@ class CubertMotor:
         elif position == GripperPosition.TOP:
             print("Moving Gripper to Top")
 
-            steps, direction = self.getStepsAndDirection(self._steps_total_travel - self._ENDSTOP_OFFSET_GAUNTRY)
+            self.moveGripperAbsoluteMM(self._DISTANCE_AT_TOP - self._ENDSTOP_OFFSET_GAUNTRY, move_speed=move_speed, acceleration=acceleration, accel_fraction=accel_fraction)
+            steps = 0
 
-            if direction == GripperDirection.UP:
-                endstop_to_check = self.get_top_endstop_pressed
-            elif direction == GripperDirection.DOWN:
-                endstop_to_check = self.get_bottom_endstop_pressed
+            # steps, direction = self.getStepsAndDirection(self._steps_total_travel - self._ENDSTOP_OFFSET_GAUNTRY)
+
+            # if direction == GripperDirection.UP:
+            #     endstop_to_check = self.get_top_endstop_pressed
+            # elif direction == GripperDirection.DOWN:
+                # endstop_to_check = self.get_bottom_endstop_pressed
 
         elif position == GripperPosition.BOTTOM:
             print("Moving Gripper to Bottom")
 
-            steps, direction = self.getStepsAndDirection(self._ENDSTOP_OFFSET_GAUNTRY)
+            self.moveGripperAbsoluteMM(self._DISTANCE_AT_BOTTOM + self._ENDSTOP_OFFSET_GAUNTRY, move_speed=move_speed, acceleration=acceleration, accel_fraction=accel_fraction)
+            steps = 0
 
-            if direction == GripperDirection.UP:
-                endstop_to_check = self.get_top_endstop_pressed
-            elif direction == GripperDirection.DOWN:
-                endstop_to_check = self.get_bottom_endstop_pressed  
+            # steps, direction = self.getStepsAndDirection(self._ENDSTOP_OFFSET_GAUNTRY)
 
-        
+            # if direction == GripperDirection.UP:
+            #     endstop_to_check = self.get_top_endstop_pressed
+            # elif direction == GripperDirection.DOWN:
+                # endstop_to_check = self.get_bottom_endstop_pressed  
+
         elif position == GripperPosition.MIDDLE:
             print("Moving Gripper to Middle")
 
-            if self._current_gripper_pos == GripperPosition.TOP_ENDSTOP:
-                endstop_to_check = self.get_bottom_endstop_pressed
-                direction = GripperDirection.DOWN
-                steps = self._steps_total_travel/2
+            self.moveGripperAbsoluteMM(self._DISTANCE_FROM_BOTTOM_TO_TOP/2, move_speed=move_speed, acceleration=acceleration, accel_fraction=accel_fraction)
+            steps = 0
 
-            elif self._current_gripper_pos == GripperPosition.BOTTOM_ENDSTOP:
-                endstop_to_check = self.get_top_endstop_pressed
-                direction = GripperDirection.UP
-                steps = self._steps_total_travel/2
+            # if self._current_gripper_pos == GripperPosition.TOP_ENDSTOP:
+            #     endstop_to_check = self.get_bottom_endstop_pressed
+            #     direction = GripperDirection.DOWN
+            #     steps = self._steps_total_travel/2
 
-            elif self._current_gripper_pos == GripperPosition.UNKNOWN or self._current_gripper_pos == GripperPosition.TOP or self._current_gripper_pos == GripperPosition.BOTTOM:
+            # elif self._current_gripper_pos == GripperPosition.BOTTOM_ENDSTOP:
+            #     endstop_to_check = self.get_top_endstop_pressed
+            #     direction = GripperDirection.UP
+            #     steps = self._steps_total_travel/2
 
-                steps = self._steps_total_travel / 2 - self._steps_from_bottom
+            # elif self._current_gripper_pos == GripperPosition.UNKNOWN or self._current_gripper_pos == GripperPosition.TOP or self._current_gripper_pos == GripperPosition.BOTTOM:
 
-                if steps > 0:
-                    endstop_to_check = self.get_top_endstop_pressed
-                    direction = GripperDirection.UP
+                # steps = self._steps_total_travel / 2 - self._steps_from_bottom
 
-                elif steps < 0:
-                    endstop_to_check = self.get_bottom_endstop_pressed
-                    direction = GripperDirection.DOWN
-                    steps *= -1        
+                # if steps > 0:
+                #     endstop_to_check = self.get_top_endstop_pressed
+                #     direction = GripperDirection.UP
 
-            else:
-                print("This Shouldn't Be Happening!")
-                print(self._current_gripper_pos)
+                # elif steps < 0:
+                #     endstop_to_check = self.get_bottom_endstop_pressed
+                #     direction = GripperDirection.DOWN
+                #     steps *= -1        
+
+            # else:
+            #     print("This Shouldn't Be Happening!")
+            #     print(self._current_gripper_pos)
+
+        elif position == GripperPosition.PICKUP:
+            print("Moving to Pickup Point")
+
+            self.moveGripperAbsoluteMM(self._pickup_height, move_speed=move_speed, acceleration=acceleration, accel_fraction=accel_fraction)
+            steps = 0
+
+        elif position == GripperPosition.FLIP_TOP:
+            print("Moving to Flip Apex")
+
+            self.moveGripperAbsoluteMM(self._flip_apex_height, move_speed=move_speed, acceleration=acceleration, accel_fraction=accel_fraction)
+            steps = 0
+
+        elif position == GripperPosition.MIDDLE_CUBE:
+            print("Moving to Middle of Cube")
+
+            self.moveGripperAbsoluteMM(self._cube_middle_height, move_speed=move_speed, acceleration=acceleration, accel_fraction=accel_fraction)
+            steps = 0
+
+        elif position == GripperPosition.DROPOFF:
+            print("Moving to Dropoff Point")
+
+            self.moveGripperAbsoluteMM(self._dropoff_height, move_speed=move_speed, acceleration=acceleration, accel_fraction=accel_fraction)
+            steps = 0
 
         # step motors
         while (not endstop_to_check()) and steps_done < steps:
@@ -842,7 +886,7 @@ class CubertMotor:
 
 
     # define cubert base spinning functions
-    def spinBase(self, rotation:BaseRotation, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, degrees_to_correct=0, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
+    def moveBaseSpin(self, rotation:BaseRotation, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, degrees_to_correct=0, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
         """
         Purpose: Spin cube base fraction of turn
 
@@ -1107,16 +1151,16 @@ if __name__ == '__main__':
             time.sleep(10)
 
         # print("Spinning CW 180")
-        # motor.spinBase(180, MotorSpin.CLOCKWISE, 60)
+        # motor.moveBaseSpin(180, MotorSpin.CLOCKWISE, 60)
 
         # print("Spinning CCW 180")
-        # motor.spinBase(180, MotorSpin.COUNTER_CLOCKWISECLOCKWISE, 60)
+        # motor.moveBaseSpin(180, MotorSpin.COUNTER_CLOCKWISECLOCKWISE, 60)
 
         # print("Spinning CW 180 With Correction")
-        # motor.spinBase(180, MotorSpin.CLOCKWISE, 60, 5)
+        # motor.moveBaseSpin(180, MotorSpin.CLOCKWISE, 60, 5)
 
         # print("Spinning CCW 180 With Correction")
-        # motor.spinBase(180, MotorSpin.COUNTER_CLOCKWISE, 60, 5)
+        # motor.moveBaseSpin(180, MotorSpin.COUNTER_CLOCKWISE, 60, 5)
 
     except KeyboardInterrupt:
         pass
