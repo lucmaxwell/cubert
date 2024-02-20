@@ -24,8 +24,8 @@ class CubertCurrentSensor():
 
         self.run_gripper_monitor = True
 
-        self._left_motor_monitor = threading.Thread(monitor_grip_current, (self, CurrentChannel.LEFT_MOTOR))
-        self._right_motor_monitor = threading.Thread(monitor_grip_current, (self, CurrentChannel.RIGHT_MOTOR))
+        self._left_motor_monitor = threading.Thread(monitor_grip_current, args=(self, CurrentChannel.LEFT_MOTOR))
+        self._right_motor_monitor = threading.Thread(monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR))
 
     def __del__(self):
         self.run_gripper_monitor = False
