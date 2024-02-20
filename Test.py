@@ -43,7 +43,7 @@ _run_thread_1 = True
 def spin_base():
     actions.rotateCube(BaseRotation.HALF, Direction.CCW)
 
-currentThread = threading.Thread(target=check_light)
+# currentThread = threading.Thread(target=check_light)
 baseThread = threading.Thread(target=spin_base)
 
 def sigint_handler(sig, frame):
