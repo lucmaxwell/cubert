@@ -10,7 +10,7 @@ import Vision
 import Solver
 import numpy as np
 
-from RubikCubeEnv import RubiksCubeEnv
+# from RubikCubeEnv import RubiksCubeEnv
 
 
 class CubertNotation(IntEnum):
