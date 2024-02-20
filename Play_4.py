@@ -25,6 +25,8 @@ motor = Motor.CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_
 
 motor.enable()
 
+motor.home()
+
 vision = Vision.CubertVision()
 motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, 50)
 motor.closeHand()
