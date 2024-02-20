@@ -27,7 +27,6 @@ class CubertNotation(IntEnum):
 
 class CubertActions:
 
-    _defaul_move_speed  = 120       # Default motor speed
     _default_base_speed = 250
     _base_accel_frac    = 0.05      # Base Max Speed Point 
     _default_arm_speed  = 100
@@ -391,20 +390,22 @@ if __name__ == '__main__':
     current_sensor = CubertCurrentSensor()
 
     # initialize motor
+    vision = Vision.CubertVision()
+    solver = Solver.Solver()
     motor = Motor.CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin, current_sensor)
 
-    actions = CubertActions(motor)
+    actions = CubertActions(motor,vision,solver)
 
     time.sleep(2)
 
     actions.flip()
-    time.sleep(1)
+    time.sleep(10)
     actions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
-    time.sleep(1)
+    time.sleep(10)
     actions.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
-    time.sleep(1)
+    time.sleep(10)
     actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-    time.sleep(1)
+    time.sleep(10)
     actions.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW)
 
     speed = input("Give Zen Mode Speed: ")
