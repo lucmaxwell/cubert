@@ -51,7 +51,7 @@ class CubertActions:
         self.solver = solver
 
         # change default move speed
-        self._defaul_move_speed = default_move_speed
+        # self._defaul_move_speed = default_move_speed
 
         # enable and home motors
         motor.enable()
