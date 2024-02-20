@@ -122,7 +122,6 @@ tots = []
 n = 0
 while n < len(a):
   tots.append(math.sqrt(a[0] + b[0]))
-  print(tots)
   n = n + 1
 
 print((sum(tots)/6)/pixel_per_cm)
