@@ -90,7 +90,7 @@ def worker(selection):
             actions.solve(True)
             time.sleep(15)
 
-    elif selection == 3: # Take an image
+    elif selection == '3': # Take an image
         cube, mask = actions.getAllImages(True)
         vision.writeImage("testingImage.png", cube)
         vision.writeImage("testingmask.png", mask)
