@@ -72,7 +72,7 @@ def sigint_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
-def worker():
+def worker(selection):
     if selection == 0: # Single solve
         time.sleep(5)
         actions.solve(True)
@@ -117,7 +117,7 @@ if __name__ == '__main__':
     selection = input("Select an option: ")
 
     # Set up the work thread
-    worker_thread = threading.Thread(target=worker)
+    worker_thread = threading.Thread(target=worker, args=(selection))
     worker_thread.daemon = True
     worker_thread.start()
 
