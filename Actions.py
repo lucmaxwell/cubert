@@ -236,6 +236,7 @@ class CubertActions:
         print("Resizing Cubelets")
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, 50)
         self.motor.closeHand()
+        time.sleep(0.5)
         self.motor.resizeCubelet(self.vision.getCubletSize())
         self.motor.openHand()
 
