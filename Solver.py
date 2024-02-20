@@ -78,11 +78,12 @@ class Solver:
         # Get the correct face facing down
         # P = yy
         # p = bb
+        # D = XX
 
         ORIENTATE = {
             'D': "",
             'F': "X",
-            'U': "XX",
+            'U': "D",
             'B': "PX",
             'L': "YX",
             'R': "yX"

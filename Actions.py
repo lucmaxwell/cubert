@@ -208,6 +208,9 @@ class CubertActions:
             if move == 'X':
                 self.flip(acceleration=True)
 
+            elif move == 'D':
+                self.doubleFlip(acceleration=True)
+
             elif move == 'y':
                 self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
 
