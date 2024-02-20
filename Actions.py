@@ -348,28 +348,6 @@ class CubertActions:
 
             self.preformMove(move, rotation, move_speed)
 
-    def enableLights(self, imageUrl, client, writeConsole=False):
-        lights = np.zeros(4)
-
-        # Find the orientation with the highest lightness
-        for i in range(4):
-            img = self.vision.getImage()
-            average = np.average(img)
-            lights[i] = average
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-
-            if(i < 4):
-                time.sleep(0.25)
-
-        # Spin to the lightest side
-        spin = lights.argmax()
-        if(spin == 1):
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-        elif(spin == 2):
-            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
-        elif(spin == 3):
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
-
     
 def sigint_handler(sig, frame):
     del actions
