@@ -243,16 +243,16 @@ class CubertActions:
         self.motor.moveGripperToPos(Motor.GripperPosition.DROPOFF, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
         self.motor.openHand()
 
-        if self._cube_face_spun:
-            # the Noah manuever
-            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, move_speed, acceleration=acceleration)
-            self.motor.closeHand()
-            self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
-            self.motor.moveBaseDegrees(40, Motor.Direction.CW, move_speed)
-            self.motor.moveBaseDegrees(10, Motor.Direction.CCW, move_speed)
-            self.motor.openHand()
+        # if self._cube_face_spun:
+        #     # the Noah manuever
+        #     self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, move_speed, acceleration=acceleration)
+        #     self.motor.closeHand()
+        #     self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
+        #     self.motor.moveBaseDegrees(40, Motor.Direction.CW, move_speed)
+        #     self.motor.moveBaseDegrees(10, Motor.Direction.CCW, move_speed)
+        #     self.motor.openHand()
 
-            self._cube_face_spun = False
+        #     self._cube_face_spun = False
 
     def doubleFlip(self, move_speed=_default_arm_speed, acceleration=True):
         """

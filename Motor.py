@@ -143,7 +143,7 @@ class CubertMotor:
     # derive class variables
     _dropoff_height         = _DISTANCE_AT_BOTTOM + 2 * _cubelet_size           # height in mm to release cube at
     _cube_middle_height     = _DISTANCE_AT_BOTTOM + 1 * _cubelet_size         # height of cube center
-    _flip_apex_height       = _DISTANCE_AT_BOTTOM + 2.75 * _cubelet_size         # highest point when flipping cube
+    _flip_apex_height       = _DISTANCE_AT_BOTTOM + 2.5 * _cubelet_size         # highest point when flipping cube
     _pickup_height          = _DISTANCE_AT_BOTTOM + _cubelet_size / 20           # height to grab cube at
 
 
