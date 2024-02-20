@@ -42,7 +42,7 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel):
     curr_reading = 0
     prev_reading = 0
 
-    global MOTOR_SKIPPED
+    MOTOR_SKIPPED
 
     while sensor.run_gripper_monitor:
         prev_reading = curr_reading
