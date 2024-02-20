@@ -173,3 +173,19 @@ class Solver:
 
         return cuberty
     
+    def getMlArray(imageArray):
+        # Transform from (3, 18) to (6, 3, 3)
+        mlArray = np.zeros((6, 3, 3), dtype=np.uint8)
+        for i in range(6):
+            mlArray[i] = imageArray[:, i*3:i*3+3]
+
+        # Put faces in the correct order
+        temp = np.copy(mlArray[2])
+        mlArray[2] = mlArray[0]
+        mlArray[0] = temp
+
+        # Orient faces the correct way
+        mlArray[4] = np.rot90(mlArray[4], 3)
+        mlArray[5] = np.rot90(mlArray[5], 3)
+
+        return mlArray
