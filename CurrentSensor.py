@@ -40,7 +40,7 @@ class CubertCurrentSensor():
     def getMotorSkipped(self):
         MOTOR_SKIPPED_LOCK.acquire()
         val = MOTOR_SKIPPED.isSet()
-        MOTOR_SKIPPED_LOCK.release
+        MOTOR_SKIPPED_LOCK.release()
         return val
     
     
