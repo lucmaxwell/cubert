@@ -10,7 +10,6 @@ import plotext as plt
 import Vision
 from Actions import *
 import Solver
-from PanicButton import panic_action
 
 # Motor Pins
 motor_en_pin = 26
