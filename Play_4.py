@@ -6,7 +6,7 @@ import imutils
 import cv2
 import math
 
-img = cv2.imread(r'C:\Users\Noah\Downloads\Capstone_Code\Capstone_Code\Assets\0 original.png')
+img = cv2.imread(r'./images.jpg')
 # Image Checking
 if img is None:
   print("Error: File not found")
