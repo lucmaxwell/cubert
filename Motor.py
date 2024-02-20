@@ -142,9 +142,9 @@ class CubertMotor:
 
     # derive class variables
     _dropoff_height         = _DISTANCE_AT_BOTTOM + 2 * _cubelet_size           # height in mm to release cube at
-    _cube_middle_height     = _DISTANCE_AT_BOTTOM + 1.5 * _cubelet_size         # height of cube center
+    _cube_middle_height     = _DISTANCE_AT_BOTTOM + 1 * _cubelet_size         # height of cube center
     _flip_apex_height       = _DISTANCE_AT_BOTTOM + 2.5 * _cubelet_size         # highest point when flipping cube
-    _pickup_height          = _DISTANCE_AT_BOTTOM + _cubelet_size / 2           # height to grab cube at
+    _pickup_height          = _DISTANCE_AT_BOTTOM + _cubelet_size / 4           # height to grab cube at
 
 
     def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin, current_sensor:CurrentSensor.CubertCurrentSensor):
