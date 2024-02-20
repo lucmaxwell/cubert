@@ -73,15 +73,15 @@ def sigint_handler(sig, frame):
     sys.exit(0)
 
 def worker(selection):
-    if selection == 0: # Single solve
+    if selection == '0': # Single solve
         time.sleep(5)
         actions.solve(True)
         time.sleep(15)
 
-    elif selection == 1: # Single scramble
+    elif selection == '1': # Single scramble
         actions.scramble(13)
 
-    elif selection == 2: # Endless scramble + solve
+    elif selection == '2': # Endless scramble + solve
         while True:
             actions.scramble(13)
             time.sleep(5)
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     print("1: Scramble")
     print("2: Endless Scramble + solve")
     print("3: Take picture, save to ./images")
-    selection = int(input("Select an option: "))
+    selection = input("Select an option: ")
 
     # Set up the work thread
     worker_thread = threading.Thread(target=worker, args=(selection))
