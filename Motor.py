@@ -967,6 +967,7 @@ class CubertMotor:
         # convert degrees to steps
         steps = round(self._STEPS_PER_BASE_REV * degrees_to_rotate / 360)
 
+        print(steps)
 
         self.moveBase(steps, direction, move_speed, acceleration, accel_fraction)
 
