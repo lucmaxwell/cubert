@@ -884,7 +884,7 @@ class CubertMotor:
         print("Closing Hand")
 
         # only close if hand state known to be open
-        if self._current_hand_state == HandState.OPEN_MAX or self._current_hand_state == OPEN:
+        if self._current_hand_state == HandState.OPEN_MAX or self._current_hand_state == HandState.OPEN:
             self.moveGripper(self._steps_to_close, GripperDirection.CLOSE, 75)
             self._current_hand_state = HandState.CLOSED
 
