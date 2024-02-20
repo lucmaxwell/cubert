@@ -107,7 +107,7 @@ if __name__ == '__main__':
     _PANIC_BUTTON_PIN = 4
     while not panic:
         # Take a reading of the panic button
-        panic = not (GPIO.input(_PANIC_BUTTON_PIN) == GPIO.LOW)
+        panic = (GPIO.input(_PANIC_BUTTON_PIN) == GPIO.LOW)
 
         # End the worker thread
         if panic:
