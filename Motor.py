@@ -95,7 +95,7 @@ class CubertMotor:
 
     _ACTUAL_STEPS   = 200               # number of steps in motor
     _MICROSTEPS     = 8                 # set microstep resolution
-    _GEAR_RATIO     = 6                 # cube base gear ratio
+    _GEAR_RATIO     = 12                 # cube base gear ratio
 
     _MAX_CURRENT    = 700               # max current draw of motors in mA
 
