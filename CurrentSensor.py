@@ -48,7 +48,9 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel):
         prev_reading = curr_reading
         curr_reading = sensor.getChannelCurrent(channel)
 
-        if abs(prev_reading - curr_reading) > sensor._current_threshold:
+        print(curr_reading)
+
+        if abs(prev_reading - curr_reading) > 100:#sensor._current_threshold:
             MOTOR_SKIPPED = True
 
 if __name__ == '__main__':
