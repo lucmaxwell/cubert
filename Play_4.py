@@ -6,9 +6,26 @@ import imutils
 import cv2
 import math
 import Vision
+import CurrentSensor
+import Motor
 
+# Motor Pins
+motor_en_pin = 26
+motor_step_pin = [27, 6, 19]
+motor_dir_pin = [17, 5, 13]
+
+# End stop for arm
+end_stop_hand_open_pin      = 16  # GPIO number for arm open limit end stop
+end_stop_arm_upperLimit_pin = 20  # GPIO number for arm upper limit end stop
+end_stop_arm_lowerLimit_pin = 21  # GPIO number for arm lower limit end stop
+
+sensor = CurrentSensor.CubertCurrentSensor()
+
+motor = Motor.CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin, sensor)
 
 vision = Vision.CubertVision()
+motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, 50)
+motor.closeHand()
 vision.capture()
 
 img = cv2.imread(r'./image.jpg')
