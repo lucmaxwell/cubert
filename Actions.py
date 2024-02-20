@@ -57,7 +57,7 @@ class CubertActions:
         motor.enable()
 
         self.motor.home(calibrate_distance)
-        if resize_cubelets: self.vision.getCubletSize()
+        if resize_cubelets: self.sizeCubelet()
 
     def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_default_base_speed, acceleration=True):
         """
