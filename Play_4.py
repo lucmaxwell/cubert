@@ -77,7 +77,7 @@ box = perspective.order_points(box)
 (tl, tr, br, bl) = box
 dist_in_pixel = euclidean(tl, tr)
 
-dist_in_cm = 0.15 #reference length
+dist_in_cm = 0.11 #reference length
 pixel_per_cm = dist_in_pixel/dist_in_cm 
 
 
