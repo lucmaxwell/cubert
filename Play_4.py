@@ -32,12 +32,17 @@ motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, 50)
 motor.closeHand()
 vision.capture()
 
+#The Image to anaylze
+imgac = cv2.imread(r'./images.jpg')
+
+#Reference Masking
 img = cv2.imread(r'./images/mask.png')
 
 # Image Checking
-if img is None:
+if imgac is None:
   print("Error: File not found")
   exit(0)
+
 img = cv2.resize(img, (500,500))
  
 
@@ -124,6 +129,6 @@ while n < len(a):
   tots.append(math.sqrt(a[0] + b[0]))
   n = n + 1
 
-print((sum(tots)/6)/pixel_per_cm)
+print(((sum(tots)/6)/pixel_per_cm)*100, 'mm')
 
 
