@@ -114,7 +114,7 @@ if __name__ == '__main__':
     print("1: Scramble")
     print("2: Endless Scramble + solve")
     print("3: Take picture, save to ./images")
-    selection = input("Select an option: ")
+    selection = int(input("Select an option: "))
 
     # Set up the work thread
     worker_thread = threading.Thread(target=worker, args=(selection))
