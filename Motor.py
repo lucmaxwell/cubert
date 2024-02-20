@@ -411,14 +411,10 @@ class CubertMotor:
 
         self.moveGripperToPos(GripperPosition.MIDDLE, 50)
 
-        CurrentSensor.MOTOR_SKIPPED_LOCK.acquire()
-        while not CurrentSensor.MOTOR_SKIPPED.isSet():
-            CurrentSensor.MOTOR_SKIPPED_LOCK.release()
+        while not sensor.getMotorSkipped():
             self.stepGripper(GripperDirection.CLOSE, step_delay)
             libc.usleep(step_delay)
             steps_done += 1
-            CurrentSensor.MOTOR_SKIPPED_LOCK.acquire()
-        CurrentSensor.MOTOR_SKIPPED_LOCK.release()
 
         self._steps_to_close = steps_done + 3
 
