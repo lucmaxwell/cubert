@@ -411,10 +411,14 @@ class CubertMotor:
 
         self.moveGripperToPos(GripperPosition.MIDDLE, 50)
 
+        CurrentSensor.MOTOR_SKIPPED_LOCK.acquire()
         while not CurrentSensor.MOTOR_SKIPPED:
+            CurrentSensor.MOTOR_SKIPPED_LOCK.release()
             self.stepGripper(GripperDirection.CLOSE, step_delay)
             libc.usleep(step_delay)
             steps_done += 1
+            CurrentSensor.MOTOR_SKIPPED_LOCK.acquire()
+        CurrentSensor.MOTOR_SKIPPED_LOCK.release()
 
         self._steps_to_close = steps_done + 3
 
@@ -1165,23 +1169,24 @@ if __name__ == '__main__':
         motor.moveBaseDegrees(90, Direction.CCW, 200, True)
 
         motor.moveGripperToPos(GripperPosition.BOTTOM_ENDSTOP, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.PICKUP, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.MIDDLE_CUBE, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.MIDDLE, 50)
-        time.sleep(10)
+        time.sleep(1)
+        motor.calibrateGripStrength()
         motor.moveGripperToPos(GripperPosition.DROPOFF, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.FLIP_TOP, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.TOP, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.TOP_ENDSTOP, 50)
-        time.sleep(10)
+        time.sleep(1)
 
         print("Testing Complete!")
 
