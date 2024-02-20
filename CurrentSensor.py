@@ -19,7 +19,7 @@ class CubertCurrentSensor():
     _current_threshold = 100
 
     def __init__(self):
-        MOTOR_SKIPPED.clear() # set to false
+        MOTOR_SKIPPED.set() # set to false
 
         self.sensor = INA3221.SDL_Pi_INA3221(addr=0x40)
 
