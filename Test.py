@@ -40,20 +40,6 @@ current_right = []
 
 _run_thread_1 = True
 
-def check_light():
-
-    global current_base
-    global current_left
-    global current_right
-    global light_on
-    global _run_thread_1
-    
-    while _run_thread_1:
-        # current_base.append(sensor.getChannelCurrent(CurrentChannel.BASE_LIGHT))
-        current_left.append(sensor.getChannelCurrent(CurrentChannel.LEFT_MOTOR))
-        current_right.append(sensor.getChannelCurrent(CurrentChannel.RIGHT_MOTOR))
-
-
 def spin_base():
     actions.rotateCube(BaseRotation.HALF, Direction.CCW)
 
