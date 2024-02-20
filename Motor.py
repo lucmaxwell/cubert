@@ -269,7 +269,7 @@ class CubertMotor:
         # move gripper away from base
         self.openHand()
         self.moveGripperToPos(GripperPosition.TOP_ENDSTOP)
-        self.calibrateGripStrength()
+        # self.calibrateGripStrength()
 
         # home components
         self.homeBase()
@@ -1165,6 +1165,24 @@ if __name__ == '__main__':
 
         motor.moveBaseDegrees(90, Direction.CCW, 200, True)
 
+        motor.moveGripperToPos(GripperPosition.BOTTOM_ENDSTOP, 50)
+        time.sleep(1)
+        motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
+        time.sleep(1)
+        motor.moveGripperToPos(GripperPosition.PICKUP, 50)
+        time.sleep(1)
+        motor.moveGripperToPos(GripperPosition.MIDDLE_CUBE, 50)
+        time.sleep(1)
+        motor.moveGripperToPos(GripperPosition.MIDDLE, 50)
+        time.sleep(1)
+        motor.moveGripperToPos(GripperPosition.DROPOFF, 50)
+        time.sleep(1)
+        motor.moveGripperToPos(GripperPosition.FLIP_TOP, 50)
+        time.sleep(1)
+        motor.moveGripperToPos(GripperPosition.TOP, 50)
+        time.sleep(1)
+        motor.moveGripperToPos(GripperPosition.TOP_ENDSTOP, 50)
+        time.sleep(1)
 
         print("Testing Complete!")
 
