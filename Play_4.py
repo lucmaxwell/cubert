@@ -5,8 +5,13 @@ import numpy as np
 import imutils
 import cv2
 import math
+import Vision
 
-img = cv2.imread(r'C:\Users\Noah\Downloads\Capstone_Code\Capstone_Code\Assets\0 original.png')
+
+vision = Vision.CubertVision()
+vision.capture()
+
+img = cv2.imread(r'./image.jpg')
 # Image Checking
 if img is None:
   print("Error: File not found")
@@ -91,7 +96,4 @@ dist = math.sqrt(a+b)
 #print(pixel_per_cm)
 print(dist/pixel_per_cm)
 
-cv2.imshow('Input Image', output)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
 
