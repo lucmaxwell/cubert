@@ -27,7 +27,7 @@ class CubertNotation(IntEnum):
 
 class CubertActions:
 
-    _default_base_speed = 300
+    _default_base_speed = 400
     _base_accel_frac    = 0.05      # Base Max Speed Point 
     _default_arm_speed  = 150
     _arm_accel_frac     = 0.15      # Arm Max Speed Point
