@@ -126,7 +126,7 @@ class CubertMotor:
     _steps_per_mm           = -1                        # number of steps to move gripper 1mm
     _steps_from_bottom      = -1                        # current number of step to get to the bottom endstop
     _steps_total_travel     = -2                        # number to steps to travel from enstop to endstop in gauntry
-    _steps_to_close         = 370                       # number of steps until gripper is considered closed
+    _steps_to_close         = 345                       # number of steps until gripper is considered closed
 
     _cubelet_size           = 17                        # cublet size in mm
 
@@ -335,7 +335,7 @@ class CubertMotor:
         median = statistics.median(queue)
 
         # find transfer coil
-        while times_crossed < 20:          
+        while times_crossed < 30:          
 
             self.stepBase(direction, step_delay)
 
