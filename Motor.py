@@ -971,8 +971,6 @@ class CubertMotor:
         # convert degrees to steps
         steps = round(self._STEPS_PER_BASE_REV * degrees_to_rotate / 360)
 
-        print(steps)
-
         self.moveBase(steps, direction, move_speed, acceleration, accel_fraction)
 
     def moveBase(self, steps, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
@@ -1167,23 +1165,23 @@ if __name__ == '__main__':
         motor.moveBaseDegrees(90, Direction.CCW, 200, True)
 
         motor.moveGripperToPos(GripperPosition.BOTTOM_ENDSTOP, 50)
-        time.sleep(1)
+        time.sleep(10)
         motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
-        time.sleep(1)
+        time.sleep(10)
         motor.moveGripperToPos(GripperPosition.PICKUP, 50)
-        time.sleep(1)
+        time.sleep(10)
         motor.moveGripperToPos(GripperPosition.MIDDLE_CUBE, 50)
-        time.sleep(1)
+        time.sleep(10)
         motor.moveGripperToPos(GripperPosition.MIDDLE, 50)
-        time.sleep(1)
+        time.sleep(10)
         motor.moveGripperToPos(GripperPosition.DROPOFF, 50)
-        time.sleep(1)
+        time.sleep(10)
         motor.moveGripperToPos(GripperPosition.FLIP_TOP, 50)
-        time.sleep(1)
+        time.sleep(10)
         motor.moveGripperToPos(GripperPosition.TOP, 50)
-        time.sleep(1)
+        time.sleep(10)
         motor.moveGripperToPos(GripperPosition.TOP_ENDSTOP, 50)
-        time.sleep(1)
+        time.sleep(10)
 
         print("Testing Complete!")
 
