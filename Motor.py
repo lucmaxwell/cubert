@@ -335,7 +335,7 @@ class CubertMotor:
         median = statistics.median(queue)
 
         # find transfer coil
-        while times_crossed < 30:          
+        while times_crossed < 40:          
 
             self.stepBase(direction, step_delay)
 
