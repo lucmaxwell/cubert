@@ -10,6 +10,7 @@ class CurrentChannel(IntEnum):
 
 # define globale vairables
 MOTOR_SKIPPED = False
+MOTOR_SKIPPED_LOCK = threading.Lock()
 
 class CubertCurrentSensor():
 
@@ -41,6 +42,7 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel):
     prev_reading = 0
 
     global MOTOR_SKIPPED
+    global MOTOR_SKIPPED_LOCK
 
     while sensor.run_gripper_monitor:
         prev_reading = curr_reading
@@ -49,7 +51,9 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel):
         print(curr_reading)
 
         if abs(prev_reading - curr_reading) > -1 or True:#sensor._current_threshold:
+            MOTOR_SKIPPED_LOCK.acquire()
             MOTOR_SKIPPED = True
+            MOTOR_SKIPPED_LOCK.release()
 
 if __name__ == '__main__':
     print("Running Current Sensor Test")
