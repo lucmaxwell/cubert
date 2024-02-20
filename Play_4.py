@@ -32,7 +32,8 @@ motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, 50)
 motor.closeHand()
 vision.capture()
 
-img = cv2.imread(r'./image.jpg')
+img = cv2.imread(r'./images/mask.png')
+
 # Image Checking
 if img is None:
   print("Error: File not found")
@@ -52,21 +53,6 @@ cnts = imutils.grab_contours(cnts)
 
 (cnts, _) = contours.sort_contours(cnts)
 
-
-# Get rid of small contours
-cnts = [x for x in cnts if cv2.contourArea(x) > 12000]
-
-#Get rid of big contours
-cnts = [x for x in cnts if cv2.contourArea(x) < 10000000]
-
-n = True
-while n == True:
-  numcon = len(cnts)
-  if numcon > 2:
-      cnts.pop(len(cnts)-1)
-  else:
-     n = False
-
 # Reference object dimensions
 ref_object = cnts[0] 
 
@@ -77,7 +63,7 @@ box = perspective.order_points(box)
 (tl, tr, br, bl) = box
 dist_in_pixel = euclidean(tl, tr)
 
-dist_in_cm = 0.11 #reference length
+dist_in_cm = 0.095 #reference length
 pixel_per_cm = dist_in_pixel/dist_in_cm 
 
 
@@ -111,10 +97,34 @@ for cnt in cnts:#cnts_all:
     wid = euclidean(tl, tr)/pixel_per_cm
     ht = euclidean(tr, br)/pixel_per_cm
      
-a = (c1[0]-c1[1])**2
-b = (c2[0]-c2[1])**2
-dist = math.sqrt(a+b)
-#print(pixel_per_cm)
-print(dist/pixel_per_cm)
+a = []
+b = []
+
+a.append((c1[0]-c1[1])**2)
+b.append( (c2[0]-c2[1])**2)
+
+a.append ((c1[1]-c1[2])**2)
+b.append((c2[1]-c2[2])**2)
+
+a.append ((c1[3]-c1[4])**2)
+b.append((c2[3]-c2[4])**2)
+
+a.append ((c1[4]-c1[5])**2)
+b.append((c2[4]-c2[5])**2)
+
+a.append((c1[6]-c1[7])**2)
+b.append((c2[6]-c2[7])**2)
+
+a.append((c1[7]-c1[8])**2)
+b.append((c2[7]-c2[8])**2)
+
+tots = []
+n = 0
+while n < len(a):
+  tots.append(math.sqrt(a[0] + b[0]))
+  print(tots)
+  n = n + 1
+
+print((sum(tots)/6)/pixel_per_cm)
 
 
