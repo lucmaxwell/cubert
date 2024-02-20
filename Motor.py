@@ -269,11 +269,11 @@ class CubertMotor:
         # move gripper away from base
         self.openHand()
         self.moveGripperToPos(GripperPosition.TOP_ENDSTOP)
-        self.calibrateGripStrength()
 
         # home components
         self.homeBase()
         self.homeGripper()
+        self.calibrateGripStrength()
 
         print("Homing Finished")
 
