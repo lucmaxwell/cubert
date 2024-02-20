@@ -9,7 +9,7 @@ class CurrentChannel(IntEnum):
     BASE_LIGHT  = 3
 
 # define globale vairables
-MOTOR_SKIPPED = False
+MOTOR_SKIPPED = threading.Event()
 MOTOR_SKIPPED_LOCK = threading.Lock()
 
 class CubertCurrentSensor():
@@ -19,6 +19,8 @@ class CubertCurrentSensor():
     _current_threshold = 100
 
     def __init__(self):
+        MOTOR_SKIPPED.clear() # set to false
+
         self.sensor = INA3221.SDL_Pi_INA3221(addr=0x40)
 
         self.run_gripper_monitor = True
@@ -52,7 +54,7 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel):
 
         if abs(prev_reading - curr_reading) > -1 or True:#sensor._current_threshold:
             MOTOR_SKIPPED_LOCK.acquire()
-            MOTOR_SKIPPED = True
+            MOTOR_SKIPPED.set()
             MOTOR_SKIPPED_LOCK.release()
 
 if __name__ == '__main__':
