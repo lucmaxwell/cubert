@@ -41,7 +41,7 @@ class CubertVision:
     def capture(self):
         self.camera.capture("./image.jpg")
 
-    def getCuubletSize(self):
+    def getCubletSize(self):
         #The Image to anaylze
         imgac = cv.imread(r'./image.jpg')
 
@@ -139,7 +139,8 @@ class CubertVision:
             tots.append(math.sqrt(a[0] + b[0]))
             n = n + 1
 
-        print(((sum(tots)/6)/pixel_per_cm)*100, 'mm')
+        # print(((sum(tots)/6)/pixel_per_cm)*100, 'mm')
+        return ((sum(tots)/6)/pixel_per_cm)*100
 
     def writeImages(self, colours):
         for i in range(colours.shape[0]):

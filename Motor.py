@@ -439,6 +439,14 @@ class CubertMotor:
         dist = input("Input Distance Measured Between Gripper and Base: ")
         self._DISTANCE_AT_TOP = float(dist)
 
+    def resizeCubelet(self, cubelet_size):
+        self._cubelet_size = cubelet_size
+
+        _dropoff_height         = self._DISTANCE_AT_BOTTOM + 1.75 * self._cubelet_size           # height in mm to release cube at
+        _cube_middle_height     = self._DISTANCE_AT_BOTTOM + 0.9 * self._cubelet_size         # height of cube center
+        _flip_apex_height       = self._DISTANCE_AT_BOTTOM + 2.3 * self._cubelet_size         # highest point when flipping cube
+        _pickup_height          = self._DISTANCE_AT_BOTTOM + self._cubelet_size / 30
+
 
     # define callback functions
     def top_endstop_callback(self, channel):

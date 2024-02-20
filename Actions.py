@@ -33,7 +33,7 @@ class CubertActions:
     _arm_accel_frac     = 0.15      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
-    def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, calibrate_distance=False):
+    def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, calibrate_distance=False, resize_cubelets=True):
         """
         Purpose: Setup CubertAction Class
 
@@ -57,7 +57,7 @@ class CubertActions:
         motor.enable()
 
         self.motor.home(calibrate_distance)
-        self.vision.getCuubletSize()
+        if resize_cubelets: self.vision.getCubletSize()
 
     def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_default_base_speed, acceleration=True):
         """
@@ -231,6 +231,11 @@ class CubertActions:
                 self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW, acceleration=False)
                     
         print("Cube should be solved")
+
+    def sizeCubelet(self):
+        self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, 50)
+        self.motor.resizeCubelet(self.vision.getCubletSize())
+
 
     def flip(self, move_speed=_default_arm_speed, acceleration=True):
         """
