@@ -667,7 +667,8 @@ class CubertMotor:
         print("Movement Complete")
 
         # update gripper location
-        self.changeRelativeLocation(steps_done, direction)
+        if direction is not None:
+            self.changeRelativeLocation(steps_done, direction)
 
         return steps_done
     
