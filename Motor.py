@@ -406,7 +406,7 @@ class CubertMotor:
         Purpose: Determine a acceptable grip strength for grabbiing the cube
         """
 
-        step_delay = get_step_delay(60)
+        step_delay = get_step_delay(10)
         steps_done = 0
 
         self.moveGripperToPos(GripperPosition.MIDDLE, 50)
