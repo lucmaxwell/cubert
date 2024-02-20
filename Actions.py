@@ -135,7 +135,7 @@ class CubertActions:
 
         for i in range(6):
             
-            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE)
+            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE)
             self.motor.closeHand()
             img = self.vision.getImage()
             self.motor.openHand()
@@ -245,7 +245,7 @@ class CubertActions:
 
         if self._cube_face_spun:
             # the Noah manuever
-            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
+            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, move_speed, acceleration=acceleration)
             self.motor.closeHand()
             self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
             self.motor.moveBaseDegrees(40, Motor.Direction.CW, move_speed)
