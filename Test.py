@@ -74,7 +74,7 @@ def sigint_handler(sig, frame):
 
 def worker():
     while True:
-        actions.scramble(random.randint(1, 24))
+        # actions.scramble(random.randint(1, 24))
         time.sleep(5)
         actions.solve(True)
         time.sleep(15)
