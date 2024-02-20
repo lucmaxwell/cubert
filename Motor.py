@@ -1159,6 +1159,8 @@ if __name__ == '__main__':
 
         motor.moveBase(round(19200/4), Direction.CCW, 200, True)
 
+        motor.moveBaseDegrees(90, Direction.CCW, 200, True)
+
 
         print("Testing Complete!")
 
