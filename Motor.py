@@ -273,7 +273,7 @@ class CubertMotor:
         # home components
         self.homeBase()
         self.homeGripper()
-        self.calibrateGripStrength()
+        # self.calibrateGripStrength()
 
         print("Homing Finished")
 
