@@ -233,8 +233,11 @@ class CubertActions:
         print("Cube should be solved")
 
     def sizeCubelet(self):
+        print("Resizing Cubelets")
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, 50)
+        self.motor.closeHand()
         self.motor.resizeCubelet(self.vision.getCubletSize())
+        self.motor.openHand()
 
 
     def flip(self, move_speed=_default_arm_speed, acceleration=True):
