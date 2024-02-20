@@ -128,7 +128,7 @@ class CubertMotor:
     _steps_total_travel     = -2                        # number to steps to travel from enstop to endstop in gauntry
     _steps_to_close         = 345                       # number of steps until gripper is considered closed
 
-    _cubelet_size           = 17                        # cublet size in mm
+    _cubelet_size           = 19                        # cublet size in mm
 
     _current_gripper_pos    = GripperPosition.UNKNOWN   # tracks the current gripper state
     _current_hand_state     = HandState.UNKOWN          # tracks the current gripper hand state
@@ -141,10 +141,10 @@ class CubertMotor:
     _base_homed             = False                     # False if base requires homing
 
     # derive class variables
-    _dropoff_height         = _DISTANCE_AT_BOTTOM + 2 * _cubelet_size           # height in mm to release cube at
-    _cube_middle_height     = _DISTANCE_AT_BOTTOM + 1 * _cubelet_size         # height of cube center
-    _flip_apex_height       = _DISTANCE_AT_BOTTOM + 2.5 * _cubelet_size         # highest point when flipping cube
-    _pickup_height          = _DISTANCE_AT_BOTTOM + _cubelet_size / 20           # height to grab cube at
+    _dropoff_height         = _DISTANCE_AT_BOTTOM + 1.75 * _cubelet_size           # height in mm to release cube at
+    _cube_middle_height     = _DISTANCE_AT_BOTTOM + 0.9 * _cubelet_size         # height of cube center
+    _flip_apex_height       = _DISTANCE_AT_BOTTOM + 2.25 * _cubelet_size         # highest point when flipping cube
+    _pickup_height          = _DISTANCE_AT_BOTTOM + _cubelet_size / 30           # height to grab cube at
 
 
     def __init__(self, enable_pin, step_pin_list, dir_pin_list, top_end_pin, bottom_end_pin, grip_end_pin, current_sensor:CurrentSensor.CubertCurrentSensor):
