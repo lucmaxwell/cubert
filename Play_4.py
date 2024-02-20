@@ -33,7 +33,7 @@ motor.closeHand()
 vision.capture()
 
 #The Image to anaylze
-imgac = cv2.imread(r'./images.jpg')
+imgac = cv2.imread(r'./image.jpg')
 
 #Reference Masking
 img = cv2.imread(r'./images/mask.png')
