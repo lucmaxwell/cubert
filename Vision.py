@@ -10,6 +10,11 @@ from sklearn.cluster import KMeans
 import urllib.request
 import scipy.stats as stats
 import plotext as plt
+import imutils
+from scipy.spatial.distance import euclidean
+from imutils import perspective
+from imutils import contours
+import math
 
 class CubertVision:
 
@@ -35,6 +40,106 @@ class CubertVision:
 
     def capture(self):
         self.camera.capture("./image.jpg")
+
+    def getCuubletSize(self):
+        #The Image to anaylze
+        imgac = cv.imread(r'./image.jpg')
+
+        #Reference Masking
+        img = cv.imread(r'./images/mask.png')
+
+        # Image Checking
+        if imgac is None:
+            print("Error: File not found")
+            return -1
+
+        img = cv.resize(img, (500,500))
+        
+
+        # Convert to grayscale
+        img_gs = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+        # Convert image to binary
+        _, thresh = cv.threshold(img_gs, 85, 200, cv.THRESH_BINARY)
+
+        # Find contours
+        cnts = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        cnts = imutils.grab_contours(cnts)
+
+        (cnts, _) = contours.sort_contours(cnts)
+
+        # Reference object dimensions
+        ref_object = cnts[0] 
+
+        box = cv.minAreaRect(ref_object)
+        box = cv.boxPoints(box)
+        box = np.array(box, dtype="int")
+        box = perspective.order_points(box)
+        (tl, tr, br, bl) = box
+        dist_in_pixel = euclidean(tl, tr)
+
+        dist_in_cm = 0.095 #reference length
+        pixel_per_cm = dist_in_pixel/dist_in_cm 
+
+
+        _, blank= cv.threshold(img_gs, 0, 200, cv.THRESH_BINARY)
+
+        # Draw contours
+        output = blank
+        c1 = []
+        c2 = []
+
+        for cnt in cnts:#cnts_all:
+            #Centroids
+            M = cv.moments(cnt)
+        
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+
+            c1.append(cX)
+            c2.append(cY)
+
+            cv.circle(output, (cX, cY), 7, (255, 255, 255), -1)
+
+            box = cv.minAreaRect(cnt)
+            box = cv.boxPoints(box)
+            box = np.array(box, dtype="int")
+            box = perspective.order_points(box)
+            (tl, tr, br, bl) = box
+            cv.drawContours(output, [box.astype("int")], -1, (0, 0, 255), 2)
+            mid_pt_horizontal = (tl[0] + int(abs(tr[0] - tl[0])/2), tl[1] + int(abs(tr[1] - tl[1])/2))
+            mid_pt_verticle = (tr[0] + int(abs(tr[0] - br[0])/2), tr[1] + int(abs(tr[1] - br[1])/2))
+            wid = euclidean(tl, tr)/pixel_per_cm
+            ht = euclidean(tr, br)/pixel_per_cm
+            
+        a = []
+        b = []
+
+        a.append((c1[0]-c1[1])**2)
+        b.append( (c2[0]-c2[1])**2)
+
+        a.append ((c1[1]-c1[2])**2)
+        b.append((c2[1]-c2[2])**2)
+
+        a.append ((c1[3]-c1[4])**2)
+        b.append((c2[3]-c2[4])**2)
+
+        a.append ((c1[4]-c1[5])**2)
+        b.append((c2[4]-c2[5])**2)
+
+        a.append((c1[6]-c1[7])**2)
+        b.append((c2[6]-c2[7])**2)
+
+        a.append((c1[7]-c1[8])**2)
+        b.append((c2[7]-c2[8])**2)
+
+        tots = []
+        n = 0
+        while n < len(a):
+            tots.append(math.sqrt(a[0] + b[0]))
+            n = n + 1
+
+        print(((sum(tots)/6)/pixel_per_cm)*100, 'mm')
 
     def writeImages(self, colours):
         for i in range(colours.shape[0]):
