@@ -58,19 +58,30 @@ def sigint_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
-def worker():
-    while True:
-        # actions.scramble(random.randint(1, 24))
+def worker(selection):
+    if selection == '0': # Single solve
         time.sleep(5)
         actions.solve(True)
         time.sleep(15)
 
-        if int(stress_test) != 1:
-            break
+    elif selection == '1': # Single scramble
+        actions.scramble(13)
 
+    elif selection == '2': # Endless scramble + solve
+        while True:
+            actions.scramble(13)
+            time.sleep(5)
+            motor.homeLight()
+            time.sleep(5)
+            actions.solve(True)
+            time.sleep(15)
+
+    elif selection == '3': # Take an image
+        cube, mask = actions.getAllImages(True)
+        vision.writeImage("testingImage.png", cube)
+        vision.writeImage("testingmask.png", mask)
 
 _PANIC_BUTTON_PIN = 4
-
 
 if __name__ == '__main__':
     print("Running Test Script")
@@ -80,11 +91,19 @@ if __name__ == '__main__':
     GPIO.setup(_PANIC_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     signal.signal(signal.SIGINT, sigint_handler)
-
-    stress_test = input("Input 1 for Stress Testing: ")
+    print()
+    print("==========================================")
+    print("==========================================")
+    print()
+    
+    print("0: Single solve")
+    print("1: Scramble")
+    print("2: Endless Scramble + solve")
+    print("3: Take picture, save to ./images")
+    selection = input("Select an option: ")
 
     # Set up the work thread
-    worker_thread = threading.Thread(target=worker)
+    worker_thread = threading.Thread(target=worker, args=(selection))
     worker_thread.daemon = True
     worker_thread.start()
 
@@ -93,7 +112,7 @@ if __name__ == '__main__':
     _PANIC_BUTTON_PIN = 4
     while not panic:
         # Take a reading of the panic button
-        panic = not (GPIO.input(_PANIC_BUTTON_PIN) == GPIO.LOW)
+        panic = (GPIO.input(_PANIC_BUTTON_PIN) == GPIO.LOW)
 
         # End the worker thread
         if panic:

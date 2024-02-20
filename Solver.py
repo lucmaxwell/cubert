@@ -78,11 +78,12 @@ class Solver:
         # Get the correct face facing down
         # P = yy
         # p = bb
+        # D = XX
 
         ORIENTATE = {
             'D': "",
             'F': "X",
-            'U': "XX",
+            'U': "D",
             'B': "PX",
             'L': "YX",
             'R': "yX"
@@ -171,15 +172,20 @@ class Solver:
             move = solution[0:3]
 
         return cuberty
+    
+    def getMlArray(imageArray):
+        # Transform from (3, 18) to (6, 3, 3)
+        mlArray = np.zeros((6, 3, 3), dtype=np.uint8)
+        for i in range(6):
+            mlArray[i] = imageArray[:, i*3:i*3+3]
 
-    # cubeArray = np.array(
-    #     [[3, 5, 1, 1, 4, 4, 3, 5, 5, 5, 2, 0, 2, 2, 0, 4, 0, 2],
-    #     [2, 2, 5, 4, 3, 0, 1, 5, 3, 4, 1, 2, 0, 4, 3, 1, 0, 3],
-    #     [3, 0, 1, 5, 1, 0, 4, 5, 3, 0, 4, 2, 4, 3, 5, 1, 1, 2]])
+        # Put faces in the correct order
+        temp = np.copy(mlArray[2])
+        mlArray[2] = mlArray[0]
+        mlArray[0] = temp
 
-    # solution = get3x3Solution(cubeArray)
-    # cuberty = cubertify(solution, True)
+        # Orient faces the correct way
+        mlArray[4] = np.rot90(mlArray[4], 3)
+        mlArray[5] = np.rot90(mlArray[5], 3)
 
-    # print()
-    # print(f"Solution: {solution}")
-    # print(f"Cubert's solution: {cuberty}")
+        return mlArray

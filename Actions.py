@@ -30,13 +30,13 @@ class CubertNotation(IntEnum):
 
 class CubertActions:
 
-    _default_base_speed = 300
+    _default_base_speed = 400
     _base_accel_frac    = 0.05      # Base Max Speed Point 
     _default_arm_speed  = 150
     _arm_accel_frac     = 0.15      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
-    def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, calibrate_distance=False):
+    def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, calibrate_distance=False, resize_cubelets=True):
         """
         Purpose: Setup CubertAction Class
 
@@ -60,6 +60,7 @@ class CubertActions:
         motor.enable()
 
         self.motor.home(calibrate_distance)
+        if resize_cubelets: self.sizeCubelet()
 
     def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_default_base_speed, acceleration=True):
         """
@@ -300,6 +301,9 @@ class CubertActions:
             if move == 'X':
                 self.flip(acceleration=True)
 
+            elif move == 'D':
+                self.doubleFlip(acceleration=True)
+
             elif move == 'y':
                 self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
 
@@ -319,6 +323,15 @@ class CubertActions:
                 self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW, acceleration=False)
                     
         print("Cube should be solved")
+
+    def sizeCubelet(self):
+        print("Resizing Cubelets")
+        self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, 50)
+        self.motor.closeHand()
+        time.sleep(0.5)
+        self.motor.resizeCubelet(self.vision.getCubletSize())
+        self.motor.openHand()
+
 
     def flip(self, move_speed=_default_arm_speed, acceleration=True):
         """
@@ -436,28 +449,6 @@ class CubertActions:
                 rotation = Motor.BaseRotation.HALF
 
             self.preformMove(move, rotation, move_speed)
-
-    def enableLights(self, imageUrl, client, writeConsole=False):
-        lights = np.zeros(4)
-
-        # Find the orientation with the highest lightness
-        for i in range(4):
-            img = self.vision.getImage()
-            average = np.average(img)
-            lights[i] = average
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-
-            if(i < 4):
-                time.sleep(0.25)
-
-        # Spin to the lightest side
-        spin = lights.argmax()
-        if(spin == 1):
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-        elif(spin == 2):
-            self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
-        elif(spin == 3):
-            self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
 
     
 def sigint_handler(sig, frame):

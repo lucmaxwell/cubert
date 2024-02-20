@@ -143,7 +143,7 @@ class CubertMotor:
     # derive class variables
     _dropoff_height         = _DISTANCE_AT_BOTTOM + 1.75 * _cubelet_size           # height in mm to release cube at
     _cube_middle_height     = _DISTANCE_AT_BOTTOM + 0.9 * _cubelet_size         # height of cube center
-    _flip_apex_height       = _DISTANCE_AT_BOTTOM + 2.25 * _cubelet_size         # highest point when flipping cube
+    _flip_apex_height       = _DISTANCE_AT_BOTTOM + 2.3 * _cubelet_size         # highest point when flipping cube
     _pickup_height          = _DISTANCE_AT_BOTTOM + _cubelet_size / 30           # height to grab cube at
 
 
@@ -411,7 +411,7 @@ class CubertMotor:
 
         self.moveGripperToPos(GripperPosition.MIDDLE, 50)
 
-        while not CurrentSensor.MOTOR_SKIPPED:
+        while not sensor.getMotorSkipped():
             self.stepGripper(GripperDirection.CLOSE, step_delay)
             libc.usleep(step_delay)
             steps_done += 1
@@ -434,6 +434,14 @@ class CubertMotor:
 
         dist = input("Input Distance Measured Between Gripper and Base: ")
         self._DISTANCE_AT_TOP = float(dist)
+
+    def resizeCubelet(self, cubelet_size):
+        self._cubelet_size = cubelet_size
+
+        _dropoff_height         = self._DISTANCE_AT_BOTTOM + 1.75 * self._cubelet_size           # height in mm to release cube at
+        _cube_middle_height     = self._DISTANCE_AT_BOTTOM + 0.9 * self._cubelet_size         # height of cube center
+        _flip_apex_height       = self._DISTANCE_AT_BOTTOM + 2.3 * self._cubelet_size         # highest point when flipping cube
+        _pickup_height          = self._DISTANCE_AT_BOTTOM + self._cubelet_size / 30
 
 
     # define callback functions
@@ -1165,23 +1173,24 @@ if __name__ == '__main__':
         motor.moveBaseDegrees(90, Direction.CCW, 200, True)
 
         motor.moveGripperToPos(GripperPosition.BOTTOM_ENDSTOP, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.PICKUP, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.MIDDLE_CUBE, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.MIDDLE, 50)
-        time.sleep(10)
+        time.sleep(1)
+        motor.calibrateGripStrength()
         motor.moveGripperToPos(GripperPosition.DROPOFF, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.FLIP_TOP, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.TOP, 50)
-        time.sleep(10)
+        time.sleep(1)
         motor.moveGripperToPos(GripperPosition.TOP_ENDSTOP, 50)
-        time.sleep(10)
+        time.sleep(1)
 
         print("Testing Complete!")
 
