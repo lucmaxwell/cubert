@@ -269,7 +269,7 @@ class CubertMotor:
         # move gripper away from base
         self.openHand()
         self.moveGripperToPos(GripperPosition.TOP_ENDSTOP)
-        # self.calibrateGripStrength()
+        self.calibrateGripStrength()
 
         # home components
         self.homeBase()
@@ -409,7 +409,7 @@ class CubertMotor:
         step_delay = get_step_delay(60)
         steps_done = 0
 
-        self.moveGripperToPos(GripperPosition.MIDDLE_CUBE)
+        self.moveGripperToPos(GripperPosition.MIDDLE, 50)
 
         while not CurrentSensor.MOTOR_SKIPPED:
             self.stepGripper(GripperDirection.CLOSE, step_delay)
