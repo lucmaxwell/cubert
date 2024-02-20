@@ -10,6 +10,7 @@ import plotext as plt
 import Vision
 from Actions import *
 import Solver
+from PanicButton import panic_action
 
 # Motor Pins
 motor_en_pin = 26
@@ -72,6 +73,17 @@ def sigint_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
+def worker():
+    while True:
+        actions.scramble(random.randint(1, 24))
+        time.sleep(5)
+        actions.solve(True)
+        time.sleep(15)
+
+        if int(stress_test) != 1:
+            break
+
+
 if __name__ == '__main__':
     print("Running Test Sciprt")
 
@@ -79,14 +91,20 @@ if __name__ == '__main__':
 
     stress_test = input("Input 1 for Stress Testing: ")
 
-    while True:
-        actions.scramble(random.randint(1,24))
-        time.sleep(5)
-        actions.solve(True)
-        time.sleep(15)
+    # Set up the work thread
+    worker_thread = threading.Thread(target=worker)
+    worker_thread.start()
 
-        if int(stress_test) != 1:
-            break
+    # Run the program until panic
+    panic = False
+    _PANIC_BUTTON_PIN = 4
+    while not panic:
+        # Take a reading of the panic button
+        panic = not (GPIO.input(_PANIC_BUTTON_PIN) == GPIO.LOW)
+
+        # End the worker thread
+        if panic:
+            sys.exit("Program terminated due to panic button pressed.")
 
     del actions
     del motor
