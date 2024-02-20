@@ -27,9 +27,9 @@ class CubertNotation(IntEnum):
 
 class CubertActions:
 
-    _default_base_speed = 250
+    _default_base_speed = 300
     _base_accel_frac    = 0.05      # Base Max Speed Point 
-    _default_arm_speed  = 100
+    _default_arm_speed  = 150
     _arm_accel_frac     = 0.15      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
@@ -51,7 +51,7 @@ class CubertActions:
         self.solver = solver
 
         # change default move speed
-        self._defaul_move_speed = default_move_speed
+        # self._defaul_move_speed = default_move_speed
 
         # enable and home motors
         motor.enable()
@@ -135,7 +135,7 @@ class CubertActions:
 
         for i in range(6):
             
-            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE)
+            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE)
             self.motor.closeHand()
             img = self.vision.getImage()
             self.motor.openHand()
@@ -206,7 +206,7 @@ class CubertActions:
         print("Sending instructions")
         for move in cubertSolution:
             if move == 'X':
-                self.flip(acceleration=False)
+                self.flip(acceleration=True)
 
             elif move == 'y':
                 self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
@@ -243,16 +243,16 @@ class CubertActions:
         self.motor.moveGripperToPos(Motor.GripperPosition.DROPOFF, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
         self.motor.openHand()
 
-        if self._cube_face_spun:
-            # the Noah manuever
-            self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, move_speed, acceleration=acceleration)
-            self.motor.closeHand()
-            self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
-            self.motor.moveBaseDegrees(40, Motor.Direction.CW, move_speed)
-            self.motor.moveBaseDegrees(10, Motor.Direction.CCW, move_speed)
-            self.motor.openHand()
+        # if self._cube_face_spun:
+        #     # the Noah manuever
+        #     self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, move_speed, acceleration=acceleration)
+        #     self.motor.closeHand()
+        #     self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
+        #     self.motor.moveBaseDegrees(40, Motor.Direction.CW, move_speed)
+        #     self.motor.moveBaseDegrees(10, Motor.Direction.CCW, move_speed)
+        #     self.motor.openHand()
 
-            self._cube_face_spun = False
+        #     self._cube_face_spun = False
 
     def doubleFlip(self, move_speed=_default_arm_speed, acceleration=True):
         """
