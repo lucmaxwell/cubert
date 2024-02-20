@@ -543,6 +543,7 @@ class CubertMotor:
         
         endstop_to_check = self.return_false    # set to false
         steps            = 4000                 # a reasonably large number of steps
+        direction        = None
 
         # check if gripper needs to move
         if self._current_gripper_pos == position:
