@@ -409,7 +409,7 @@ class CubertMotor:
         step_delay = get_step_delay(60)
         steps_done = 0
 
-        self.moveGripper(GripperPosition.MIDDLE_CUBE)
+        self.moveGripperToPos(GripperPosition.MIDDLE_CUBE)
 
         while not CurrentSensor.MOTOR_SKIPPED:
             self.stepGripper(GripperDirection.CLOSE, step_delay)
