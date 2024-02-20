@@ -29,7 +29,7 @@ class CubertActions:
 
     _default_base_speed = 250
     _base_accel_frac    = 0.05      # Base Max Speed Point 
-    _default_arm_speed  = 100
+    _default_arm_speed  = 120
     _arm_accel_frac     = 0.15      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
@@ -206,7 +206,7 @@ class CubertActions:
         print("Sending instructions")
         for move in cubertSolution:
             if move == 'X':
-                self.flip(acceleration=False)
+                self.flip(acceleration=True)
 
             elif move == 'y':
                 self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
