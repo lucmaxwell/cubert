@@ -19,7 +19,7 @@ class CubertCurrentSensor():
     _current_threshold = 100
 
     def __init__(self):
-        MOTOR_SKIPPED.set() # set to false
+        MOTOR_SKIPPED.clear() # set to false
 
         self.sensor = INA3221.SDL_Pi_INA3221(addr=0x40)
 
@@ -49,6 +49,8 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel):
     while sensor.run_gripper_monitor:
         prev_reading = curr_reading
         curr_reading = sensor.getChannelCurrent(channel)
+
+        MOTOR_SKIPPED.set()
 
         print(curr_reading)
 
