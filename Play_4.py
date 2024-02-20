@@ -9,7 +9,7 @@ import Vision
 
 
 vision = Vision.CubertVision()
-Vision.CubertVision.capture()
+vision.capture()
 
 img = cv2.imread(r'./image.jpg')
 # Image Checking
