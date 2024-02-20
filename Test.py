@@ -83,8 +83,15 @@ def worker():
             break
 
 
+_PANIC_BUTTON_PIN = 4
+
+
 if __name__ == '__main__':
-    print("Running Test Sciprt")
+    print("Running Test Script")
+
+    # Setup panic pin
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(_PANIC_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     signal.signal(signal.SIGINT, sigint_handler)
 
