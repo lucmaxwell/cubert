@@ -99,6 +99,7 @@ if __name__ == '__main__':
 
     # Set up the work thread
     worker_thread = threading.Thread(target=worker)
+    worker_thread.daemon = True
     worker_thread.start()
 
     # Run the program until panic
@@ -111,6 +112,8 @@ if __name__ == '__main__':
         # End the worker thread
         if panic:
             sys.exit("Program terminated due to panic button pressed.")
+
+        time.sleep(0.2)
 
     del actions
     del motor
