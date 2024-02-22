@@ -14,7 +14,7 @@ MOTOR_SKIPPED_LOCK = threading.Lock()
 
 class CubertCurrentSensor():
 
-    run_gripper_monitor = False
+    run_gripper_monitor = threading.Event()
     
     _current_threshold = 100
 
@@ -23,13 +23,16 @@ class CubertCurrentSensor():
 
         self.sensor = INA3221.SDL_Pi_INA3221(addr=0x40)
 
-        self.run_gripper_monitor = True
+        self.run_gripper_monitor.set()
 
         self._left_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.LEFT_MOTOR))
         self._right_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR))
 
+        self._left_motor_monitor.start()
+        self._right_motor_monitor.start()
+
     def __del__(self):
-        self.run_gripper_monitor = False
+        self.run_gripper_monitor.clear()
 
         self._left_motor_monitor.join()
         self._right_motor_monitor.join()
@@ -49,10 +52,7 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel):
     curr_reading = 0
     prev_reading = 0
 
-    MOTOR_SKIPPED
-    MOTOR_SKIPPED_LOCK
-
-    while sensor.run_gripper_monitor:
+    while sensor.run_gripper_monitor.isSet():
         prev_reading = curr_reading
         curr_reading = sensor.getChannelCurrent(channel)
 
