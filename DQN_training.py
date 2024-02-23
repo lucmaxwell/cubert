@@ -9,7 +9,6 @@ from RubikCubeEnv import RubiksCubeEnv
 from Training_Utility_Functions import train_and_evaluate
 
 network_configuration = ResidualBlock_3Layers_4096
-.000
 
 NUM_SCRAMBLES = 2
 
