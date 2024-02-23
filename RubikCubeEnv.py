@@ -102,7 +102,7 @@ class RubiksCubeEnv(gymnasium.Env):
 
         # Calculate reward based on the number of correct squares
         done = self.cube.is_solved()
-        reward = 1 if done else -1 + self.cube.entropy()
+        reward = 1 if done else -0.5 - 0.5*self.cube.entropy()
 
         # Update the episode reward
         self.episode_reward += reward

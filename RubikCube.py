@@ -89,13 +89,15 @@ class RubikCube:
         }[given_face]
 
     def rotate_clockwise(self, face):
+        self.face_list[face].rotate_clockwise()
         self._perform_clockwise_rotation(face)
 
     def rotate_counter_clockwise(self, face):
+        self.face_list[face].counter_clockwise()
         for _ in range(3):
             self._perform_clockwise_rotation(face)
 
-    def _perform_clockwise_rotation(self, face):
+    def _perform_edge_clockwise_rotation(self, face):
         if (face is Face.Top) or (face is Face.Bottom):
             rotate_row = 0
             face_list = [Face.Front, Face.Left, Face.Back, Face.Right]
@@ -263,6 +265,7 @@ class RubikCube:
 
         # Return the entropy
         return entropy(p_correct_squares, base=2)
+        #return p_correct_squares
 
 
 if __name__ == '__main__':

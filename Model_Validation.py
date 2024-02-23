@@ -62,7 +62,7 @@ def evaluate_scramble_1000(model, num_scramble):
     count = 0
     solved = True
     solved_percentage = 0.0
-    while count < 100 and solved:
+    while count < 10 and solved:
         count += 1
 
         solved_percentage = evaluate_scramble(model, num_scramble, num_episodes=10, multiple_attempts=True)
@@ -95,7 +95,7 @@ def test(model, plot_title, num_episodes=1000):
 
         # Focus on the first 3 scramble only
         actual_num_episodes = num_episodes
-        if num_scramble > 4:
+        if num_scramble > 7:
             actual_num_episodes = 100
 
         # Solve the puzzles

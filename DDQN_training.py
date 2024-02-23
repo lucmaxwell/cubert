@@ -11,7 +11,7 @@ from Training_Utility_Functions import train_and_evaluate
 
 network_configuration = ResidualBlock_2Layers_4096
 
-NUM_SCRAMBLES = 3
+NUM_SCRAMBLES = 4
 
 NUM_STEPS = 100_000
 

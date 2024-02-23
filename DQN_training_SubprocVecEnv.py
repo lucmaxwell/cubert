@@ -4,19 +4,17 @@ import torch
 from stable_baselines3 import DQN
 from stable_baselines3.common.vec_env import SubprocVecEnv
 
-from Network import ResidualBlock_2Layers_2048, ResidualBlock_3Layers_2048, \
-    ResidualBlock_4Layers_1024, LSTM_4Layers_1024, ResidualBlock_2Layers_4096, ResidualBlock_3Layers_4096
+from Network import ResidualBlock_512_20_Dropout, ResidualBlock_1024_50_Dropout
 from RubikCubeEnv import RubiksCubeEnv
 from Training_Utility_Functions import train_and_evaluate
 
-network_configuration = ResidualBlock_2Layers_4096
+network_configuration = ResidualBlock_512_20_Dropout
 
-NUM_SCRAMBLES = 2
+NUM_SCRAMBLES = 1
 
 NUM_ENVS = 12
 
 NUM_STEPS = 100_000
-
 
 def make_env(num_scrambles):
     def _init():
@@ -26,6 +24,8 @@ def make_env(num_scrambles):
 
 
 if __name__ == '__main__':
+    os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+
     MODEL_NAME = "DQN_" + network_configuration.__name__ + "_SubprocVecEnv"
 
     save_path = os.path.join('Training', 'Saved Models')
@@ -57,8 +57,9 @@ if __name__ == '__main__':
         training_model = DQN(policy='MlpPolicy',
                              env=envs,
                              policy_kwargs=policy_kwargs,
-                             verbose=0,
-                             device="cuda")
+                             verbose=2,
+                             device="cuda",
+                             tensorboard_log="./tensorboard_logs/")
 
     # Learn and evaluate
     train_and_evaluate(

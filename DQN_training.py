@@ -8,15 +8,17 @@ from Network import ResidualBlock_2Layers_2048, ResidualBlock_3Layers_2048, \
 from RubikCubeEnv import RubiksCubeEnv
 from Training_Utility_Functions import train_and_evaluate
 
-network_configuration = ResidualBlock_3Layers_4096
-.000
 
-NUM_SCRAMBLES = 2
+network_configuration = ResidualBlock_2Layers_4096
+
+NUM_SCRAMBLES = 5
 
 NUM_STEPS = 100_000
 
 
 if __name__ == '__main__':
+    os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+
     MODEL_NAME = "DQN_" + network_configuration.__name__
 
     print(f"Model name: {MODEL_NAME}")
@@ -46,14 +48,14 @@ if __name__ == '__main__':
         print("Loading existing model...")
         training_model = DQN.load(model_file_path,
                                   env=env,
-                                  verbose=2,
+                                  verbose=0,
                                   device="cuda")
     else:
         print("Creating a new model...")
         training_model = DQN(policy='MlpPolicy',
                              env=env,
                              policy_kwargs=policy_kwargs,
-                             verbose=2,
+                             verbose=0,
                              device="cuda")
 
     # Learn and evaluate

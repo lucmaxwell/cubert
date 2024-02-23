@@ -18,19 +18,22 @@ def train_and_evaluate(training_model, save_path, MODEL_NAME, NUM_STEPS, NUM_SCR
         # Training
         training_model.learn(total_timesteps=NUM_STEPS)
 
-        # Save the model
-        model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
-        training_model.save(model_file_path)
-        print(f"Model {MODEL_NAME} saved. Path: {model_file_path}")
-
         # Calculate elapsed time
         end_time = time.time()
         elapsed_time = end_time - start_time
+        print(f"Model {MODEL_NAME}")
         print(f"Elapsed time {run_count}: {elapsed_time} seconds")
 
         # Check if 100% solve rate condition is met
         done, count, solved_percentage = evaluate_scramble_1000(training_model, NUM_SCRAMBLES)
         print(f"{run_count} num_scramble={NUM_SCRAMBLES}: {count} {solved_percentage}%")
+
+        # Save model condition
+        if solved_percentage > 70:
+            # Save the model
+            model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
+            training_model.save(model_file_path)
+            print(f"Saved {MODEL_NAME}. Path: {model_file_path}")
 
         # End condition
         if num_run is not None:
