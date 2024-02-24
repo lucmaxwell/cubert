@@ -1142,6 +1142,12 @@ class CubertMotor:
 
 # testing functionality
 def sigint_handler(sig, frame):
+    global sensor
+    global motor
+
+    del sensor
+    del motor
+
     GPIO.cleanup()
     sys.exit(0)
 
