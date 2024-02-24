@@ -1145,8 +1145,8 @@ def sigint_handler(sig, frame):
     global sensor
     global motor
 
-    del sensor
     del motor
+    del sensor
 
     GPIO.cleanup()
     sys.exit(0)
@@ -1201,6 +1201,13 @@ if __name__ == '__main__':
         time.sleep(1)
 
         print("Testing Complete!")
+
+        del motor
+        del sensor
+
+        GPIO.cleanup()
+
+        print("Cleaned Up!")
 
         # while True:
         #     # do nothing
