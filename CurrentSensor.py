@@ -17,7 +17,7 @@ class CubertCurrentSensor():
 
     run_gripper_monitor = threading.Event()
     
-    _current_threshold = 500
+    _current_threshold = 100
 
     _left_log_list = []
     _right_log_list = []
@@ -58,8 +58,6 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log
     
     curr_reading = 0
     prev_reading = 0
-
-
 
     while sensor.run_gripper_monitor.isSet():
         prev_reading = curr_reading
