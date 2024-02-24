@@ -17,7 +17,7 @@ class CubertCurrentSensor():
 
     run_gripper_monitor = threading.Event()
     
-    _current_threshold = 50
+    _current_threshold = 25
 
     _left_log_list = []
     _right_log_list = []
@@ -70,6 +70,7 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log
         # print(curr_reading)
 
         if abs(delta) > sensor._current_threshold:
+            print("Motor Skipped!")
             MOTOR_SKIPPED_LOCK.acquire()
             MOTOR_SKIPPED.set()
             MOTOR_SKIPPED_LOCK.release()
