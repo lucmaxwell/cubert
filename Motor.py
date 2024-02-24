@@ -411,12 +411,14 @@ class CubertMotor:
 
         self.moveGripperToPos(GripperPosition.MIDDLE, 50)
 
-        while steps_done < 350 and not sensor.getMotorSkipped():
+        while steps_done < 400 and not sensor.getMotorSkipped():
             self.stepGripper(GripperDirection.CLOSE, step_delay)
             libc.usleep(step_delay)
             steps_done += 1
 
         self._steps_to_close = steps_done + 3
+
+        print(self._steps_to_close)
 
 
     def calibrateDistance(self):
