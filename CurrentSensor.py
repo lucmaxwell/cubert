@@ -53,6 +53,11 @@ class CubertCurrentSensor():
         MOTOR_SKIPPED_LOCK.release()
         return val
     
+    def clearSkipFlag(self):
+        MOTOR_SKIPPED_LOCK.acquire()
+        MOTOR_SKIPPED.clear()
+        MOTOR_SKIPPED_LOCK.release()
+    
     
 def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log_list):
     

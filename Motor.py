@@ -411,6 +411,8 @@ class CubertMotor:
 
         self.moveGripperToPos(GripperPosition.MIDDLE, 50)
 
+        self._current_sensor.clearSkipFlag()
+
         while steps_done < 500 and not sensor.getMotorSkipped():
             self.stepGripper(GripperDirection.CLOSE, step_delay)
             libc.usleep(step_delay)
