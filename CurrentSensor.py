@@ -65,8 +65,6 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log
         prev_reading = curr_reading
         curr_reading = sensor.getChannelCurrent(channel)
 
-        MOTOR_SKIPPED.set()
-
         delta = prev_reading - curr_reading
 
         log_list.append(delta)

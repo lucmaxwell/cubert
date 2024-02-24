@@ -1016,9 +1016,9 @@ class CubertMotor:
                 last_speed = curr_speed
                 curr_speed = step_delay
 
-            if curr_speed - last_speed > 0 and not peak_hit:
-                print(last_speed)
-                peak_hit = True
+            # if curr_speed - last_speed > 0 and not peak_hit:
+            #     print(last_speed)
+            #     peak_hit = True
 
 
             self.stepBase(direction, step_delay)
