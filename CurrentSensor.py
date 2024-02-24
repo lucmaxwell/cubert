@@ -17,7 +17,7 @@ class CubertCurrentSensor():
 
     run_gripper_monitor = threading.Event()
     
-    _current_threshold = 25
+    _current_threshold = 10
 
     _left_log_list = []
     _right_log_list = []
