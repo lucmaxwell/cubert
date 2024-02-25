@@ -39,7 +39,7 @@ class CubertCurrentSensor():
         # self._right_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR, self._right_log_list, self._right_log_lock))
 
         self._left_motor_monitor.start()
-        self._right_motor_monitor.start()
+        # self._right_motor_monitor.start()
 
     def __del__(self):
         print("Deleting Sensor")
