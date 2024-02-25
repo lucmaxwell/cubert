@@ -1204,8 +1204,8 @@ if __name__ == '__main__':
 
         print("Testing Complete!")
 
-        del motor
-        del sensor
+        motor.__del__()
+        sensor.__del__()
 
         GPIO.cleanup()
 
