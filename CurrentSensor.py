@@ -22,8 +22,8 @@ class CubertCurrentSensor():
     
     _current_threshold = 20
 
-    _left_log_list = []
-    _right_log_list = []
+    _left_log_list = [[], []]
+    _right_log_list = [[], []]
 
     _left_log_lock = threading.Lock()
     _right_log_lock = threading.Lock()
@@ -50,8 +50,10 @@ class CubertCurrentSensor():
         self._right_motor_monitor.join()
 
         print("Saving Data")
-        np.save("./logging/left_motor_current.npy", np.array(self._left_log_list))
-        np.save("./logging/right_motor_current.npy", np.array(self._right_log_list))
+        np.save("./logging/left_motor_current_reading.npy", np.array(self._left_log_list[0]))
+        np.save("./logging/right_motor_current_reading.npy", np.array(self._right_log_list[0]))
+        np.save("./logging/left_motor_current_delta.npy", np.array(self._left_log_list[1]))
+        np.save("./logging/right_motor_current_delta.npy", np.array(self._right_log_list[1]))
 
         print("Sensor Deleted")
 
@@ -84,7 +86,8 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log
         delta = prev_reading - curr_reading
 
         log_lock.acquire()
-        log_list.append(curr_reading)
+        log_list[0].append(curr_reading)
+        log_list[1].append(delta)
         log_lock.release()
 
         # print(curr_reading)
