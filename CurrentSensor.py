@@ -42,13 +42,18 @@ class CubertCurrentSensor():
         self._right_motor_monitor.start()
 
     def __del__(self):
+        print("Deleting Sensor")
         self.run_gripper_monitor.clear()
 
+        print("Terminating Threads")
         self._left_motor_monitor.join()
         self._right_motor_monitor.join()
 
+        print("Saving Data")
         np.save("./logging/left_motor_current.npy", np.array(self._left_log_list))
         np.save("./logging/right_motor_current.npy", np.array(self._right_log_list))
+
+        print("Sensor Deleted")
 
     def getChannelCurrent(self, channel:CurrentChannel):
         return self.sensor.getCurrent_mA(channel)
