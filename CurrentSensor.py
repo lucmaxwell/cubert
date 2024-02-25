@@ -20,7 +20,7 @@ class CubertCurrentSensor():
 
     run_gripper_monitor = threading.Event()
     
-    _current_threshold = 15
+    _current_threshold = 20
 
     _left_log_list = []
     _right_log_list = []
@@ -36,7 +36,7 @@ class CubertCurrentSensor():
         self.run_gripper_monitor.set()
 
         self._left_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.LEFT_MOTOR, self._left_log_list, self._left_log_lock))
-        self._right_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR, self._right_log_list, self._right_log_lock))
+        # self._right_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR, self._right_log_list, self._right_log_lock))
 
         self._left_motor_monitor.start()
         self._right_motor_monitor.start()
@@ -47,7 +47,7 @@ class CubertCurrentSensor():
 
         print("Terminating Threads")
         self._left_motor_monitor.join()
-        self._right_motor_monitor.join()
+        # self._right_motor_monitor.join()
 
         print("Saving Data")
         np.save("./logging/left_motor_current.npy", np.array(self._left_log_list))
