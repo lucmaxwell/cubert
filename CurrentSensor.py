@@ -3,6 +3,9 @@ from enum import IntEnum
 import INA3221.SDL_Pi_INA3221 as INA3221
 import threading
 import numpy as np
+import ctypes
+
+libc = ctypes.CDLL('libc.so.6')
 
 class CurrentChannel(IntEnum):
     LEFT_MOTOR  = 1
@@ -22,6 +25,9 @@ class CubertCurrentSensor():
     _left_log_list = []
     _right_log_list = []
 
+    _left_log_lock = threading.Lock()
+    _right_log_lock = threading.Lock()
+
     def __init__(self):
         MOTOR_SKIPPED.clear() # set to false
 
@@ -29,8 +35,8 @@ class CubertCurrentSensor():
 
         self.run_gripper_monitor.set()
 
-        self._left_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.LEFT_MOTOR, self._left_log_list))
-        self._right_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR, self._right_log_list))
+        self._left_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.LEFT_MOTOR, self._left_log_list, self._left_log_lock))
+        self._right_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR, self._right_log_list, self._right_log_lock))
 
         self._left_motor_monitor.start()
         self._right_motor_monitor.start()
@@ -59,8 +65,10 @@ class CubertCurrentSensor():
         MOTOR_SKIPPED_LOCK.release()
     
     
-def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log_list):
+def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log_list, log_lock:threading.Lock):
     
+    conversion_time = 160 # time to wait for new sample
+
     curr_reading = 0
     prev_reading = 0
 
@@ -70,7 +78,9 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log
 
         delta = prev_reading - curr_reading
 
+        log_lock.acquire()
         log_list.append(delta)
+        log_lock.release()
 
         # print(curr_reading)
 
@@ -79,6 +89,9 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log
             MOTOR_SKIPPED_LOCK.acquire()
             MOTOR_SKIPPED.set()
             MOTOR_SKIPPED_LOCK.release()
+
+        # wait for next conversion
+        libc.usleep(conversion_time)
 
 if __name__ == '__main__':
     print("Running Current Sensor Test")
