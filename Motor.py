@@ -406,10 +406,6 @@ class CubertMotor:
         Purpose: Determine a acceptable grip strength for grabbiing the cube
         """
 
-        start_time = time.time()
-
-        warmup_time = 0.1
-
         step_delay = get_step_delay(10)
         steps_done = 0
 
@@ -417,6 +413,10 @@ class CubertMotor:
         self.moveGripperToPos(GripperPosition.MIDDLE, 50)
 
         self._current_sensor.clearSkipFlag()
+
+        start_time = time.time()
+
+        warmup_time = 0.1
 
         while (steps_done < 500 and not self._current_sensor.getMotorSkipped()):# or time_elapsed < warmup_time:
             self.stepGripper(GripperDirection.CLOSE, step_delay)
