@@ -1202,7 +1202,7 @@ if __name__ == '__main__':
         # motor.moveGripperToPos(GripperPosition.MIDDLE, 50)
         # time.sleep(10)
         # motor.calibrateGripStrength()
-        time.sleep(20)
+        # time.sleep(20)
         # motor.moveGripperToPos(GripperPosition.DROPOFF, 50)
         # time.sleep(1)
         # motor.moveGripperToPos(GripperPosition.FLIP_TOP, 50)
