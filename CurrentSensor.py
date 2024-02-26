@@ -29,8 +29,8 @@ class CubertCurrentSensor():
     
     _current_threshold = 2000
 
-    _left_log_list = [[], []]
-    _right_log_list = [[], []]
+    _left_log_list = [[], [], []]
+    _right_log_list = [[], [], []]
 
     _left_monitor_list = [[], []]
     _right_monitor_list = [[], []]
@@ -66,6 +66,8 @@ class CubertCurrentSensor():
         np.save("./logging/right_motor_current_reading.npy", np.array(self._right_log_list[0]))
         np.save("./logging/left_motor_current_delta.npy", np.array(self._left_log_list[1]))
         np.save("./logging/right_motor_current_delta.npy", np.array(self._right_log_list[1]))
+        np.save("./logging/left_motor_current_time.npy", np.array(self._left_log_list[2]))
+        np.save("./logging/right_motor_current_time.npy", np.array(self._right_log_list[2]))
 
         np.save("./logging/left_motor_current_reading_step.npy", np.array(self._left_monitor_list[0]))
         np.save("./logging/right_motor_current_reading_step.npy", np.array(self._right_monitor_list[0]))
@@ -111,6 +113,8 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log
     
     conversion_time = 160 # time to wait for new sample
 
+    start = time.time()
+
     curr_reading = 0
     prev_reading = 0
 
@@ -120,9 +124,12 @@ def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log
 
         delta = prev_reading - curr_reading
 
+        curr_time = time.time() - start
+
         log_lock.acquire()
         log_list[0].append(curr_reading)
         log_list[1].append(delta)
+        log_list[2].append(curr_time)
         log_lock.release()
 
         # print(curr_reading)
