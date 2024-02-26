@@ -422,8 +422,8 @@ class CubertMotor:
             libc.usleep(step_delay)
             steps_done += 1
             time_elapsed = time.time() - start_time
-            if time_elapsed < warmup_time:
-                self._current_sensor.clearSkipFlag()
+            # if time_elapsed < warmup_time:
+            #     self._current_sensor.clearSkipFlag()
 
         self._steps_to_close = steps_done + 3
 
