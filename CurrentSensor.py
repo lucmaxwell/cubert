@@ -4,9 +4,15 @@ import INA3221.SDL_Pi_INA3221 as INA3221
 import threading
 import numpy as np
 import ctypes
-from Motor import MotorType
+# from Motor import MotorType
 
 libc = ctypes.CDLL('libc.so.6')
+
+class MotorType(IntEnum):
+    """Identifies the motor to access"""
+    BASE    = 0
+    LEFT    = 1
+    RIGHT   = 2
 
 class CurrentChannel(IntEnum):
     LEFT_MOTOR  = 1
