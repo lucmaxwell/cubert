@@ -4,6 +4,7 @@ import INA3221.SDL_Pi_INA3221 as INA3221
 import threading
 import numpy as np
 import ctypes
+from Motor import MotorType
 
 libc = ctypes.CDLL('libc.so.6')
 
@@ -24,6 +25,9 @@ class CubertCurrentSensor():
 
     _left_log_list = [[], []]
     _right_log_list = [[], []]
+
+    _left_monitor_list = [[], []]
+    _right_monitor_list = [[], []]
 
     _left_log_lock = threading.Lock()
     _right_log_lock = threading.Lock()
@@ -57,6 +61,11 @@ class CubertCurrentSensor():
         np.save("./logging/left_motor_current_delta.npy", np.array(self._left_log_list[1]))
         np.save("./logging/right_motor_current_delta.npy", np.array(self._right_log_list[1]))
 
+        np.save("./logging/left_motor_current_reading_step.npy", np.array(self._left_monitor_list[0]))
+        np.save("./logging/right_motor_current_reading_step.npy", np.array(self._right_monitor_list[0]))
+        np.save("./logging/left_motor_current_delta_step.npy", np.array(self._left_monitor_list[1]))
+        np.save("./logging/right_motor_current_delta_step.npy", np.array(self._right_monitor_list[1]))
+
         print("Sensor Deleted")
 
     def getChannelCurrent(self, channel:CurrentChannel):
@@ -72,6 +81,24 @@ class CubertCurrentSensor():
         MOTOR_SKIPPED_LOCK.acquire()
         MOTOR_SKIPPED.clear()
         MOTOR_SKIPPED_LOCK.release()
+
+    def logCurrent(self, motor:MotorType):
+        if motor == MotorType.LEFT:
+
+            self._left_monitor_list[0].append(self.sensor.getCurrent_mA(CurrentChannel.LEFT_MOTOR))
+
+            if len(self._left_monitor_list[0]) > 1:
+                i = len(self._left_monitor_list[0])
+
+                self._left_monitor_list[1].append(self._left_monitor_list[0][i] - self._left_monitor_list[0][i-1])
+
+        elif motor == MotorType.RIGHT:
+            self._right_monitor_list[0].append(self.sensor.getCurrent_mA(CurrentChannel.LEFT_MOTOR))
+
+            if len(self._right_monitor_list[0]) > 1:
+                i = len(self._right_monitor_list[0])
+
+                self._right_monitor_list[1].append(self._right_monitor_list[0][i] - self._right_monitor_list[0][i-1])
     
     
 def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log_list, log_lock:threading.Lock):

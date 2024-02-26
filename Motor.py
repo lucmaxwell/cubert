@@ -1141,6 +1141,7 @@ class CubertMotor:
 
             # step motor
             self.tmc_list[motor].make_a_step()
+            self._current_sensor.logCurrent(motor)
 
 # testing functionality
 def sigint_handler(sig, frame):
