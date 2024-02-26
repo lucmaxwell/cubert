@@ -413,7 +413,7 @@ class CubertMotor:
 
         self._current_sensor.clearSkipFlag()
 
-        while steps_done < 500 and not sensor.getMotorSkipped():
+        while steps_done < 750 and not sensor.getMotorSkipped():
             self.stepGripper(GripperDirection.CLOSE, step_delay)
             libc.usleep(step_delay)
             steps_done += 1
@@ -1141,7 +1141,7 @@ class CubertMotor:
 
             # step motor
             self.tmc_list[motor].make_a_step()
-            self._current_sensor.logCurrent(motor)
+            # self._current_sensor.logCurrent(motor)
 
 # testing functionality
 def sigint_handler(sig, frame):
