@@ -94,7 +94,7 @@ class CubertCurrentSensor():
             self._left_monitor_list[0].append(self.sensor.getCurrent_mA(CurrentChannel.LEFT_MOTOR))
 
             if len(self._left_monitor_list[0]) > 1:
-                i = len(self._left_monitor_list[0])
+                i = len(self._left_monitor_list[0]) - 1
 
                 self._left_monitor_list[1].append(self._left_monitor_list[0][i] - self._left_monitor_list[0][i-1])
 
@@ -102,7 +102,7 @@ class CubertCurrentSensor():
             self._right_monitor_list[0].append(self.sensor.getCurrent_mA(CurrentChannel.LEFT_MOTOR))
 
             if len(self._right_monitor_list[0]) > 1:
-                i = len(self._right_monitor_list[0])
+                i = len(self._right_monitor_list[0]) - 1
 
                 self._right_monitor_list[1].append(self._right_monitor_list[0][i] - self._right_monitor_list[0][i-1])
     
