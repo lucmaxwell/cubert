@@ -416,7 +416,7 @@ class CubertMotor:
 
         start_time = time.time()
 
-        warmup_time = 0.005
+        warmup_time = 0.02
 
         while (steps_done < 500 and not self._current_sensor.getMotorSkipped()):# or time_elapsed < warmup_time:
             self.stepGripper(GripperDirection.CLOSE, step_delay)
