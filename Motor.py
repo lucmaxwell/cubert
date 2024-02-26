@@ -426,7 +426,7 @@ class CubertMotor:
             # if time_elapsed < warmup_time:
             #     self._current_sensor.clearSkipFlag()
 
-        self._steps_to_close = steps_done + 3
+        self._steps_to_close = steps_done - 3
 
         print(self._steps_to_close)
 
