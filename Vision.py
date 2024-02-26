@@ -9,7 +9,6 @@ import glob
 from sklearn.cluster import KMeans
 import urllib.request
 import scipy.stats as stats
-import plotext as plt
 import imutils
 from scipy.spatial.distance import euclidean
 from imutils import perspective

@@ -6,7 +6,6 @@ import signal
 import RPi.GPIO as GPIO
 import sys
 import numpy as np
-import plotext as plt
 import Vision
 from Actions import *
 import Solver
