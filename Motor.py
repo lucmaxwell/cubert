@@ -418,7 +418,7 @@ class CubertMotor:
 
         self._current_sensor.clearSkipFlag()
 
-        while (steps_done < 750 and not sensor.getMotorSkipped()):# or time_elapsed < warmup_time:
+        while (steps_done < 750 and not self._current_sensor.getMotorSkipped()):# or time_elapsed < warmup_time:
             self.stepGripper(GripperDirection.CLOSE, step_delay)
             libc.usleep(step_delay)
             steps_done += 1
