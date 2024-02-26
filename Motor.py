@@ -103,7 +103,7 @@ class CubertMotor:
     _DISTANCE_AT_TOP        = 64.22     # distance from base to gripper when at top position in mm
 
     _ENDSTOP_OFFSET_GAUNTRY = 2         # number of mm to stop at to avoid hitting top and bottom endstops
-    _ENDSTOP_OFFSET_GRIPPER = 35        # number of steps to stop at to avoid hitting gripper endstop
+    _ENDSTOP_OFFSET_GRIPPER = 70        # number of steps to stop at to avoid hitting gripper endstop
 
     _DEFAULT_MOVE_SPEED     = 50        # default speed to preform moves at
     _DEFAULT_SPEED_UP_FRAC  = 0.10      # default point at which max speed is reached
@@ -908,9 +908,12 @@ class CubertMotor:
         print("Closing Hand")
 
         # only close if hand state known to be open
-        if self._current_hand_state == HandState.OPEN_MAX or self._current_hand_state == HandState.OPEN:
+        if self._current_hand_state == HandState.OPEN_MAX:
             self.moveGripper(self._steps_to_close, GripperDirection.CLOSE, 75)
             self._current_hand_state = HandState.CLOSED
+
+        elif  self._current_hand_state == HandState.OPEN:
+            self.moveGripper(self._steps_to_close - self._ENDSTOP_OFFSET_GRIPPER, GripperDirection.CLOSE, 75)
 
     def openHand(self):
         """
