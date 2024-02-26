@@ -1185,6 +1185,9 @@ if __name__ == '__main__':
 
         motor.home()
 
+        motor.openHand()
+        motor.closeHand()
+        input("Break Point!")
         # motor.moveBase(round(19200/4), Direction.CCW, 75, True)
 
         # motor.moveBase(round(19200/4), Direction.CCW, 200, True)
