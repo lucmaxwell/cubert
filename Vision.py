@@ -1,7 +1,5 @@
 import time
-from picamera import PiCamera
-from picamera.array import PiRGBArray
-# from cv2 import imwrite, imread, resize, cvtColor, COLOR_BGR2HSV, COLOR_HSV2BGR, COLOR_BGR2RGB
+from picamera2 import Picamera2
 import cv2 as cv
 import numpy as np
 import os
@@ -17,7 +15,7 @@ import math
 
 class CubertVision:
 
-    resolution = (64, 48)
+    resolution = (640, 480)
     lowerResolution = (45, 45)
     mask = np.full(tuple(list(lowerResolution) + [3]), 1, dtype=np.uint8)
 
@@ -25,20 +23,17 @@ class CubertVision:
     maskName = "mask.png"
 
     def __init__(self):
-        self.camera = PiCamera()
-
-        # Camera parameters
-        self.camera.resolution = self.resolution
-        self.camera.awb_mode = 'off'
-        self.camera.awb_gains = (407/256, 311/256)
-
-        # Allow the camera to startup
+        self.camera = Picamera2()
+        camera_config = self.camera.create_still_configuration(lores={"size": (640, 480)}, display="lores")
+        self.camera.configure(camera_config)
+        self.camera.set_controls({"ExposureTime": 100000, "AnalogueGain": 1.0})
+        self.camera.start()
         time.sleep(2)
 
         self.loadMask(self.imagesFolder + self.maskName)
 
     def capture(self):
-        self.camera.capture("./image.jpg")
+        self.camera.capture_file("./image.jpg")
 
     def getCubletSize(self):
         #The Image to anaylze
@@ -150,10 +145,11 @@ class CubertVision:
         cv.imwrite(self.imagesFolder + fileName, image)
 
     def getImage(self):
-        size = (self.resolution[1], self.resolution[0], 3)
+        # size = (self.resolution[1], self.resolution[0], 3)
 
-        image = np.empty(size, dtype=np.uint8)
-        self.camera.capture(image, 'bgr')
+        # image = np.empty(size, dtype=np.uint8)
+        image = self.camera.capture_array()
+        # self.camera.capture(image, 'bgr')
         self.writeImage("0 original.png", image)
 
         image = cv.resize(image, self.lowerResolution)
