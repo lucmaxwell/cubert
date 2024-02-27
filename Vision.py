@@ -148,6 +148,7 @@ class CubertVision:
 
         # image = np.empty(size, dtype=np.uint8)
         image = self.camera.capture_array()
+        image = cv.cvtColor(image, cv.COLOR_RGB2BGR)
         # self.camera.capture(image, 'bgr')
         self.writeImage("0 original.png", image)
 
