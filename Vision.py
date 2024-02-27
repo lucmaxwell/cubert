@@ -15,7 +15,6 @@ import math
 
 class CubertVision:
 
-    resolution = (640, 480)
     lowerResolution = (45, 45)
     mask = np.full(tuple(list(lowerResolution) + [3]), 1, dtype=np.uint8)
 
@@ -26,7 +25,7 @@ class CubertVision:
         self.camera = Picamera2()
         camera_config = self.camera.create_still_configuration(lores={"size": (640, 480)}, display="lores")
         self.camera.configure(camera_config)
-        self.camera.set_controls({"ExposureTime": 100000, "AnalogueGain": 1.0})
+        self.camera.set_controls({"AnalogueGain": 1.0})
         self.camera.start()
         time.sleep(2)
 
