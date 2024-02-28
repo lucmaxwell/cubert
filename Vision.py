@@ -25,14 +25,13 @@ class CubertVision:
         self.camera = Picamera2()
         camera_config = self.camera.create_still_configuration(lores={"size": (640, 480)}, display="lores")
         self.camera.configure(camera_config)
-        self.camera.set_controls({"AnalogueGain": 1.0, "AwbEnable": False, "Saturation": 1.0})
+        self.camera.set_controls({"AnalogueGain": 2, "AwbEnable": False, "Saturation": 1.0, "ColourGains": (407/256, 311/256), "ExposureTime": 0})
         self.camera.start()
         time.sleep(2)
 
         self.loadMask(self.imagesFolder + self.maskName)
 
     def capture(self):
-        time.sleep(2)
         self.camera.capture_file("./image.jpg")
 
     def getCubletSize(self):
@@ -148,7 +147,6 @@ class CubertVision:
         # size = (self.resolution[1], self.resolution[0], 3)
 
         # image = np.empty(size, dtype=np.uint8)
-        time.sleep(2)
         image = self.camera.capture_array()
         image = cv.cvtColor(image, cv.COLOR_RGB2BGR)
         # self.camera.capture(image, 'bgr')

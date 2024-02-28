@@ -80,6 +80,9 @@ def worker(selection):
         vision.writeImage("testingImage.png", cube)
         vision.writeImage("testingmask.png", mask)
 
+    GPIO.cleanup()
+    sys.exit(0)
+
 _PANIC_BUTTON_PIN = 4
 
 if __name__ == '__main__':
