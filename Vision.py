@@ -25,7 +25,7 @@ class CubertVision:
         self.camera = Picamera2()
         camera_config = self.camera.create_still_configuration(lores={"size": (640, 480)}, display="lores")
         self.camera.configure(camera_config)
-        self.camera.set_controls({"AnalogueGain": 1, "AwbEnable": False, "Saturation": 1.0, "ColourGains": (407/256, 311/256), "ExposureTime": 10000})
+        self.camera.set_controls({"AnalogueGain": 1, "AwbEnable": False, "Saturation": 1.0, "ColourGains": (407/256, 311/256), "ExposureTime": 0})
         self.camera.start()
         time.sleep(2)
 
