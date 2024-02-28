@@ -32,6 +32,7 @@ class CubertVision:
         self.loadMask(self.imagesFolder + self.maskName)
 
     def capture(self):
+        time.sleep(2)
         self.camera.capture_file("./image.jpg")
 
     def getCubletSize(self):
@@ -147,6 +148,7 @@ class CubertVision:
         # size = (self.resolution[1], self.resolution[0], 3)
 
         # image = np.empty(size, dtype=np.uint8)
+        time.sleep(2)
         image = self.camera.capture_array()
         image = cv.cvtColor(image, cv.COLOR_RGB2BGR)
         # self.camera.capture(image, 'bgr')
