@@ -1173,6 +1173,8 @@ def test_inertia(motor:CubertMotor):
 
     value = input("Give Number of Steps")
 
+    step_delay = get_step_delay(1)
+
     while int(value) > 0:
         motor.enable()
 
@@ -1180,7 +1182,11 @@ def test_inertia(motor:CubertMotor):
 
         motor.moveGripperToPos(GripperPosition.MIDDLE)
 
-        motor.step(Direction.CCW, MotorType.LEFT, int(value))
+        time.sleep(1)
+
+        for i in range(int(value)):
+            motor.step(Direction.CCW, MotorType.LEFT, step_delay)
+            libc.usleep(step_delay)
 
         value = input("Give Number of Steps")
 
