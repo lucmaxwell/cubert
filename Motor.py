@@ -1174,11 +1174,19 @@ def test_inertia(motor:CubertMotor):
     value = input("Give Number of Steps")
 
     while int(value) > 0:
+        motor.enable()
+
         motor.homeGripper()
 
         motor.moveGripperToPos(GripperPosition.MIDDLE)
 
         motor.step(Direction.CCW, MotorType.LEFT, int(value))
+
+        value = input("Give Number of Steps")
+
+    motor.disable()
+
+    del motor
 
 
 
