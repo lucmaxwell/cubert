@@ -375,8 +375,8 @@ class CubertActions:
             self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
             self.motor.closeHand()
             self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
-            self.motor.moveBaseDegrees(40, Motor.Direction.CW, move_speed)
-            self.motor.moveBaseDegrees(10, Motor.Direction.CCW, move_speed)
+            self.motor.moveBaseDegrees(38, Motor.Direction.CW, move_speed)
+            self.motor.moveBaseDegrees(8, Motor.Direction.CCW, move_speed)
             self.motor.openHand()
 
             self._cube_face_spun = False
@@ -466,8 +466,8 @@ def test_flip(actions:CubertActions):
         actions.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, 400, acceleration=True, accel_fraction=actions._arm_accel_frac)
         actions.motor.closeHand()
         actions.motor.moveBaseDegrees(30, Motor.Direction.CCW, 400)
-        actions.motor.moveBaseDegrees(40, Motor.Direction.CW, 400)
-        actions.motor.moveBaseDegrees(10, Motor.Direction.CCW, 400)
+        actions.motor.moveBaseDegrees(38, Motor.Direction.CW, 400)
+        actions.motor.moveBaseDegrees(8, Motor.Direction.CCW, 400)
         actions.motor.openHand()
         
 
