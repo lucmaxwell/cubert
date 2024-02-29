@@ -462,6 +462,14 @@ def test_flip(actions:CubertActions):
     for i in range(10,400):
         print("\n\n\n\nCurrent Speed: %d\n\n\n\n" % (i))
         actions.flip(i)
+        # the Noah manuever
+        actions.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, 400, acceleration=True, accel_fraction=actions._arm_accel_frac)
+        actions.motor.closeHand()
+        actions.motor.moveBaseDegrees(30, Motor.Direction.CCW, 400)
+        actions.motor.moveBaseDegrees(40, Motor.Direction.CW, 400)
+        actions.motor.moveBaseDegrees(10, Motor.Direction.CCW, 400)
+        actions.motor.openHand()
+        
 
 def test_spin(actions:CubertActions):
     for i in range(5,200):
