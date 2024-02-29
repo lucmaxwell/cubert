@@ -1169,6 +1169,20 @@ def sigint_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
+def test_inertia(motor:CubertMotor):
+
+    value = input("Give Number of Steps")
+
+    while int(value) > 0:
+        motor.homeGripper()
+
+        motor.moveGripperToPos(GripperPosition.MIDDLE)
+
+        motor.step(Direction.CCW, MotorType.LEFT, int(value))
+
+
+
+
 if __name__ == '__main__':
     motor_en_pin = 26
     motor_step_pin = [27, 6, 19]
@@ -1185,70 +1199,5 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, sigint_handler)
 
-    # Spin
-    print("Running motor...")
-    try:
-        motor.enable()
-
-        motor.home()
-
-        motor.openHand()
-        motor.closeHand()
-        input("Break Point!")
-        # motor.moveBase(round(19200/4), Direction.CCW, 75, True)
-
-        # motor.moveBase(round(19200/4), Direction.CCW, 200, True)
-
-        # motor.moveBaseDegrees(90, Direction.CCW, 200, True)
-
-        # motor.moveGripperToPos(GripperPosition.BOTTOM_ENDSTOP, 50)
-        # time.sleep(1)
-        # motor.moveGripperToPos(GripperPosition.BOTTOM, 50)
-        # time.sleep(1)
-        # motor.moveGripperToPos(GripperPosition.PICKUP, 50)
-        # time.sleep(1)
-        # motor.moveGripperToPos(GripperPosition.MIDDLE_CUBE, 50)
-        # time.sleep(1)
-        # motor.moveGripperToPos(GripperPosition.MIDDLE, 50)
-        # time.sleep(10)
-        # motor.calibrateGripStrength()
-        # time.sleep(20)
-        # motor.moveGripperToPos(GripperPosition.DROPOFF, 50)
-        # time.sleep(1)
-        # motor.moveGripperToPos(GripperPosition.FLIP_TOP, 50)
-        # time.sleep(1)
-        # motor.moveGripperToPos(GripperPosition.TOP, 50)
-        # time.sleep(1)
-        # motor.moveGripperToPos(GripperPosition.TOP_ENDSTOP, 50)
-        # time.sleep(1)
-
-        print("Testing Complete!")
-
-        motor.__del__()
-        sensor.__del__()
-
-        GPIO.cleanup()
-
-        print("Cleaned Up!")
-
-        # while True:
-        #     # do nothing
-        #     time.sleep(10)
-
-        # print("Spinning CW 180")
-        # motor.moveBaseSpin(180, MotorSpin.CLOCKWISE, 60)
-
-        # print("Spinning CCW 180")
-        # motor.moveBaseSpin(180, MotorSpin.COUNTER_CLOCKWISECLOCKWISE, 60)
-
-        # print("Spinning CW 180 With Correction")
-        # motor.moveBaseSpin(180, MotorSpin.CLOCKWISE, 60, 5)
-
-        # print("Spinning CCW 180 With Correction")
-        # motor.moveBaseSpin(180, MotorSpin.COUNTER_CLOCKWISE, 60, 5)
-
-    except KeyboardInterrupt:
-        pass
-    # finally:
-        # del motor
+    test_inertia(motor)
 
