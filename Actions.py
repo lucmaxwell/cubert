@@ -458,6 +458,15 @@ def sigint_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
+def test_flip(actions:CubertActions):
+    for i in range(400):
+        actions.flip(i)
+
+def test_spin(actions:CubertActions):
+    for i in range(200):
+        actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed=2*i)
+        actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed=2*i+1)
+
 if __name__ == '__main__':
     motor_en_pin = 26
     motor_step_pin = [27, 6, 19]
@@ -479,22 +488,15 @@ if __name__ == '__main__':
 
     actions = CubertActions(motor,vision,solver)
 
-    time.sleep(2)
+    print("Options:")
+    print("0:\tStress Test Flip")
+    print("0:\tStress Test Spin")
+    input = input("Input: ")
 
-    actions.flip()
-    time.sleep(10)
-    actions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
-    time.sleep(10)
-    actions.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
-    time.sleep(10)
-    actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
-    time.sleep(10)
-    actions.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW)
-
-    speed = input("Give Zen Mode Speed: ")
-
-    actions.zen(int(speed))
-
+    if 0 == int(input):
+        test_flip(actions)
+    elif 1 == int(input):
+        test_spin(actions)
 
     del actions
     del motor
