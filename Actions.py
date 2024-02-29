@@ -460,14 +460,14 @@ def sigint_handler(sig, frame):
 
 def test_flip(actions:CubertActions):
     for i in range(10,400):
-        print("Current Speed: %d" % (i))
+        print("\n\n\n\nCurrent Speed: %d\n\n\n\n" % (i))
         actions.flip(i)
 
 def test_spin(actions:CubertActions):
     for i in range(5,200):
-        print("Current Speed: %d" % (2*i))
+        print("\n\n\n\nCurrent Speed: %d\n\n\n\n" % (2*i))
         actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed=2*i)
-        print("Current Speed: %d" % (2*i+1))
+        print("\n\n\n\nCurrent Speed: %d\n\n\n\n" % (2*i+1))
         actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed=2*i+1)
 
 if __name__ == '__main__':
