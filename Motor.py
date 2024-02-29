@@ -416,6 +416,7 @@ class CubertMotor:
 
         self.moveGripperToPos(GripperPosition.TOP, 50)
         self.moveGripperToPos(GripperPosition.MIDDLE, 50)
+        time.sleep(0.001)
 
         self._current_sensor.clearSkipFlag()
 
@@ -997,7 +998,7 @@ class CubertMotor:
         # convert degrees to steps
         steps = round(self._STEPS_PER_BASE_REV * degrees_to_rotate / 360)
 
-        self.moveBase(steps, direction, move_speed, acceleration, accel_fraction)
+        return self.moveBase(steps, direction, move_speed, acceleration, accel_fraction)
 
     def moveBase(self, steps, direction:Direction, move_speed=_DEFAULT_MOVE_SPEED, acceleration=False, accel_fraction=_DEFAULT_SPEED_UP_FRAC):
         """

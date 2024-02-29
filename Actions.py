@@ -32,9 +32,12 @@ class CubertActions:
 
     _default_base_speed = 400
     _base_accel_frac    = 0.05      # Base Max Speed Point 
-    _default_arm_speed  = 150
+    _default_arm_speed  = 200
     _arm_accel_frac     = 0.15      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
+
+    _grip_delay = 0.001
+    _apex_delay = 0.001
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, calibrate_distance=False, resize_cubelets=True):
         """
@@ -342,22 +345,12 @@ class CubertActions:
             - acceleration: If True acceleration enabled
         """
 
-        self.motor.moveGripperToPos(Motor.GripperPosition.PICKUP, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
+        self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
         self.motor.closeHand()
         self.motor.moveGripperToPos(Motor.GripperPosition.FLIP_TOP, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
+        time.sleep(self._apex_delay)
         self.motor.moveGripperToPos(Motor.GripperPosition.DROPOFF, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
         self.motor.openHand()
-
-        # if self._cube_face_spun:
-        #     # the Noah manuever
-        #     self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, move_speed, acceleration=acceleration)
-        #     self.motor.closeHand()
-        #     self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
-        #     self.motor.moveBaseDegrees(40, Motor.Direction.CW, move_speed)
-        #     self.motor.moveBaseDegrees(10, Motor.Direction.CCW, move_speed)
-        #     self.motor.openHand()
-
-        #     self._cube_face_spun = False
 
     def doubleFlip(self, move_speed=_default_arm_speed, acceleration=True):
         """
@@ -373,10 +366,12 @@ class CubertActions:
         if self._cube_face_spun:
             # the Noah manuever
             self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
+            time.sleep(self._grip_delay)
             self.motor.closeHand()
-            self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
-            self.motor.moveBaseDegrees(38, Motor.Direction.CW, move_speed)
-            self.motor.moveBaseDegrees(8, Motor.Direction.CCW, move_speed)
+            steps_ccw   = self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
+            steps_cw    = self.motor.moveBaseDegrees(38, Motor.Direction.CW, move_speed)
+            self.motor.moveBaseSpin(steps_cw - steps_ccw, Motor.Direction.CCW, move_speed)
+            time.sleep(self._grip_delay)
             self.motor.openHand()
 
             self._cube_face_spun = False
@@ -395,8 +390,10 @@ class CubertActions:
         """
 
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
+        time.sleep(self._grip_delay)
         self.motor.closeHand()
         self.motor.moveBaseSpin(rotation, direction, move_speed, degrees_to_correct=8, acceleration=acceleration, accel_fraction=self._base_accel_frac)
+        time.sleep(self._grip_delay)
         self.motor.openHand()
 
         self._cube_face_spun = True
@@ -430,7 +427,7 @@ class CubertActions:
             else:
                 rotation = Motor.BaseRotation.HALF
 
-            self.preformMove(move, rotation, move_speed)
+            self.preformMove(move, rotation)
 
 
     def zen(self, move_speed=10):
@@ -458,7 +455,7 @@ def sigint_handler(sig, frame):
     GPIO.cleanup()
     sys.exit(0)
 
-def test_flip(actions:CubertActions):
+def test_flip_speed(actions:CubertActions):
     for i in range(10,400):
         print("\n\n\n\nCurrent Speed: %d\n\n\n\n" % (i))
         actions.flip(i)
@@ -471,12 +468,32 @@ def test_flip(actions:CubertActions):
         actions.motor.openHand()
         
 
-def test_spin(actions:CubertActions):
+def test_spin_speed(actions:CubertActions):
     for i in range(5,200):
         print("\n\n\n\nCurrent Speed: %d\n\n\n\n" % (2*i))
         actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, move_speed=2*i)
         print("\n\n\n\nCurrent Speed: %d\n\n\n\n" % (2*i+1))
         actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed=2*i+1)
+
+def test_spin(actions:CubertActions):
+    print("Stress Test Quarter Spin")
+    for i in range(200):
+        actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+        actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+
+    input("Stress Test Half Spin")
+
+    for i in range(200):
+        actions.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW)
+        actions.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW)
+
+    input("Stress Test Full Spin")
+
+    for i in range(200):
+        actions.rotateFace(Motor.BaseRotation.FULL, Motor.Direction.CCW)
+        actions.rotateFace(Motor.BaseRotation.FULL, Motor.Direction.CW)
+
+    
 
 if __name__ == '__main__':
     motor_en_pin = 26
@@ -502,12 +519,14 @@ if __name__ == '__main__':
     print("Options:")
     print("0:\tStress Test Flip")
     print("1:\tStress Test Spin")
-    input = input("Input: ")
+    value = input()
 
-    if 0 == int(input):
-        test_flip(actions)
-    elif 1 == int(input):
+    if 0 == int(value):
+        test_flip_speed(actions)
+    elif 1 == int(value):
         test_spin(actions)
+    elif 2 == int(value):
+        test_spin_speed(actions)
 
     del actions
     del motor
