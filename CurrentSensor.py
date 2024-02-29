@@ -43,21 +43,13 @@ class CubertCurrentSensor():
 
         self.sensor = INA3221.SDL_Pi_INA3221(addr=0x40)
 
-        self.run_gripper_monitor.set()
-
         self._left_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.LEFT_MOTOR, self._left_log_list, self._left_log_lock))
         self._right_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR, self._right_log_list, self._right_log_lock))
 
-        self._left_motor_monitor.start()
-        self._right_motor_monitor.start()
-
     def __del__(self):
-        print("Deleting Sensor")
-        self.run_gripper_monitor.clear()
-
-        print("Terminating Threads")
-        self._left_motor_monitor.join()
-        self._right_motor_monitor.join()
+        
+        if self.run_gripper_monitor.is_set():
+            self.stopMotorSensing()
 
         del self.sensor
 
@@ -75,6 +67,23 @@ class CubertCurrentSensor():
         # np.save("./logging/right_motor_current_delta_step.npy", np.array(self._right_monitor_list[1]))
 
         print("Sensor Deleted")
+
+    def startMotorSensing(self):
+        print("Starting Threads")
+        self.run_gripper_monitor.set()
+
+        self._left_motor_monitor.start()
+        self._right_motor_monitor.start()
+
+    def stopMotorSensing(self):
+        print("Deleting Sensor")
+        self.run_gripper_monitor.clear()
+
+        print("Terminating Threads")
+        self._left_motor_monitor.join()
+        self._right_motor_monitor.join()
+
+
 
     def getChannelCurrent(self, channel:CurrentChannel):
         return self.sensor.getCurrent_mA(channel)
