@@ -370,7 +370,7 @@ class CubertActions:
             self.motor.closeHand()
             steps_ccw   = self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
             steps_cw    = self.motor.moveBaseDegrees(38, Motor.Direction.CW, move_speed)
-            self.motor.moveBaseSpin(steps_cw - steps_ccw, Motor.Direction.CCW, move_speed)
+            self.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW, move_speed)
             time.sleep(self._grip_delay)
             self.motor.openHand()
 
@@ -462,9 +462,9 @@ def test_flip_speed(actions:CubertActions):
         # the Noah manuever
         actions.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, 400, acceleration=True, accel_fraction=actions._arm_accel_frac)
         actions.motor.closeHand()
-        actions.motor.moveBaseDegrees(30, Motor.Direction.CCW, 400)
-        actions.motor.moveBaseDegrees(38, Motor.Direction.CW, 400)
-        actions.motor.moveBaseDegrees(8, Motor.Direction.CCW, 400)
+        steps_ccw = actions.motor.moveBaseDegrees(30, Motor.Direction.CCW, 400)
+        steps_cw = actions.motor.moveBaseDegrees(38, Motor.Direction.CW, 400)
+        actions.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW, 400)
         actions.motor.openHand()
         
 
