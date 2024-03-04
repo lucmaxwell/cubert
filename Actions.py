@@ -459,14 +459,15 @@ def test_flip_speed(actions:CubertActions):
     for i in range(10,400):
         print("\n\n\n\nCurrent Speed: %d\n\n\n\n" % (i))
         actions._cube_face_spun = True
-        actions.doubleFlip(i)
+        # actions.doubleFlip(i)
+        actions.flip(i)
         # # the Noah manuever
-        # actions.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, 400, acceleration=True, accel_fraction=actions._arm_accel_frac)
-        # actions.motor.closeHand()
-        # steps_ccw = actions.motor.moveBaseDegrees(30, Motor.Direction.CCW, 400)
-        # steps_cw = actions.motor.moveBaseDegrees(38, Motor.Direction.CW, 400)
-        # actions.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW, 400)
-        # actions.motor.openHand()
+        actions.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, 400, acceleration=True, accel_fraction=actions._arm_accel_frac)
+        actions.motor.closeHand()
+        steps_ccw = actions.motor.moveBaseDegrees(30, Motor.Direction.CCW, 400)
+        steps_cw = actions.motor.moveBaseDegrees(38, Motor.Direction.CW, 400)
+        actions.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW, 400)
+        actions.motor.openHand()
         
 
 def test_spin_speed(actions:CubertActions):
@@ -543,7 +544,15 @@ def test_flip(actions:CubertActions):
         print("\nTesting Double Flip w/ Error")
         for i in range(200):
             actions._cube_face_spun = True # Set error correction flag
-            actions.doubleFlip()
+            # actions.doubleFlip()
+            actions.flip()
+            # the Noah manuever
+            actions.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, 400, acceleration=True, accel_fraction=actions._arm_accel_frac)
+            actions.motor.closeHand()
+            steps_ccw = actions.motor.moveBaseDegrees(30, Motor.Direction.CCW, 400)
+            steps_cw = actions.motor.moveBaseDegrees(38, Motor.Direction.CW, 400)
+            actions.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW, 400)
+            actions.motor.openHand()
             print(i+1)
 
     else:
