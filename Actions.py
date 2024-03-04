@@ -547,11 +547,13 @@ def test_flip(actions:CubertActions):
             # actions.doubleFlip()
             actions.flip()
             # the Noah manuever
-            actions.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, 400, acceleration=True, accel_fraction=actions._arm_accel_frac)
+            actions.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE)
+            time.sleep(actions._grip_delay)
             actions.motor.closeHand()
-            steps_ccw = actions.motor.moveBaseDegrees(30, Motor.Direction.CCW, 400)
-            steps_cw = actions.motor.moveBaseDegrees(38, Motor.Direction.CW, 400)
-            actions.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW, 400)
+            steps_ccw   = actions.motor.moveBaseDegrees(30, Motor.Direction.CCW)
+            steps_cw    = actions.motor.moveBaseDegrees(38, Motor.Direction.CW)
+            actions.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW)
+            time.sleep(actions._grip_delay)
             actions.motor.openHand()
             print(i+1)
 
