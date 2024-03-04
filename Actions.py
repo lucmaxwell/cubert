@@ -36,7 +36,7 @@ class CubertActions:
     _arm_accel_frac     = 0.15      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
-    _grip_delay = 0.001
+    _grip_delay = 0.01
     _apex_delay = 0.001
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, calibrate_distance=False, resize_cubelets=True):
@@ -550,9 +550,9 @@ def test_flip(actions:CubertActions):
             actions.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE)
             time.sleep(actions._grip_delay)
             actions.motor.closeHand()
-            steps_ccw   = actions.motor.moveBaseDegrees(30, Motor.Direction.CCW)
-            steps_cw    = actions.motor.moveBaseDegrees(38, Motor.Direction.CW)
-            actions.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW)
+            steps_ccw   = actions.motor.moveBaseDegrees(30, Motor.Direction.CCW, actions._default_arm_speed)
+            steps_cw    = actions.motor.moveBaseDegrees(38, Motor.Direction.CW,  actions._default_arm_speed)
+            actions.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW,  actions._default_arm_speed)
             time.sleep(actions._grip_delay)
             actions.motor.openHand()
             print(i+1)
