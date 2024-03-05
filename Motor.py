@@ -434,6 +434,8 @@ class CubertMotor:
 
         self.moveGripperToPos(GripperPosition.BOTTOM_ENDSTOP)
 
+        self.openHand()
+
         print(self._steps_to_close)
 
 
