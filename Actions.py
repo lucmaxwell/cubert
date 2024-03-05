@@ -477,7 +477,7 @@ def test_spin_speed(actions:CubertActions):
         print("\n\n\n\nCurrent Speed: %d\n\n\n\n" % (2*i+1))
         actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, move_speed=2*i+1)
 
-def test_spin(actions:CubertActions):
+def test_spin_face(actions:CubertActions):
 
     print("\n\nTesting Spin\n----------------------")
     print("1: Quarter Spin Clockwise")
@@ -520,6 +520,62 @@ def test_spin(actions:CubertActions):
         print("\nStress Test Full Spin Clocwise")
         for i in range(200):
             actions.rotateFace(Motor.BaseRotation.FULL, Motor.Direction.CW)
+            print(i+1)
+            time.sleep(0.1)
+
+    elif 6 == int(value):
+        print("\nStress Test Full Spin Counter-Clocwise")
+        for i in range(200):
+            actions.rotateFace(Motor.BaseRotation.FULL, Motor.Direction.CCW)
+            print(i+1)
+            time.sleep(0.1)
+
+    else:
+        print("\nERROR: Value out of Range!")
+
+def test_spin_cube(actions:CubertActions):
+
+    print("\n\nTesting Spin\n----------------------")
+    print("1: Quarter Spin Clockwise")
+    print("2: Quarter Spin Counter-Clockwise")
+    print("3: Half Spin Clockwise")
+    print("4: Half Spin Counter-Clockwise")
+    print("5: Full Spin Clockwise")
+    print("6: Full Spin Counter-Clockwise")
+    value = input()
+
+    if 1 == int(value):
+        print("\nStress Test Quarter Spin Clocwise")
+        for i in range(200):
+            actions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
+            print(i+1)
+            time.sleep(0.1)
+
+    elif 2 == int(value):
+        print("\nStress Test Quarter Spin Counter-Clocwise")
+        for i in range(200):
+            actions.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
+            print(i+1)
+            time.sleep(0.1)
+
+    elif 3 == int(value):
+        print("\nStress Test Half Spin Clocwise")
+        for i in range(200):
+            actions.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW)
+            print(i+1)
+            time.sleep(0.1)
+
+    elif 4 == int(value):
+        print("\nStress Test Half Spin Counter-Clocwise")
+        for i in range(200):
+            actions.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CCW)
+            print(i+1)
+            time.sleep(0.1)
+
+    elif 5 == int(value):
+        print("\nStress Test Full Spin Clocwise")
+        for i in range(200):
+            actions.rotateCube(Motor.BaseRotation.FULL, Motor.Direction.CW)
             print(i+1)
             time.sleep(0.1)
 
@@ -590,15 +646,18 @@ if __name__ == '__main__':
 
     print("Options:")
     print("0:\tStress Test Flip")
-    print("1:\tStress Test Spin")
-    print("2:\tStress Test Flip Speed")
-    print("3:\tStress Test Spin Speed")
+    print("1:\tStress Test Spin Cube")
+    print("2:\tStress Test Spin Face")
+    print("3:\tStress Test Flip Speed")
+    print("4:\tStress Test Spin Speed")
     value = input()
 
     if 0 == int(value):
         test_flip(actions)
     elif 1 == int(value):
-        test_spin(actions)
+        test_spin_cube(actions)
+    elif 2 == int(value):
+        test_spin_face(actions)
     elif 2 == int(value):
         test_flip_speed(actions)
     elif 3 == int(value):
