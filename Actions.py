@@ -493,36 +493,42 @@ def test_spin(actions:CubertActions):
         for i in range(200):
             actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
             print(i+1)
+            time.sleep(0.1)
 
     elif 2 == int(value):
         print("\nStress Test Quarter Spin Counter-Clocwise")
         for i in range(200):
             actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
             print(i+1)
+            time.sleep(0.1)
 
     elif 3 == int(value):
         print("\nStress Test Half Spin Clocwise")
         for i in range(200):
             actions.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW)
             print(i+1)
+            time.sleep(0.1)
 
     elif 4 == int(value):
         print("\nStress Test Half Spin Counter-Clocwise")
         for i in range(200):
             actions.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW)
             print(i+1)
+            time.sleep(0.1)
 
     elif 5 == int(value):
         print("\nStress Test Full Spin Clocwise")
         for i in range(200):
             actions.rotateFace(Motor.BaseRotation.FULL, Motor.Direction.CW)
             print(i+1)
+            time.sleep(0.1)
 
     elif 6 == int(value):
         print("\nStress Test Full Spin Counter-Clocwise")
         for i in range(200):
             actions.rotateFace(Motor.BaseRotation.FULL, Motor.Direction.CCW)
             print(i+1)
+            time.sleep(0.1)
 
     else:
         print("\nERROR: Value out of Range!")
