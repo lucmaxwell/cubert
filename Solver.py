@@ -205,7 +205,7 @@ class Solver:
         # Load the saved policy state
         print("Load network...")
         MODEL_NAME = "DQN_Tianshou_Vector.pth"
-        model_path = 'machine_leaning/' + MODEL_NAME
+        model_path = '/home/pi/cubert/machine_learning/' + MODEL_NAME
         policy.load_state_dict(load(model_path))
         net.eval()  # Set to eval mode
 
