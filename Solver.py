@@ -203,8 +203,9 @@ class Solver:
         policy = DQNPolicy(net, optim, estimation_step=10)
 
         # Load the saved policy state
+        print("Load network...")
         MODEL_NAME = "DQN_Tianshou_Vector.pth"
-        model_path = 'Training/Saved Models/' + MODEL_NAME
+        model_path = 'machine_leaning/' + MODEL_NAME
         policy.load_state_dict(load(model_path))
         net.eval()  # Set to eval mode
 
