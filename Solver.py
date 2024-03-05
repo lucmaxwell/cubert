@@ -175,7 +175,7 @@ class Solver:
 
         return cuberty
     
-    def getMlArray(imageArray):
+    def getMlArray(self, imageArray):
         # Transform from (3, 18) to (6, 3, 3)
         mlArray = np.zeros((6, 3, 3), dtype=np.uint8)
         for i in range(6):
@@ -209,6 +209,7 @@ class Solver:
         net.eval()  # Set to eval mode
 
         # Moves
+        print("Solve...")
         action_list = []
         done = False
         count = 0
