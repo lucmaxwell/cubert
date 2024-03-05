@@ -3,6 +3,7 @@ from enum import Enum
 import copy
 
 import numpy as np
+from scipy.stats import entropy
 
 
 class Face(Enum):
@@ -88,13 +89,15 @@ class RubikCube:
         }[given_face]
 
     def rotate_clockwise(self, face):
-        self._perform_clockwise_rotation(face)
+        self.face_list[face].rotate_clockwise()
+        self._perform_edge_clockwise_rotation(face)
 
     def rotate_counter_clockwise(self, face):
+        self.face_list[face].rotate_counter_clockwise()
         for _ in range(3):
-            self._perform_clockwise_rotation(face)
+            self._perform_edge_clockwise_rotation(face)
 
-    def _perform_clockwise_rotation(self, face):
+    def _perform_edge_clockwise_rotation(self, face):
         if (face is Face.Top) or (face is Face.Bottom):
             rotate_row = 0
             face_list = [Face.Front, Face.Left, Face.Back, Face.Right]
@@ -262,19 +265,7 @@ class RubikCube:
 
         # Return the entropy
         return entropy(p_correct_squares, base=2)
-
-    def find_face_by_color(self, color):
-        for face in Face:
-            # Central square's position is [size//2, size//2]
-            central_square = self.face_list[face].square_list[self.size // 2][self.size // 2]
-            if central_square.color == color:
-                return face
-        return None
-
-    def reorient_to_face(self, target_face):
-        robot_instructions = []
-
-
+        #return p_correct_squares
 
 
 if __name__ == '__main__':
