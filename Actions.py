@@ -542,6 +542,9 @@ def test_spin_cube(actions:CubertActions):
     print("4: Half Spin Counter-Clockwise")
     print("5: Full Spin Clockwise")
     print("6: Full Spin Counter-Clockwise")
+
+    actions.motor.moveGripperToPos(Motor.GripperPosition.TOP)
+
     value = input()
 
     if 1 == int(value):
