@@ -1220,5 +1220,11 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, sigint_handler)
 
-    test_inertia(motor)
+    # test_inertia(motor)
+    motor.homeBase()
+    motor.homeGripper()
+    for i in range(100):
+        motor.openHand()
+        motor.closeHand()
+        time.wait(0.5)
 
