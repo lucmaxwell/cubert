@@ -232,6 +232,7 @@ class Solver:
 
 
 if __name__ == '__main__':
+    print("Starting main")    
     solver = Solver()
     a = solver.getAiSolution(np.array([1, 2, 3, 4]))
     print("AI solution:")
