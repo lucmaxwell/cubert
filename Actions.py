@@ -535,6 +535,8 @@ def test_spin_face(actions:CubertActions):
 
 def test_spin_cube(actions:CubertActions):
 
+    actions.motor.moveGripperToPos(Motor.GripperPosition.TOP)
+
     print("\n\nTesting Spin\n----------------------")
     print("1: Quarter Spin Clockwise")
     print("2: Quarter Spin Counter-Clockwise")
@@ -542,8 +544,6 @@ def test_spin_cube(actions:CubertActions):
     print("4: Half Spin Counter-Clockwise")
     print("5: Full Spin Clockwise")
     print("6: Full Spin Counter-Clockwise")
-
-    actions.motor.moveGripperToPos(Motor.GripperPosition.TOP)
 
     value = input()
 
