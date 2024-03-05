@@ -80,6 +80,11 @@ def worker(selection):
         vision.writeImage("testingImage.png", cube)
         vision.writeImage("testingmask.png", mask)
 
+    elif selection =='4':
+        time.sleep(5)
+        actions.solve(writeImages=True, aiSolve=True)
+        time.sleep(15)
+
     GPIO.cleanup()
     sys.exit(0)
 
@@ -102,6 +107,7 @@ if __name__ == '__main__':
     print("1: Scramble")
     print("2: Endless Scramble + solve")
     print("3: Take picture, save to ./images")
+    print("4: AI solve")
     selection = input("Select an option: ")
 
     # Set up the work thread
