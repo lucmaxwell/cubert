@@ -196,7 +196,7 @@ class Solver:
 
         # Setup the machine learning model
         print("Setup machine learning model...")
-        env = RubiksCubeEnv()
+        env = RubikCubeEnv()
         state_shape = env.observation_space.shape or env.observation_space.n
         action_shape = env.action_space.shape or env.action_space.n
         net = Tianshou_Network(state_shape, action_shape)
@@ -229,3 +229,10 @@ class Solver:
 
         # Return
         return action_list
+
+
+if __name__ == '__main__':
+    solver = Solver()
+    a = solver.getAiSolution(np.array([1, 2, 3, 4]))
+    print("AI solution:")
+    print(a)
