@@ -661,9 +661,9 @@ if __name__ == '__main__':
         test_spin_cube(actions)
     elif 2 == int(value):
         test_spin_face(actions)
-    elif 2 == int(value):
-        test_flip_speed(actions)
     elif 3 == int(value):
+        test_flip_speed(actions)
+    elif 4 == int(value):
         test_spin_speed(actions)
 
     del actions
