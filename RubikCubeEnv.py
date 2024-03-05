@@ -2,7 +2,6 @@ import random
 
 import gymnasium
 import numpy as np
-from stable_baselines3.common.env_checker import check_env
 
 from RubikCube import RubikCube, Face
 
@@ -19,7 +18,7 @@ def decode_action(action):
 
 class RubikCubeEnv(gymnasium.Env):
     def __init__(self, num_scramble=1, cube_size=3):
-        super(RubiksCubeEnv, self).__init__()
+        super(RubikCubeEnv, self).__init__()
 
         # Define action and observation space
         self.action_space = gymnasium.spaces.Discrete(TOTAL_FACES * TOTAL_SPINS)
@@ -136,7 +135,6 @@ class RubikCubeEnv(gymnasium.Env):
         self.episode_reward = 0
 
         return self._get_observation()
-
 
 if __name__ == '__main__':
     # Create an instance of the environment
