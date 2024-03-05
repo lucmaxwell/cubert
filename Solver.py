@@ -194,6 +194,7 @@ class Solver:
         return mlArray
 
     def getAiSolution(self, obs):
+        
         # Setup the machine learning model
         print("Setup machine learning model...")
         env = RubiksCubeEnv()
@@ -207,7 +208,7 @@ class Solver:
         print("Load network...")
         MODEL_NAME = "DQN_Tianshou_Vector.pth"
         model_path = './machine_leaning/' + MODEL_NAME
-        policy.load_state_dict(load(model_path), map_location=device('cpu'))
+        policy.load_state_dict(load(model_path, map_location=device('cpu')))
         net.eval()  # Set to eval mode
 
         # Moves
