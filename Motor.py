@@ -913,11 +913,11 @@ class CubertMotor:
 
         # only close if hand state known to be open
         if self._current_hand_state == HandState.OPEN_MAX:
-            self.moveGripper(self._steps_to_close, GripperDirection.CLOSE, 75)
+            self.moveGripper(self._steps_to_close, GripperDirection.CLOSE, 75, True, 0.3)
             self._current_hand_state = HandState.CLOSED
 
         elif  self._current_hand_state == HandState.OPEN:
-            self.moveGripper(self._steps_to_close - self._ENDSTOP_OFFSET_GRIPPER, GripperDirection.CLOSE, 75)
+            self.moveGripper(self._steps_to_close - self._ENDSTOP_OFFSET_GRIPPER, GripperDirection.CLOSE, 75, True, 0.3)
 
     def openHand(self):
         """
@@ -926,7 +926,7 @@ class CubertMotor:
         print("Opening Hand")
 
         # move until enstop hit
-        self.moveGripper(self._steps_to_close - self._ENDSTOP_OFFSET_GRIPPER, GripperDirection.OPEN, 75)
+        self.moveGripper(self._steps_to_close - self._ENDSTOP_OFFSET_GRIPPER, GripperDirection.OPEN, 75, True, 0.3)
 
         self._current_hand_state = HandState.OPEN
 
