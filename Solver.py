@@ -1,9 +1,9 @@
 import numpy as np
-import torch
 import twophase.solver as sv
 from tianshou.data import Batch
 from tianshou.policy import DQNPolicy
 from torch.optim import AdamW
+from torch import load
 
 from RubikCubeEnv import RubiksCubeEnv
 from machine_learning.Network import Tianshou_Network
@@ -205,7 +205,7 @@ class Solver:
         # Load the saved policy state
         MODEL_NAME = "DQN_Tianshou_Vector.pth"
         model_path = 'Training/Saved Models/' + MODEL_NAME
-        policy.load_state_dict(torch.load(model_path))
+        policy.load_state_dict(load(model_path))
         net.eval()  # Set to eval mode
 
         # Moves
