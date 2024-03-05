@@ -371,8 +371,8 @@ class CubertActions:
             steps_ccw   = self.motor.moveBaseDegrees(30, Motor.Direction.CCW, move_speed)
             steps_cw    = self.motor.moveBaseDegrees(38, Motor.Direction.CW, move_speed)
             self.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW, move_speed)
-            time.sleep(self._grip_delay)
             self.motor.openHand()
+            time.sleep(self._grip_delay)
 
             self._cube_face_spun = False
 
@@ -553,8 +553,8 @@ def test_flip(actions:CubertActions):
             steps_ccw   = actions.motor.moveBaseDegrees(30, Motor.Direction.CCW, actions._default_arm_speed)
             steps_cw    = actions.motor.moveBaseDegrees(38, Motor.Direction.CW,  actions._default_arm_speed)
             actions.motor.moveBase(steps_cw - steps_ccw, Motor.Direction.CCW,  actions._default_arm_speed)
-            time.sleep(actions._grip_delay)
             actions.motor.openHand()
+            time.sleep(actions._grip_delay)
             print(i+1)
 
     else:
