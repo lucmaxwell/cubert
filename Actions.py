@@ -36,8 +36,8 @@ class CubertActions:
     _arm_accel_frac     = 0.15      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
-    _grip_delay = 0.01
-    _apex_delay = 0.001
+    _grip_delay = 0.1
+    _apex_delay = 0.1
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, calibrate_distance=False, resize_cubelets=True):
         """
@@ -63,9 +63,7 @@ class CubertActions:
         motor.enable()
 
         self.motor.home(calibrate_distance)
-        if resize_cubelets:
-            self.sizeCubelet()
-            self.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM_ENDSTOP)
+        if resize_cubelets: self.sizeCubelet()
 
     def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_default_base_speed, acceleration=True):
         """
@@ -496,6 +494,7 @@ def test_spin_face(actions:CubertActions):
             actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW)
             print(i+1)
             time.sleep(0.1)
+            actions.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM)
 
     elif 2 == int(value):
         print("\nStress Test Quarter Spin Counter-Clocwise")
@@ -503,6 +502,7 @@ def test_spin_face(actions:CubertActions):
             actions.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW)
             print(i+1)
             time.sleep(0.1)
+            actions.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM)
 
     elif 3 == int(value):
         print("\nStress Test Half Spin Clocwise")
@@ -510,6 +510,7 @@ def test_spin_face(actions:CubertActions):
             actions.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW)
             print(i+1)
             time.sleep(0.1)
+            actions.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM)
 
     elif 4 == int(value):
         print("\nStress Test Half Spin Counter-Clocwise")
@@ -517,6 +518,7 @@ def test_spin_face(actions:CubertActions):
             actions.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CCW)
             print(i+1)
             time.sleep(0.1)
+            actions.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM)
 
     elif 5 == int(value):
         print("\nStress Test Full Spin Clocwise")
@@ -524,6 +526,7 @@ def test_spin_face(actions:CubertActions):
             actions.rotateFace(Motor.BaseRotation.FULL, Motor.Direction.CW)
             print(i+1)
             time.sleep(0.1)
+            actions.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM)
 
     elif 6 == int(value):
         print("\nStress Test Full Spin Counter-Clocwise")
@@ -531,6 +534,7 @@ def test_spin_face(actions:CubertActions):
             actions.rotateFace(Motor.BaseRotation.FULL, Motor.Direction.CCW)
             print(i+1)
             time.sleep(0.1)
+            actions.motor.moveGripperToPos(Motor.GripperPosition.BOTTOM)
 
     else:
         print("\nERROR: Value out of Range!")
