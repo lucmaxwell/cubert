@@ -1,5 +1,13 @@
 import numpy as np
+import torch
 import twophase.solver as sv
+from tianshou.data import Batch
+from tianshou.policy import DQNPolicy
+from torch.optim import AdamW
+
+from RubikCubeEnv import RubiksCubeEnv
+from machine_learning.Network import Tianshou_Network
+
 
 class Solver:
     # Order of the cube faces in the image is B, R, F, L, U, D
@@ -189,3 +197,39 @@ class Solver:
         mlArray[5] = np.rot90(mlArray[5], 3)
 
         return mlArray
+
+    def ai_solver(self, obs):
+
+        # Setup the machine learning model
+        print("Setup machine learning model...")
+        env = RubiksCubeEnv()
+        state_shape = env.observation_space.shape or env.observation_space.n
+        action_shape = env.action_space.shape or env.action_space.n
+        net = Tianshou_Network(state_shape, action_shape)
+        optim = AdamW(net.parameters(), lr=1e-3)
+        policy = DQNPolicy(net, optim, estimation_step=10)
+
+        # Load the saved policy state
+        MODEL_NAME = "DQN_Tianshou_Vector.pth"
+        model_path = 'Training/Saved Models/' + MODEL_NAME
+        policy.load_state_dict(torch.load(model_path))
+        net.eval()  # Set to eval mode
+
+        # Moves
+        action_list = []
+        done = False
+        count = 0
+        while not done and count < 3:
+            count += 1
+
+            while not done and count < 30:
+                batch = Batch(obs=np.array([obs]), info={})
+                action = policy(batch).act[0]
+                obs, _, done, _, _ = env.step(action)
+
+                action_list.append(action)
+
+            done = env.is_solved()
+
+        # Return
+        return action_list
