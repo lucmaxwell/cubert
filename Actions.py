@@ -257,7 +257,7 @@ class CubertActions:
         pass
 
 
-    def solve(self, writeImages=False):
+    def solve(self, writeImages=False, aiSolve=False):
         print(f"Starting cube solving sequence")
 
         # Take images
@@ -280,8 +280,15 @@ class CubertActions:
         print()
 
         # Find cube solution
-        print("Finding solution")
-        solution = self.solver.get3x3Solution(cubeState)
+        if(aiSolve):
+            print("Finding solution with AI")
+            cubeState = self.solver.getMlArray(cubeState)
+            solution = self.solver.getAiSolution(cubeState)
+
+        else:
+            print("Finding solution with two-phase")
+            solution = self.solver.get3x3Solution(cubeState)
+
         print("Found solution")
         print(solution)
         print()
