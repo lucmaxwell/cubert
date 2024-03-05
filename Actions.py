@@ -285,6 +285,37 @@ class CubertActions:
             cubeState = self.solver.getMlArray(cubeState)
             solution = self.solver.getAiSolution(cubeState)
 
+            solutionString = ''
+
+            for move in solution:
+                if(move == 0):
+                    solutionString += 'F1 '
+                elif(move == 1):
+                    solutionString += 'F3 '
+                elif(move == 2):
+                    solutionString += 'R1 '
+                elif(move == 3):
+                    solutionString += 'R3 '
+                elif(move == 4):
+                    solutionString += 'B1 '
+                elif(move == 5):
+                    solutionString += 'B3 '
+                elif(move == 6):
+                    solutionString += 'L1 '
+                elif(move == 7):
+                    solutionString += 'L3 '
+                elif(move == 8):
+                    solutionString += 'U1 '
+                elif(move == 9):
+                    solutionString += 'U3 '
+                elif(move == 10):
+                    solutionString += 'D1 '
+                elif(move == 11):
+                    solutionString += 'D3 '
+
+            solutionString += '(' + len(solution) + 'f)'
+            solution = solutionString
+
         else:
             print("Finding solution with two-phase")
             solution = self.solver.get3x3Solution(cubeState)
