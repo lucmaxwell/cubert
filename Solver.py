@@ -5,7 +5,7 @@ from tianshou.policy import DQNPolicy
 from torch.optim import AdamW
 from torch import load
 
-from RubikCubeEnv import RubiksCubeEnv
+from RubikCubeEnv import RubikCubeEnv
 from machine_learning.Network import Tianshou_Network
 
 
