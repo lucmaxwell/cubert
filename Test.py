@@ -39,6 +39,24 @@ current_right = []
 
 _run_thread_1 = True
 
+def getSelection():
+    print()
+    print()
+    print()
+    print("==========================================")
+    print("==========================================")
+    print()
+    
+    print("0: Single solve")
+    print("1: Scramble")
+    print("2: Endless Scramble + solve")
+    print("3: Take picture, save to ./images")
+    print("4: AI solve")
+    print("5: AI solve (no actuation)")
+    print("9: Quit")
+    selection = input("Select an option: ")
+    return selection
+
 def spin_base():
     actions.rotateCube(BaseRotation.HALF, Direction.CCW)
 
@@ -86,23 +104,15 @@ def worker(selection):
             actions.solve(writeImages=True, aiSolve=True)
             time.sleep(15)
 
-        elif selection =='5':
+        elif selection =='4':
+            time.sleep(5)
+            actions.solve(writeImages=True, aiSolve=True, actuate=False)
+            time.sleep(15)
+
+        elif selection =='9':
             print("Andrew didn't implement quitting because he doesn't know how to do it properly")
-            
-        print()
-        print()
-        print()
-        print("==========================================")
-        print("==========================================")
-        print()
-        
-        print("0: Single solve")
-        print("1: Scramble")
-        print("2: Endless Scramble + solve")
-        print("3: Take picture, save to ./images")
-        print("4: AI solve")
-        print("5: Quit")
-        selection = input("Select an option: ")
+
+        selection = getSelection()
 
 _PANIC_BUTTON_PIN = 4
 
@@ -114,17 +124,8 @@ if __name__ == '__main__':
     GPIO.setup(_PANIC_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     signal.signal(signal.SIGINT, sigint_handler)
-    print()
-    print("==========================================")
-    print("==========================================")
-    print()
-    
-    print("0: Single solve")
-    print("1: Scramble")
-    print("2: Endless Scramble + solve")
-    print("3: Take picture, save to ./images")
-    print("4: AI solve")
-    selection = input("Select an option: ")
+
+    selection = getSelection()
 
     # Set up the work thread
     worker_thread = threading.Thread(target=worker, args=(selection))
