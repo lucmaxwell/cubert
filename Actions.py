@@ -279,14 +279,30 @@ class CubertActions:
         print(cubeState)
         print()
 
+        print("Finding solution with two-phase")
+        solution = self.solver.get3x3Solution(cubeState)
+
+        if(solution.startswith("Error: ")):
+            print("Vision returned invalid cube, cube cannot be solved")
+            return
+        
+        print("two-phase solution: ")
+        print(solution)
+        print()
+
         # Find cube solution
         if(aiSolve):
             print("Finding solution with AI")
-            cubeState = self.solver.getMlArray(cubeState)
-            solution = self.solver.getAiSolution(cubeState)
 
+            cubeState = self.solver.getMlArray(cubeState)
+            print("AI cube state:")
+            print(cubeState)
+            print()
+            
+            solution = self.solver.getAiSolution(cubeState)
             print("AI solution:")
             print(solution)
+            print()
 
             solutionString = ''
 
@@ -319,18 +335,9 @@ class CubertActions:
             solutionString += '(' + str(len(solution)) + 'f)'
             solution = solutionString
 
-        else:
-            print("Finding solution with two-phase")
-            solution = self.solver.get3x3Solution(cubeState)
-
-        # ========================================================================================================================================    
-        # To guarantee a cube is solvable
-        # Change from if(aisolve) else to just doing the tables method and then if that outputs a solution then the AI can try to solve it
-        # ========================================================================================================================================    
-        
-        print("Found solution")
-        print(solution)
-        print()
+            print("Found AI solution")
+            print(solution)
+            print()
 
         # Abort if the solver had an error
         if(solution.startswith("Error: ")):
