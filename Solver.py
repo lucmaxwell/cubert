@@ -193,10 +193,16 @@ class Solver:
 
         return mlArray
 
-    def getAiSolution(self, cubeState):
+    def getAiSolution(self, cubeState, verbose=False):
 
         if(self.environment == None or self.policy == None):
             self.loadModel()
+
+        self.environment.set_observation(cubeState)
+        
+        if(verbose):
+            print("AI Cube state (model):")
+            self.environment.render()
 
         # Moves
         print("Solve...")
@@ -205,6 +211,8 @@ class Solver:
         count = 0
         while not done and count < 3:
             count += 1
+
+            self.environment.set_observation(cubeState)
 
             while not done and count < 30:
                 batch = Batch(obs=np.array([cubeState]), info={})

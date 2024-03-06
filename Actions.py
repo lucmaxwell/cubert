@@ -295,7 +295,7 @@ class CubertActions:
             print("Finding solution with AI")
 
             cubeState = self.solver.getMlArray(cubeState)
-            print("AI cube state:")
+            print("AI cube state (vision):")
             print(cubeState)
             print()
             
