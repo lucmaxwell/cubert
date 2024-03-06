@@ -1,16 +1,12 @@
 import os
 
 import torch
-from stable_baselines3 import DQN
+from stable_baselines3 import PPO
 
-from Network import ResidualBlock_64_50_Dropout, Machine_1024_50_Dropout
 from RubikCubeEnv import RubiksCubeEnv
 from Training_Utility_Functions import train_and_evaluate
 
-
-network_configuration = Machine_1024_50_Dropout
-
-NUM_SCRAMBLES = 1
+NUM_SCRAMBLES = 4
 
 NUM_STEPS = 100_000
 
@@ -18,7 +14,7 @@ NUM_STEPS = 100_000
 if __name__ == '__main__':
     os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
-    MODEL_NAME = "DQN_" + network_configuration.__name__
+    MODEL_NAME = "PPO_No_Network_Configuration"
 
     print(f"Model name: {MODEL_NAME}")
 
@@ -34,26 +30,19 @@ if __name__ == '__main__':
     # Create the environment and vector for parallel environments
     env = RubiksCubeEnv(num_scramble=NUM_SCRAMBLES)
 
-    # Define the policy kwargs with custom feature extractor
-    policy_kwargs = dict(
-        features_extractor_class=network_configuration,
-        features_extractor_kwargs=dict(features_dim=env.action_space.n)
-    )
-
     # Create a new model or load model if already existed
     training_model = None
     model_file_path = os.path.join(save_path, MODEL_NAME + ".zip")
     if os.path.isfile(model_file_path):
         print("Loading existing model...")
-        training_model = DQN.load(model_file_path,
+        training_model = PPO.load(model_file_path,
                                   env=env,
                                   verbose=0,
                                   device="cuda")
     else:
         print("Creating a new model...")
-        training_model = DQN(policy='MlpPolicy',
+        training_model = PPO(policy='MlpPolicy',
                              env=env,
-                             policy_kwargs=policy_kwargs,
                              verbose=0,
                              device="cuda")
 

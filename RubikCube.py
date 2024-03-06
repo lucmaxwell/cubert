@@ -90,12 +90,12 @@ class RubikCube:
 
     def rotate_clockwise(self, face):
         self.face_list[face].rotate_clockwise()
-        self._perform_clockwise_rotation(face)
+        self._perform_edge_clockwise_rotation(face)
 
     def rotate_counter_clockwise(self, face):
-        self.face_list[face].counter_clockwise()
+        self.face_list[face].rotate_counter_clockwise()
         for _ in range(3):
-            self._perform_clockwise_rotation(face)
+            self._perform_edge_clockwise_rotation(face)
 
     def _perform_edge_clockwise_rotation(self, face):
         if (face is Face.Top) or (face is Face.Bottom):

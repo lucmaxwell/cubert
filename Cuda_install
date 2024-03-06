@@ -1,0 +1,10 @@
+
+Activate virtual environment.
+Windows:
+.\venv\Scripts\activate
+
+MacOS/Linux:
+source venv/bin/activate
+
+Install command.
+pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121

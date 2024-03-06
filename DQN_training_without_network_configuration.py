@@ -2,31 +2,24 @@ import os
 
 import torch
 from stable_baselines3 import DQN
-from stable_baselines3.common.vec_env import SubprocVecEnv
 
-from Network import Machine_1024_50_Dropout, Machine_2048_50_Dropout, Machine_1024_20_Dropout, Machine_2048_20_Dropout
 from RubikCubeEnv import RubiksCubeEnv
 from Training_Utility_Functions import train_and_evaluate
 
-network_configuration = Machine_2048_50_Dropout
-
-NUM_SCRAMBLES = 5
-
-NUM_ENVS = 12
+NUM_SCRAMBLES = 3
 
 NUM_STEPS = 100_000
-
-def make_env(num_scrambles):
-    def _init():
-        env = RubiksCubeEnv(num_scramble=num_scrambles)
-        return env
-    return _init
 
 
 if __name__ == '__main__':
     os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
-    MODEL_NAME = "DQN_" + network_configuration.__name__ + "_SubprocVecEnv"
+    MODEL_NAME = "DQN_No_Network_Configuration"
+
+    print(f"Model name: {MODEL_NAME}")
+
+    print(torch.__version__)
+    print(f"CUDA is available: {torch.cuda.is_available()}")
 
     save_path = os.path.join('Training', 'Saved Models')
 
@@ -35,13 +28,7 @@ if __name__ == '__main__':
     os.makedirs(plot_folder_name, exist_ok=True)
 
     # Create the environment and vector for parallel environments
-    envs = SubprocVecEnv([make_env(NUM_SCRAMBLES) for i in range(NUM_ENVS)])
-
-    # Define the policy kwargs with custom feature extractor
-    policy_kwargs = dict(
-        features_extractor_class=network_configuration,
-        features_extractor_kwargs=dict(features_dim=envs.action_space.n)
-    )
+    env = RubiksCubeEnv(num_scramble=NUM_SCRAMBLES)
 
     # Create a new model or load model if already existed
     training_model = None
@@ -49,17 +36,15 @@ if __name__ == '__main__':
     if os.path.isfile(model_file_path):
         print("Loading existing model...")
         training_model = DQN.load(model_file_path,
-                                  env=envs,
+                                  env=env,
                                   verbose=0,
                                   device="cuda")
     else:
         print("Creating a new model...")
         training_model = DQN(policy='MlpPolicy',
-                             env=envs,
-                             policy_kwargs=policy_kwargs,
+                             env=env,
                              verbose=0,
-                             device="cuda",
-                             tensorboard_log="./tensorboard_logs/")
+                             device="cuda")
 
     # Learn and evaluate
     train_and_evaluate(
@@ -72,4 +57,4 @@ if __name__ == '__main__':
     )
 
     # Release resource
-    envs.close()
+    env.close()

@@ -17,9 +17,9 @@ def decode_action(action):
     return face, spin
 
 
-class RubiksCubeEnv(gymnasium.Env):
+class RubikCubeEnv(gymnasium.Env):
     def __init__(self, num_scramble=1, cube_size=3):
-        super(RubiksCubeEnv, self).__init__()
+        super(RubikCubeEnv, self).__init__()
 
         # Define action and observation space
         self.action_space = gymnasium.spaces.Discrete(TOTAL_FACES * TOTAL_SPINS)
@@ -54,7 +54,7 @@ class RubiksCubeEnv(gymnasium.Env):
     def get_max_steps(self):
         #return int(math.ceil(self.num_scramble * 2.5))
         #return self.current_num_scramble * 10
-        return 100
+        return 30
 
     def is_solved(self):
         return self.cube.is_solved()
@@ -74,7 +74,8 @@ class RubiksCubeEnv(gymnasium.Env):
         return self._get_observation()
 
     def reset(self, **kwargs):
-        self.current_num_scramble = random.choices(range(1, self.num_scramble + 1), weights=self.weights, k=1)[0]
+        #self.current_num_scramble = random.choices(range(1, self.num_scramble + 1), weights=self.weights, k=1)[0]
+        self.current_num_scramble = self.num_scramble
 
         self.cube = RubikCube(self.cube_size)
         self.cube.scramble(self.current_num_scramble)
@@ -116,6 +117,7 @@ class RubiksCubeEnv(gymnasium.Env):
 
     def render(self):
         self.cube.print_cube_state()
+        print()
         # pass
 
     def _get_observation(self):
@@ -138,7 +140,7 @@ class RubiksCubeEnv(gymnasium.Env):
 
 if __name__ == '__main__':
     # Create an instance of the environment
-    env = RubiksCubeEnv()
+    env = RubikCubeEnv()
 
     # Action space sample
     print(env.action_space.sample())

@@ -1,7 +1,6 @@
 import concurrent.futures
 import os
 
-import pandas as pd
 from matplotlib import pyplot as plt
 from stable_baselines3 import DQN
 

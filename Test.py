@@ -37,10 +37,9 @@ if __name__ == '__main__':
     #                           device="cuda")
 
     cube = RubikCube(3)
-    #cube.set_state_from_observation(original_obs)
+    cube.set_state_from_observation(original_obs)
 
-    cube.rotate_clockwise(Face.Left)
-    cube.rotate_clockwise(Face.Back)
+    cube.rotate_clockwise(Face.Front)
 
 
     # Solve the cube
