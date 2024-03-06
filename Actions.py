@@ -168,95 +168,6 @@ class CubertActions:
 
         return combinedImage, combinedMask
 
-    def ai_solve(self):
-        # print("Taking images")
-        # cube, mask = self.getAllImages(True)
-        # print("Images taken")
-        # print()
-        #
-        # # Find cube state
-        # print("Finding cube state")
-        # cubeState, outImage = self.vision.getCubeState(cube, mask, 3, 18, True)
-        # print("Got cube state")
-        # print(cubeState)
-        # print()
-        #
-        # # Create the environment
-        # env = RubiksCubeEnv()
-        #
-        # # Create the AI model
-        # policy_kwargs = dict(
-        #     features_extractor_class=network_configuration,
-        #     features_extractor_kwargs=dict(features_dim=env.action_space.n)
-        # )
-        # training_model = DQN.load(model_file_path,
-        #                           env=env,
-        #                           verbose=2,
-        #                           device="cuda")
-        #
-        # # Find cube solution
-        # # Attempt to solve three times
-        # print("Finding solution")
-        # obs = env.set_observation(cubeState)
-        # solved = False
-        # count = 0
-        # action_list = []
-        # while not solved and count < 3:
-        #     count += 1
-        #
-        #     # Determine action and take step
-        #     action, _ = model.predict(obs, deterministic=True)
-        #     obs, _, done, _, _ = env.step(action)
-        #
-        # # Check if the cube has been solved
-        # done = env.is_solved()
-        #
-        #
-        #
-        # print("Found solution")
-        # print(solution)
-        # print()
-        #
-        # # Abort if the solver had an error
-        # if (solution.startswith("Error: ")):
-        #     print("Aborting solution attempt")
-        #     return
-        #
-        # # Translate solution
-        # print("Translating to cubertish")
-        # cubertSolution = self.solver.cubertify(solution)
-        # print("Translated to cubertish")
-        # print(cubertSolution)
-        # print()
-        #
-        # # Send instructions
-        # print("Sending instructions")
-        # for move in cubertSolution:
-        #     if move == 'X':
-        #         self.flip(acceleration=True)
-        #
-        #     elif move == 'y':
-        #         self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
-        #
-        #     elif move == 'Y':
-        #         self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, acceleration=False)
-        #
-        #     elif move == 'P':
-        #         self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW, acceleration=False)
-        #
-        #     elif move == 'b':
-        #         self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, acceleration=False)
-        #
-        #     elif move == 'B':
-        #         self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
-        #
-        #     elif move == 'p':
-        #         self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW, acceleration=False)
-        #
-        # print("Cube should be solved")
-        pass
-
-
     def solve(self, writeImages=False, aiSolve=False, actuate=True):
         print(f"Starting cube solving sequence")
 
@@ -299,7 +210,7 @@ class CubertActions:
             print(cubeState)
             print()
             
-            solution = self.solver.getAiSolution(cubeState)
+            solution = self.solver.getAiSolution(cubeState, verbose=True)
             print("AI solution:")
             print(solution)
             print()
