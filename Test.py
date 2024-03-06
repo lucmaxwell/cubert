@@ -104,7 +104,7 @@ def worker(selection):
             actions.solve(writeImages=True, aiSolve=True)
             time.sleep(15)
 
-        elif selection =='4':
+        elif selection =='5':
             time.sleep(5)
             actions.solve(writeImages=True, aiSolve=True, actuate=False)
             time.sleep(15)
