@@ -191,6 +191,12 @@ class Solver:
         mlArray[4] = np.rot90(mlArray[4], 3)
         mlArray[5] = np.rot90(mlArray[5], 3)
 
+
+        # Translate the values such that face 0's centre is 0, face 1's centre is 1, and so on 
+        mlArray = mlArray * 10
+        for i in range(6):
+            mlArray[mlArray == mlArray[i, 1, 1]] = i
+
         return mlArray
 
     def getAiSolution(self, cubeState, verbose=False):
