@@ -257,7 +257,7 @@ class CubertActions:
         pass
 
 
-    def solve(self, writeImages=False, aiSolve=False):
+    def solve(self, writeImages=False, aiSolve=False, actuate=True):
         print(f"Starting cube solving sequence")
 
         # Take images
@@ -338,11 +338,6 @@ class CubertActions:
             print("Found AI solution")
             print(solution)
             print()
-
-        # Abort if the solver had an error
-        if(solution.startswith("Error: ")):
-            print("Aborting solution attempt")
-            return
         
         # Translate solution
         print("Translating to cubertish")
@@ -352,33 +347,34 @@ class CubertActions:
         print()
 
         # Send instructions
-        print("Sending instructions")
-        for move in cubertSolution:
-            if move == 'X':
-                self.flip(acceleration=True)
+        if(actuate):
+            print("Sending instructions")
+            for move in cubertSolution:
+                if move == 'X':
+                    self.flip(acceleration=True)
 
-            elif move == 'D':
-                self.doubleFlip(acceleration=True)
+                elif move == 'D':
+                    self.doubleFlip(acceleration=True)
 
-            elif move == 'y':
-                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
+                elif move == 'y':
+                    self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
 
-            elif move == 'Y':
-                self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, acceleration=False)
+                elif move == 'Y':
+                    self.rotateCube(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, acceleration=False)
 
-            elif move == 'P':
-                self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW, acceleration=False)
-                
-            elif move == 'b':
-                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, acceleration=False)
-                
-            elif move == 'B':
-                self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
-                
-            elif move == 'p':
-                self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW, acceleration=False)
+                elif move == 'P':
+                    self.rotateCube(Motor.BaseRotation.HALF, Motor.Direction.CW, acceleration=False)
                     
-        print("Cube should be solved")
+                elif move == 'b':
+                    self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CCW, acceleration=False)
+                    
+                elif move == 'B':
+                    self.rotateFace(Motor.BaseRotation.QUARTER, Motor.Direction.CW, acceleration=False)
+                    
+                elif move == 'p':
+                    self.rotateFace(Motor.BaseRotation.HALF, Motor.Direction.CW, acceleration=False)
+                        
+            print("Cube should be solved")
 
     def sizeCubelet(self):
         print("Resizing Cubelets")
