@@ -58,35 +58,51 @@ def sigint_handler(sig, frame):
     sys.exit(0)
 
 def worker(selection):
-    if selection == '0': # Single solve
-        time.sleep(5)
-        actions.solve(True)
-        time.sleep(15)
-
-    elif selection == '1': # Single scramble
-        actions.scramble(13)
-
-    elif selection == '2': # Endless scramble + solve
-        while True:
-            actions.scramble(13)
-            time.sleep(5)
-            motor.homeLight()
+    while True:
+        if selection == '0': # Single solve
             time.sleep(5)
             actions.solve(True)
             time.sleep(15)
 
-    elif selection == '3': # Take an image
-        cube, mask = actions.getAllImages(True)
-        vision.writeImage("testingImage.png", cube)
-        vision.writeImage("testingmask.png", mask)
+        elif selection == '1': # Single scramble
+            actions.scramble(13)
 
-    elif selection =='4':
-        time.sleep(5)
-        actions.solve(writeImages=True, aiSolve=True)
-        time.sleep(15)
+        elif selection == '2': # Endless scramble + solve
+            while True:
+                actions.scramble(13)
+                time.sleep(5)
+                motor.homeLight()
+                time.sleep(5)
+                actions.solve(True)
+                time.sleep(15)
 
-    GPIO.cleanup()
-    sys.exit(0)
+        elif selection == '3': # Take an image
+            cube, mask = actions.getAllImages(True)
+            vision.writeImage("testingImage.png", cube)
+            vision.writeImage("testingmask.png", mask)
+
+        elif selection =='4':
+            time.sleep(5)
+            actions.solve(writeImages=True, aiSolve=True)
+            time.sleep(15)
+
+        elif selection =='5':
+            print("Andrew didn't implement quitting because he doesn't know how to do it properly")
+            
+        print()
+        print()
+        print()
+        print("==========================================")
+        print("==========================================")
+        print()
+        
+        print("0: Single solve")
+        print("1: Scramble")
+        print("2: Endless Scramble + solve")
+        print("3: Take picture, save to ./images")
+        print("4: AI solve")
+        print("5: Quit")
+        selection = input("Select an option: ")
 
 _PANIC_BUTTON_PIN = 4
 
