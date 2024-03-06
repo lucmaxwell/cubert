@@ -197,22 +197,6 @@ class Solver:
 
         if(self.environment == None or self.policy == None):
             self.loadModel()
-            
-        # # Setup the machine learning model
-        # print("Setup machine learning model...")
-        # environment = RubikCubeEnv()
-        # state_shape = environment.observation_space.shape or environment.observation_space.n
-        # action_shape = environment.action_space.shape or environment.action_space.n
-        # network = Tianshou_Network(state_shape, action_shape)
-        # optim = AdamW(network.parameters(), lr=1e-3)
-        # policy = DQNPolicy(network, optim, estimation_step=10)
-
-        # # Load the saved policy state
-        # print("Load network...")
-        # MODEL_NAME = "DQN_Tianshou_Vector.pth"
-        # model_path = '/home/pi/cubert/machine_learning/' + MODEL_NAME
-        # policy.load_state_dict(load(model_path, map_location='cpu'))
-        # network.eval()  # Set to eval mode
 
         # Moves
         print("Solve...")

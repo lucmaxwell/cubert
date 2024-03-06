@@ -135,21 +135,3 @@ class RubikCubeEnv(gymnasium.Env):
         self.episode_reward = 0
 
         return self._get_observation()
-
-if __name__ == '__main__':
-    # Create an instance of the environment
-    env = RubikCubeEnv()
-
-    # Action space sample
-    print(env.action_space.sample())
-
-    # Initial state and reset
-    print("Initial state:")
-    env.render()
-
-    # Reset state
-    env.reset()
-    print("Reset state should be the same as initial:")
-    env.render()
-
-    check_env(env)
