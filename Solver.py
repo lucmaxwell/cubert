@@ -21,7 +21,8 @@ class Solver:
     }
 
     def __init__(self):
-        pass
+        self.policy = None
+        self.environment = None
 
     def get3x3Solution(self, imageArray, verbose=False):
         # imageToString at index i has the index of where the colour at index i belongs in the cubeString
@@ -192,23 +193,26 @@ class Solver:
 
         return mlArray
 
-    def getAiSolution(self, obs):
+    def getAiSolution(self, cubeState):
 
-        # Setup the machine learning model
-        print("Setup machine learning model...")
-        env = RubikCubeEnv()
-        state_shape = env.observation_space.shape or env.observation_space.n
-        action_shape = env.action_space.shape or env.action_space.n
-        net = Tianshou_Network(state_shape, action_shape)
-        optim = AdamW(net.parameters(), lr=1e-3)
-        policy = DQNPolicy(net, optim, estimation_step=10)
+        if(self.environment == None or self.policy == None):
+            self.loadModel()
+            
+        # # Setup the machine learning model
+        # print("Setup machine learning model...")
+        # environment = RubikCubeEnv()
+        # state_shape = environment.observation_space.shape or environment.observation_space.n
+        # action_shape = environment.action_space.shape or environment.action_space.n
+        # network = Tianshou_Network(state_shape, action_shape)
+        # optim = AdamW(network.parameters(), lr=1e-3)
+        # policy = DQNPolicy(network, optim, estimation_step=10)
 
-        # Load the saved policy state
-        print("Load network...")
-        MODEL_NAME = "DQN_Tianshou_Vector.pth"
-        model_path = '/home/pi/cubert/machine_learning/' + MODEL_NAME
-        policy.load_state_dict(load(model_path, map_location='cpu'))
-        net.eval()  # Set to eval mode
+        # # Load the saved policy state
+        # print("Load network...")
+        # MODEL_NAME = "DQN_Tianshou_Vector.pth"
+        # model_path = '/home/pi/cubert/machine_learning/' + MODEL_NAME
+        # policy.load_state_dict(load(model_path, map_location='cpu'))
+        # network.eval()  # Set to eval mode
 
         # Moves
         print("Solve...")
@@ -219,17 +223,33 @@ class Solver:
             count += 1
 
             while not done and count < 30:
-                batch = Batch(obs=np.array([obs]), info={})
-                action = policy(batch).act[0]
-                obs, _, done, _, _ = env.step(action)
+                batch = Batch(obs=np.array([cubeState]), info={})
+                action = self.policy(batch).act[0]
+                cubeState, _, done, _, _ = self.environment.step(action)
 
                 action_list.append(action)
 
-            done = env.is_solved()
+            done = self.environment.is_solved()
 
         # Return
         return action_list
 
+    def loadModel(self):
+        # Setup the machine learning model
+        print("Setup machine learning model...")
+        self.environment = RubikCubeEnv()
+        state_shape = self.environment.observation_space.shape or self.environment.observation_space.n
+        action_shape = self.environment.action_space.shape or self.environment.action_space.n
+        network = Tianshou_Network(state_shape, action_shape)
+        optim = AdamW(network.parameters(), lr=1e-3)
+        self.policy = DQNPolicy(network, optim, estimation_step=10)
+
+        # Load the saved policy state
+        print("Load network...")
+        MODEL_NAME = "DQN_Tianshou_Vector.pth"
+        model_path = '/home/pi/cubert/machine_learning/' + MODEL_NAME
+        self.policy.load_state_dict(load(model_path, map_location='cpu'))
+        network.eval()  # Set to eval mode
 
 if __name__ == '__main__':
     print("Starting main")    
