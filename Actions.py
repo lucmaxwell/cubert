@@ -285,6 +285,9 @@ class CubertActions:
             cubeState = self.solver.getMlArray(cubeState)
             solution = self.solver.getAiSolution(cubeState)
 
+            print("AI solution:")
+            print(solution)
+
             solutionString = ''
 
             for move in solution:
@@ -313,13 +316,18 @@ class CubertActions:
                 elif(move == 11):
                     solutionString += 'D3 '
 
-            solutionString += '(' + len(solution) + 'f)'
+            solutionString += '(' + str(len(solution)) + 'f)'
             solution = solutionString
 
         else:
             print("Finding solution with two-phase")
             solution = self.solver.get3x3Solution(cubeState)
 
+        # ========================================================================================================================================    
+        # To guarantee a cube is solvable
+        # Change from if(aisolve) else to just doing the tables method and then if that outputs a solution then the AI can try to solve it
+        # ========================================================================================================================================    
+        
         print("Found solution")
         print(solution)
         print()
