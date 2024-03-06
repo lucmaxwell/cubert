@@ -193,6 +193,7 @@ class Solver:
 
 
         # Translate the values such that face 0's centre is 0, face 1's centre is 1, and so on 
+        mlArray = mlArray + 1
         mlArray = mlArray * 10
         for i in range(6):
             mlArray[mlArray == mlArray[i, 1, 1]] = i
@@ -228,6 +229,11 @@ class Solver:
                 action_list.append(action)
 
             done = self.environment.is_solved()
+
+        if(verbose):
+            print("AI Cube state (solved):")
+            self.environment.render()
+
 
         # Return
         return action_list
