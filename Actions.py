@@ -36,8 +36,8 @@ class CubertActions:
     _arm_accel_frac     = 0.15      # Arm Max Speed Point
     _cube_face_spun     = False     # tracks if cube state was spun recently
 
-    _grip_delay = 0.1
-    _apex_delay = 0.1
+    _grip_delay = 0.05
+    _apex_delay = 0.05
 
     def __init__(self, motor:Motor.CubertMotor,  vision:Vision.CubertVision, solver:Solver.Solver, calibrate_distance=False, resize_cubelets=True):
         """

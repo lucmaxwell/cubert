@@ -93,9 +93,10 @@ class CubertMotor:
     # class constants
     _USE_UART = False # DON'T USE UART VERY BROKEN RIGHT NOW!!!
 
-    _ACTUAL_STEPS   = 200               # number of steps in motor
-    _MICROSTEPS     = 8                 # set microstep resolution
-    _GEAR_RATIO     = 12                 # cube base gear ratio
+    _ACTUAL_STEPS       = 200               # number of steps in motor
+    _MICROSTEPS         = 8                 # set microstep resolution
+    _MICROSTEPS_BASE    = 4
+    _GEAR_RATIO         = 12                 # cube base gear ratio
 
     _MAX_CURRENT    = 700               # max current draw of motors in mA
 
@@ -112,7 +113,7 @@ class CubertMotor:
     _SANITY_STEP            = 100       # Tolerance for sanity checking _steps_from_bottom
 
     # derived class constants
-    _STEPS_PER_REV      = _ACTUAL_STEPS * _MICROSTEPS   # number of steps per revolution of motor shaft
+    _STEPS_PER_REV      = _ACTUAL_STEPS * _MICROSTEPS_BASE   # number of steps per revolution of motor shaft
     _STEPS_PER_BASE_REV = _STEPS_PER_REV * _GEAR_RATIO  # number of steps per revolution of cube base
 
     _DISTANCE_FROM_BOTTOM_TO_TOP    = _DISTANCE_AT_TOP - _DISTANCE_AT_BOTTOM    # distance from gripper travel bottom to top in mm
@@ -181,11 +182,26 @@ class CubertMotor:
         self._current_sensor = current_sensor
 
         # setup motors
-        for tmc in self.tmc_list:
-            tmc.set_current(700)
-            tmc.set_microstepping_resolution(self._MICROSTEPS)
-            tmc.set_interpolation(True)
-            tmc.set_direction_pin(Direction.CCW)
+        # for tmc in self.tmc_list:
+        #     tmc.set_current(700)
+        #     tmc.set_microstepping_resolution(self._MICROSTEPS)
+        #     tmc.set_interpolation(True)
+        #     tmc.set_direction_pin(Direction.CCW)
+
+        self.tmc_base.set_current(700)
+        self.tmc_base.set_microstepping_resolution(self._MICROSTEPS_BASE)
+        self.tmc_base.set_interpolation(True)
+        self.tmc_base.set_direction_pin(Direction.CCW)
+
+        self.tmc_left.set_current(1000)
+        self.tmc_left.set_microstepping_resolution(self._MICROSTEPS)
+        self.tmc_left.set_interpolation(True)
+        self.tmc_left.set_direction_pin(Direction.CCW)
+
+        self.tmc_right.set_current(1000)
+        self.tmc_right.set_microstepping_resolution(self._MICROSTEPS)
+        self.tmc_right.set_interpolation(True)
+        self.tmc_right.set_direction_pin(Direction.CCW)        
 
         # store enstop pins
         self._top_end_pin       = top_end_pin
@@ -226,6 +242,8 @@ class CubertMotor:
         # remove tmc objects
         for tmc in self.tmc_list:
             del(tmc)
+
+        del self._current_sensor
 
         # cleanup gpio pins
         GPIO.cleanup()
