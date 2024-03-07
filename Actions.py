@@ -150,7 +150,9 @@ class CubertActions:
             
             self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE)
             self.motor.closeHand()
+            self.motor.disable()
             img = self.vision.getImage()
+            self.motor.enable()
             self.motor.openHand()
 
             if i == 0 or i == 1 or i == 2:
@@ -297,8 +299,10 @@ class CubertActions:
         print("Resizing Cubelets")
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE, 50)
         self.motor.closeHand()
+        self.motor.disable()
         time.sleep(0.5)
         self.motor.resizeCubelet(self.vision.getCubletSize())
+        self.motor.enable()
         self.motor.openHand()
 
 
