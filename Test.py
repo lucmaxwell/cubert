@@ -157,7 +157,7 @@ if __name__ == '__main__':
     panic = False
     _PANIC_BUTTON_PIN = 4
     while _run_thread.is_set() and not panic:
-        time.sleep(0.2)
+        time.sleep(0.01)
 
         # Take a reading of the panic button
         panic = (GPIO.input(_PANIC_BUTTON_PIN) == GPIO.LOW)
