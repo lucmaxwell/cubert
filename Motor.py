@@ -410,7 +410,7 @@ class CubertMotor:
             attempts = 0
 
             while attempts < 4:
-                for i in range(10):
+                for i in range(50):
                     queue.append(self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT))
 
                 if statistics.median(queue) > threshold:
@@ -419,6 +419,8 @@ class CubertMotor:
                 else:
                     queue.clear()
                     self.moveBaseSpin(BaseRotation.QUARTER, Direction.CCW)
+
+                attempts += 1
 
         
         self.homeBase()
