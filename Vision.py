@@ -34,6 +34,8 @@ class CubertVision:
     def __del__(self):
         print("Deleting Vision")
         
+        self.camera.stop()
+
         del self.camera
 
     def capture(self):
