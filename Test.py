@@ -53,6 +53,7 @@ def getSelection():
     print("3: Take picture, save to ./images")
     print("4: AI solve")
     print("5: AI solve (no actuation)")
+    print("6: Recalibrate Grip Strength")
     print("9: Quit")
     selection = input("Select an option: ")
     return selection
@@ -117,6 +118,9 @@ def worker(selection):
             time.sleep(5)
             actions.solve(writeImages=True, aiSolve=True, actuate=False)
             time.sleep(15)
+
+        elif selection == '6':
+            actions.motor.calibrateGripStrength()
 
         elif selection =='9':
             print("Andrew didn't implement quitting because he doesn't know how to do it properly")
