@@ -324,6 +324,8 @@ class CubertMotor:
         """
         print("Homing Base")
 
+        self.tmc_base.set_microstepping_resolution(self._MICROSTEPS)
+
         # setup function variables
         step_delay = 0
         short_delay = 0
@@ -393,6 +395,8 @@ class CubertMotor:
         self.enable()
 
         self._base_homed = True
+
+        self.tmc_base.set_microstepping_resolution(self._MICROSTEPS_BASE)
 
     def homeLight(self):
         """
