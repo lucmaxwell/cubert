@@ -169,11 +169,11 @@ if __name__ == '__main__':
 
     print("Cleaning Up Program")
 
-    del actions
-    del motor
     del sensor
+    del motor
     del vision
     del solver
+    del actions
 
     GPIO.cleanup()
     sys.exit(0)
