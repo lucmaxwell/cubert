@@ -37,7 +37,7 @@ current_left = []
 current_right = []
 
 
-_run_thread_1 = True
+_run_thread = threading.Event()
 
 def getSelection():
     print()
@@ -76,7 +76,7 @@ def sigint_handler(sig, frame):
     sys.exit(0)
 
 def worker(selection):
-    while True:
+    while _run_thread.is_set():
         if selection == '0': # Single solve
             time.sleep(5)
             actions.solve(True)
@@ -111,6 +111,9 @@ def worker(selection):
 
         elif selection =='9':
             print("Andrew didn't implement quitting because he doesn't know how to do it properly")
+            print("So Matthew fixed it for him")
+            _run_thread.clear()
+            
 
         selection = getSelection()
 
@@ -127,6 +130,8 @@ if __name__ == '__main__':
 
     selection = getSelection()
 
+    _run_thread.set()
+
     # Set up the work thread
     worker_thread = threading.Thread(target=worker, args=(selection))
     worker_thread.daemon = True
@@ -135,15 +140,16 @@ if __name__ == '__main__':
     # Run the program until panic
     panic = False
     _PANIC_BUTTON_PIN = 4
-    while not panic:
+    while _run_thread.is_set() and not panic:
+        time.sleep(0.2)
+
         # Take a reading of the panic button
         panic = (GPIO.input(_PANIC_BUTTON_PIN) == GPIO.LOW)
 
         # End the worker thread
         if panic:
-            sys.exit("Program terminated due to panic button pressed.")
-
-        time.sleep(0.2)
+            _run_thread.clear()
+            print("Program terminated due to panic button pressed.")
 
     del actions
     del motor
