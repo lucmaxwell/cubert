@@ -79,6 +79,9 @@ def worker(selection):
 
     global _run_thread
 
+    if selection == '1':
+        actions.solver.loadModel()
+
     while _run_thread.is_set():
 
         selection = getSelection()
@@ -131,7 +134,17 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, sigint_handler)
 
-    selection = getSelection()
+    print()
+    print()
+    print()
+    print("==========================================")
+    print("==========================================")
+    print()
+    
+    print("0: Continue")
+    print("1: Preload AI Model")
+
+    selection = input()
 
     _run_thread.set()
 

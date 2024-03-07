@@ -31,6 +31,11 @@ class CubertVision:
 
         self.loadMask(self.imagesFolder + self.maskName)
 
+    def __del__(self):
+        print("Deleting Vision")
+        
+        del self.camera
+
     def capture(self):
         time.sleep(2)
         self.camera.capture_file("./image.jpg")

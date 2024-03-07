@@ -24,6 +24,9 @@ class Solver:
         self.policy = None
         self.environment = None
 
+    def __del__(self):
+        print("Deleting Solver")
+
     def get3x3Solution(self, imageArray, verbose=False):
         # imageToString at index i has the index of where the colour at index i belongs in the cubeString
         imageToString = np.array(

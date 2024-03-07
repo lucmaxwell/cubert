@@ -65,6 +65,12 @@ class CubertActions:
         self.motor.home(calibrate_distance)
         if resize_cubelets: self.sizeCubelet()
 
+    def __del__(self):
+        print("Deleting Actions")
+        del self.solver
+        del self.motor
+        del self.vision
+
     def preformMove(self, move:CubertNotation, rotation:Motor.BaseRotation, move_speed=_default_base_speed, acceleration=True):
         """
         Purpose: Preform a given move on the Rubik's cube

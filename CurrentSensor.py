@@ -48,6 +48,8 @@ class CubertCurrentSensor():
 
     def __del__(self):
         
+        print("Deleting Current Sensor")
+
         if self.run_gripper_monitor.is_set():
             self.stopMotorSensing()
 
@@ -82,8 +84,6 @@ class CubertCurrentSensor():
         print("Terminating Threads")
         self._left_motor_monitor.join()
         self._right_motor_monitor.join()
-
-
 
     def getChannelCurrent(self, channel:CurrentChannel):
         return self.sensor.getCurrent_mA(channel)
