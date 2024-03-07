@@ -205,6 +205,9 @@ class Solver:
         if(self.environment == None or self.policy == None):
             self.loadModel()
 
+        else:
+            print("Model Already Loaded. Finding Solution")
+
         self.environment.set_observation(cubeState)
         
         if(verbose):

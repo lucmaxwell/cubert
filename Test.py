@@ -76,7 +76,13 @@ def sigint_handler(sig, frame):
     sys.exit(0)
 
 def worker(selection):
+
+    global _run_thread
+
     while _run_thread.is_set():
+
+        selection = getSelection()
+
         if selection == '0': # Single solve
             time.sleep(5)
             actions.solve(True)
@@ -113,9 +119,6 @@ def worker(selection):
             print("Andrew didn't implement quitting because he doesn't know how to do it properly")
             print("So Matthew fixed it for him")
             _run_thread.clear()
-            
-
-        selection = getSelection()
 
 _PANIC_BUTTON_PIN = 4
 
@@ -150,6 +153,10 @@ if __name__ == '__main__':
         if panic:
             _run_thread.clear()
             print("Program terminated due to panic button pressed.")
+
+    worker_thread.join()
+
+    print("Cleaning Up Program")
 
     del actions
     del motor
