@@ -167,13 +167,13 @@ if __name__ == '__main__':
             _run_thread.clear()
             print("Program terminated due to panic button pressed.")
 
-    worker_thread.join()
-
     print("Cleaning Up Program")
 
     del actions
     del motor
     del sensor
+    del vision
+    del solver
 
     GPIO.cleanup()
     sys.exit(0)
