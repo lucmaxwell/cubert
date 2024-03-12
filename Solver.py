@@ -224,6 +224,7 @@ class Solver:
         attempt_count = 0
         while not done and attempt_count < 3:
             attempt_count += 1
+            action_list = []
 
             obs = self.environment.set_observation(cubeState)
 
@@ -244,9 +245,10 @@ class Solver:
 
             done = self.environment.is_solved()
 
-        if(verbose):
+        if(verbose and done):
             print("AI Cube state (solved):")
             self.environment.render()
+            print(action_list)
 
         # Return
         return action_list
