@@ -245,8 +245,12 @@ class Solver:
 
             done = self.environment.is_solved()
 
-        if(verbose and done):
-            print("AI Cube state (solved):")
+        # Was not able to solve
+        if not done:
+            action_list = []
+
+        if verbose:
+            print("AI final cube state:")
             self.environment.render()
             print(action_list)
 
