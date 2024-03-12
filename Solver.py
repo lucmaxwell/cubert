@@ -225,15 +225,15 @@ class Solver:
         while not done and attempt_count < 3:
             attempt_count += 1
 
-            self.environment.set_observation(cubeState)
+            obs = self.environment.set_observation(cubeState)
 
             move_count = 0
             while not done and move_count < 5:
                 move_count += 1
 
-                batch = Batch(obs=np.array([cubeState]), info={})
+                batch = Batch(obs=np.array([obs]), info={})
                 action = self.policy(batch).act[0]
-                cubeState, _, done, _, _ = self.environment.step(action)
+                obs, _, done, _, _ = self.environment.step(action)
 
                 action_list.append(action)
 
