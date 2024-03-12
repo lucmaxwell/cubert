@@ -5,7 +5,7 @@ from tianshou.policy import DQNPolicy
 from torch.optim import AdamW
 from torch import load
 
-from RubikCubeEnv import RubikCubeEnv
+from RubikCubeEnv import RubikCubeEnv, decode_action
 from machine_learning.Network import Tianshou_Network
 
 
@@ -203,9 +203,9 @@ class Solver:
 
         return mlArray
 
-    def getAiSolution(self, cubeState, verbose=False):
+    def getAiSolution(self, cubeState, verbose=True):
 
-        if(self.environment == None or self.policy == None):
+        if (self.environment == None or self.policy == None):
             self.loadModel()
 
         else:
@@ -221,25 +221,32 @@ class Solver:
         print("Solve...")
         action_list = []
         done = False
-        count = 0
-        while not done and count < 3:
-            count += 1
+        attempt_count = 0
+        while not done and attempt_count < 3:
+            attempt_count += 1
 
             self.environment.set_observation(cubeState)
 
-            while not done and count < 30:
+            move_count = 0
+            while not done and move_count < 30:
+                move_count += 1
+
                 batch = Batch(obs=np.array([cubeState]), info={})
                 action = self.policy(batch).act[0]
                 cubeState, _, done, _, _ = self.environment.step(action)
 
                 action_list.append(action)
 
+                if (verbose):
+                    face, spin = decode_action(action)
+                    print(f"{attempt_count} {move_count} Action: {face} {spin}")
+                    self.environment.render()
+
             done = self.environment.is_solved()
 
         if(verbose):
             print("AI Cube state (solved):")
             self.environment.render()
-
 
         # Return
         return action_list
