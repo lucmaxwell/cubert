@@ -454,7 +454,7 @@ class CubertMotor:
 
         self._current_sensor.stopMotorSensing()
 
-        self._steps_to_close = steps_done - 3
+        self._steps_to_close = steps_done - 1
 
         self.moveGripperToPos(GripperPosition.BOTTOM_ENDSTOP)
 
