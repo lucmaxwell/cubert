@@ -228,7 +228,7 @@ class Solver:
             self.environment.set_observation(cubeState)
 
             move_count = 0
-            while not done and move_count < 30:
+            while not done and move_count < 5:
                 move_count += 1
 
                 batch = Batch(obs=np.array([cubeState]), info={})
