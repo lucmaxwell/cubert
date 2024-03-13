@@ -2,6 +2,7 @@ import random
 
 import gymnasium
 import numpy as np
+from stable_baselines3.common.env_checker import check_env
 
 from RubikCube import RubikCube, Face
 
@@ -64,7 +65,7 @@ class RubikCubeEnv(gymnasium.Env):
     def scramble(self, num_scramble):
         self.current_num_scramble = num_scramble
 
-        self.cube = RubikCube(self.cube_size)
+        self.cube = RubikCube()
         self.cube.scramble(self.current_num_scramble)
 
         self.current_num_steps = 0
@@ -102,7 +103,7 @@ class RubikCubeEnv(gymnasium.Env):
 
         # Calculate reward based on the number of correct squares
         done = self.cube.is_solved()
-        reward = 1 if done else -0.5 - 0.5*self.cube.entropy()
+        reward = 1 if done else -0.5 - 0.5*(1 - self.cube.percentage_correct())
 
         # Update the episode reward
         self.episode_reward += reward
@@ -135,3 +136,22 @@ class RubikCubeEnv(gymnasium.Env):
         self.episode_reward = 0
 
         return self._get_observation()
+
+
+if __name__ == '__main__':
+    # Create an instance of the environment
+    env = RubikCubeEnv()
+
+    # Action space sample
+    print(env.action_space.sample())
+
+    # Initial state and reset
+    print("Initial state:")
+    env.render()
+
+    # Reset state
+    env.reset()
+    print("Reset state should be the same as initial:")
+    env.render()
+
+    check_env(env)

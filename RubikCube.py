@@ -67,7 +67,7 @@ class RubikFace:
         return np.array([[copy.deepcopy(square) for square in row] for row in self.square_list], dtype=object)
 
 class RubikCube:
-    def __init__(self, size):
+    def __init__(self, size=3):
         self.size = size
         self.current_front_face = Face.Front
         self.face_list = {}
@@ -211,26 +211,16 @@ class RubikCube:
         Parameters:
         moves (int): The number of random moves to perform.
         """
-        last_move = None
-
         for _ in range(moves):
-            while True:
-                # Choose a random face and direction
-                face = random.choice(list(Face))
-                direction = random.choice(['clockwise', 'counter_clockwise'])
-
-                # Check if the current move is the inverse of the last move
-                if last_move is None or (last_move != (face, 'counter_clockwise' if direction == 'clockwise' else 'clockwise')):
-                    break
+            # Choose a random face and direction
+            face = random.choice(list(Face))
+            direction = random.choice(['clockwise', 'counter_clockwise'])
 
             # Perform the rotation
             if direction == 'clockwise':
                 self.rotate_clockwise(face)
             else:
                 self.rotate_counter_clockwise(face)
-
-            # Update last move
-            last_move = (face, direction)
 
     def get_face_colors(self, given_face):
         face_np = np.zeros((self.size, self.size), dtype=np.uint8)
@@ -257,15 +247,18 @@ class RubikCube:
                     color_value = observation[face_index][i][j]
                     self.face_list[face].square_list[i][j].color = SquareColour(color_value)
 
+    def percentage_correct(self):
+        # Calculate the entropy from the count of correct squares
+        total_num_squares = self.size ** 2 * 6
+        correct_squares = self.count_correct_squares()
+        return correct_squares / total_num_squares
+
     def entropy(self):
         # Calculate the entropy from the count of correct squares
-        total_num_squares = self.size**2 * 6
-        correct_squares = self.count_correct_squares()
-        p_correct_squares = correct_squares / total_num_squares
+        p_correct_squares = self.percentage_correct()
 
         # Return the entropy
         return entropy(p_correct_squares, base=2)
-        #return p_correct_squares
 
 
 if __name__ == '__main__':

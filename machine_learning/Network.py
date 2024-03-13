@@ -25,6 +25,7 @@ class Tianshou_Network(nn.Module):
         super().__init__()
 
         flattened_obs_space = int(np.prod(state_shape))
+        action_space = np.prod(action_shape)
 
         hidden_size = 1024
         dropout = 0.2
@@ -33,26 +34,24 @@ class Tianshou_Network(nn.Module):
         self.feature = nn.Sequential(
             # Input layers
             nn.Linear(np.prod(flattened_obs_space), hidden_size),
+            nn.LayerNorm(hidden_size),
             nn.LeakyReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            nn.Dropout(dropout),
 
             # Features
-            Tianshou_Residual_Block(4, hidden_size, dropout),
+            Tianshou_Residual_Block(3, hidden_size, dropout),
         )
 
         # Outputs a single value (V)
         self.value_stream = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
+            Tianshou_Residual_Block(2, hidden_size, dropout),
             nn.Linear(hidden_size, 1)
         )
 
         # Outputs advantage for each action (A)
         self.advantage_stream = nn.Sequential(
-            nn.Linear(hidden_size, hidden_size),
-            nn.LeakyReLU(),
-            nn.Linear(hidden_size, np.prod(action_shape))
+            Tianshou_Residual_Block(4, hidden_size, dropout),
+            nn.Linear(hidden_size, action_space)
         )
 
     def forward(self, obs, state=None, info={}):

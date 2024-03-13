@@ -2,7 +2,7 @@ import numpy as np
 import twophase.solver as sv
 from tianshou.data import Batch
 from tianshou.policy import DQNPolicy
-from torch.optim import AdamW
+from torch.optim import AdamW, Adam
 from torch import load
 
 from RubikCubeEnv import RubikCubeEnv, decode_action
@@ -22,7 +22,7 @@ class Solver:
 
     def __init__(self):
         self.policy = None
-        self.environment = None
+        self.env = None
 
     def __del__(self):
         print("Deleting Solver")
@@ -205,20 +205,20 @@ class Solver:
 
     def getAiSolution(self, cubeState, verbose=True):
 
-        if (self.environment == None or self.policy == None):
+        if (self.env == None or self.policy == None):
             self.loadModel()
 
         else:
             print("Model Already Loaded. Finding Solution")
 
-        self.environment.set_observation(cubeState)
+        obs = self.env.set_observation(cubeState)
         
         if(verbose):
-            print("AI Cube state (model):")
-            self.environment.render()
+            print("Original state:")
+            self.env.render()
 
         # Moves
-        print("Solve...")
+        print("Solving...")
         action_list = []
         done = False
         attempt_count = 0
@@ -234,16 +234,16 @@ class Solver:
 
                 batch = Batch(obs=np.array([obs]), info={})
                 action = self.policy(batch).act[0]
-                obs, _, done, _, _ = self.environment.step(action)
+                obs, _, done, _, _ = self.env.step(action)
 
                 action_list.append(action)
 
                 if (verbose):
                     face, spin = decode_action(action)
                     print(f"{attempt_count} {move_count} Action: {face} {spin}")
-                    self.environment.render()
+                    self.env.render()
 
-            done = self.environment.is_solved()
+            done = self.env.is_solved()
 
         # Was not able to solve
         if not done:
@@ -251,7 +251,7 @@ class Solver:
 
         if verbose:
             print("AI final cube state:")
-            self.environment.render()
+            self.env.render()
             print(action_list)
 
         # Return
@@ -260,19 +260,30 @@ class Solver:
     def loadModel(self):
         # Setup the machine learning model
         print("Setup machine learning model...")
-        self.environment = RubikCubeEnv()
-        state_shape = self.environment.observation_space.shape or self.environment.observation_space.n
-        action_shape = self.environment.action_space.shape or self.environment.action_space.n
-        network = Tianshou_Network(state_shape, action_shape)
-        optim = AdamW(network.parameters(), lr=1e-3)
-        self.policy = DQNPolicy(network, optim, estimation_step=10)
+
+        # Set up the environment
+        self.env = RubikCubeEnv(num_scramble=0)
+
+        # Set up the network and policy
+        state_shape = self.env.observation_space.shape or self.env.observation_space.n
+        action_shape = self.env.action_space.shape or self.env.action_space.n
+        net = Tianshou_Network(state_shape, action_shape)
+
+        # Optimization and policy
+        optim = Adam(net.parameters(), lr=2e-4)
+        self.policy = DQNPolicy(
+            net,
+            optim,
+            estimation_step=10
+        )
 
         # Load the saved policy state
         print("Load network...")
         MODEL_NAME = "DQN_Tianshou_Vector.pth"
         model_path = '/home/pi/cubert/machine_learning/' + MODEL_NAME
         self.policy.load_state_dict(load(model_path, map_location='cpu'))
-        network.eval()  # Set to eval mode
+        net.eval()  # Set to eval mode
+
 
 if __name__ == '__main__':
     print("Starting main")    
