@@ -468,7 +468,7 @@ class CubertMotor:
 
         self._current_sensor.stopMotorSensing()
 
-        self._steps_to_close = math.ceil(statistics.mean(steps_counted))
+        self._steps_to_close = math.ceil(statistics.geometric_mean(steps_counted))
 
         self.openHand()
 
