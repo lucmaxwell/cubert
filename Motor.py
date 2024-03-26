@@ -7,6 +7,7 @@ from TMC2209MotorLib.src.TMC_2209.TMC_2209_StepperDriver import *
 import ctypes
 import CurrentSensor
 import statistics
+import math
 
 # Parameter
 MAX_SPEED = 3.3 # DO NOT MESS WITH THESE VALUES. YOU WILL BREAK SOMETHING.
@@ -443,23 +444,33 @@ class CubertMotor:
         self.moveGripperToPos(GripperPosition.MIDDLE, 50)
         time.sleep(0.001)
 
-        self._current_sensor.clearSkipFlag()
+        steps_counted = []
 
-        while (steps_done < MAX_STEPS and not self._current_sensor.getMotorSkipped()):
-            self.stepGripper(GripperDirection.CLOSE, step_delay)
-            libc.usleep(step_delay)
-            steps_done += 1
 
-            if steps_done < MIN_STEPS:
-                self._current_sensor.clearSkipFlag()
+        for i in range(3):
+            self._current_sensor.clearSkipFlag()
+
+            while (steps_done < MAX_STEPS and not self._current_sensor.getMotorSkipped()):
+                self.stepGripper(GripperDirection.CLOSE, step_delay)
+                libc.usleep(step_delay)
+                steps_done += 1
+
+                if steps_done < MIN_STEPS:
+                    self._current_sensor.clearSkipFlag()
+
+            steps_counted.append(steps_done - 1)
+
+            self.openHand()
+
+            steps_done = 0
 
         self._current_sensor.stopMotorSensing()
 
-        self._steps_to_close = steps_done - 1
-
-        self.moveGripperToPos(GripperPosition.BOTTOM_ENDSTOP)
+        self._steps_to_close = math.ceil(statistics.mean(steps_counted))
 
         self.openHand()
+
+        self.moveGripperToPos(GripperPosition.BOTTOM_ENDSTOP)
 
         print(self._steps_to_close)
 
