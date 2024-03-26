@@ -433,7 +433,7 @@ class CubertMotor:
         """
 
         MAX_STEPS = 500
-        MIN_STEPS = 100
+        MIN_STEPS = 150
 
         step_delay = get_step_delay(10)
         steps_done = 0
@@ -447,7 +447,7 @@ class CubertMotor:
         steps_counted = []
 
 
-        for i in range(3):
+        for i in range(9):
             self._current_sensor.clearSkipFlag()
 
             while (steps_done < MAX_STEPS and not self._current_sensor.getMotorSkipped()):
