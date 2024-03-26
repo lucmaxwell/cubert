@@ -464,6 +464,8 @@ class CubertMotor:
 
             steps_done = 0
 
+            time.sleep(1)
+
         self._current_sensor.stopMotorSensing()
 
         self._steps_to_close = math.ceil(statistics.mean(steps_counted))
