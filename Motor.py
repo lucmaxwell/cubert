@@ -444,31 +444,19 @@ class CubertMotor:
         self.moveGripperToPos(GripperPosition.MIDDLE, 50)
         time.sleep(0.001)
 
-        steps_counted = []
+        self._current_sensor.clearSkipFlag()
 
+        while (steps_done < MAX_STEPS and not self._current_sensor.getMotorSkipped()):
+            self.stepGripper(GripperDirection.CLOSE, step_delay)
+            libc.usleep(step_delay)
+            steps_done += 1
 
-        for i in range(9):
-            self._current_sensor.clearSkipFlag()
-
-            while (steps_done < MAX_STEPS and not self._current_sensor.getMotorSkipped()):
-                self.stepGripper(GripperDirection.CLOSE, step_delay)
-                libc.usleep(step_delay)
-                steps_done += 1
-
-                if steps_done < MIN_STEPS:
-                    self._current_sensor.clearSkipFlag()
-
-            steps_counted.append(steps_done - 1)
-
-            self.openHand()
-
-            steps_done = 0
-
-            time.sleep(1)
+            if steps_done < MIN_STEPS:
+                self._current_sensor.clearSkipFlag()
 
         self._current_sensor.stopMotorSensing()
 
-        self._steps_to_close = math.ceil(statistics.median(steps_counted))
+        self._steps_to_close = steps_done
 
         self.openHand()
 
