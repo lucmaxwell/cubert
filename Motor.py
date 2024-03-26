@@ -410,10 +410,11 @@ class CubertMotor:
             attempts = 0
 
             while attempts < 4:
-                for i in range(50):
+                for i in range(145):
                     queue.append(self._current_sensor.getChannelCurrent(CurrentSensor.CurrentChannel.BASE_LIGHT))
 
                 if statistics.median(queue) > threshold:
+                    light_found = True
                     return
                 
                 else:
