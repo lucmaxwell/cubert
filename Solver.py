@@ -226,7 +226,7 @@ class Solver:
             attempt_count += 1
             action_list = []
 
-            obs = self.environment.set_observation(cubeState)
+            obs = self.env.set_observation(cubeState)
 
             move_count = 0
             while not done and move_count < 5:
