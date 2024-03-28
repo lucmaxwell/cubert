@@ -121,19 +121,19 @@ def worker(selection):
             time.sleep(15)
 
         elif selection == '6':
-            print("Current Gripper Strength Offset is %d" %{actions.motor._grip_strength_offset})
+            print("Current Gripper Strength Offset is {}".format(actions._default_arm_speed))
             val = input("New Grip Strength Offest Value: ")
             try:
                 val = int(val)
                 actions.motor._grip_strength_offset = val
-                print("Changed Grip Strength Offset to %d" % {actions.motor._grip_strength_offset})
+                print("Changed Grip Strength Offset to {}".format(actions._default_arm_speed))
             except:
                 print("Input Invalid: Not Changing Grip Strength Offset!")
 
             actions.motor.calibrateGripStrength()
 
         elif selection == '7':
-            print("Current Gripper Speed is %d" %{actions._default_arm_speed})
+            print("Current Gripper Speed is {}".format(actions._default_arm_speed))
 
             try:
                 val = int(val)
@@ -142,11 +142,11 @@ def worker(selection):
                     raise Exception("Value should be between 0 and 400")
 
                 actions._default_arm_speed = val
-                print("Changed Gripper Speed to %d" % {actions._default_arm_speed})
+                print("Changed Gripper Speed to {}".format(actions._default_base_speed))
             except:
                 print("Input Invalid: Not Changing Gripper Speed!")
 
-            print("Current Base Speed is %d" %{actions._default_base_speed})
+            print("Current Base Speed is {}".format(actions._default_base_speed))
 
             try:
                 val = int(val)
@@ -155,7 +155,7 @@ def worker(selection):
                     raise Exception("Value should be between 0 and 400")
 
                 actions._default_arm_speed = val
-                print("Changed Base Speed to %d" % {actions._default_base_speed})
+                print("Changed Base Speed to {}".format(actions._default_base_speed))
             except:
                 print("Input Invalid: Not Changing Base Speed!")
 
