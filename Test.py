@@ -54,6 +54,7 @@ def getSelection():
     print("4: AI solve")
     print("5: AI solve (no actuation)")
     print("6: Recalibrate Grip Strength")
+    print("7: Alter Speed")
     print("9: Quit")
     selection = input("Select an option: ")
     return selection
@@ -120,7 +121,47 @@ def worker(selection):
             time.sleep(15)
 
         elif selection == '6':
+            print("Current Gripper Strength Offset is {}".format(actions.motor._grip_strength_offset))
+            val = input("New Grip Strength Offest Value: ")
+            try:
+                val = int(val)
+                actions.motor._grip_strength_offset = val
+                print("Changed Grip Strength Offset to {}".format(actions.motor._grip_strength_offset))
+            except:
+                print("Input Invalid: Not Changing Grip Strength Offset!")
+
             actions.motor.calibrateGripStrength()
+
+        elif selection == '7':
+            print("Current Gripper Speed is {}".format(actions._default_arm_speed))
+
+            val = input("New Gripper Speed Value: ")
+
+            try:
+                val = int(val)
+
+                if val < 0 or val > 400:
+                    raise Exception("Value should be between 0 and 400")
+
+                actions._default_arm_speed = val
+                print("Changed Gripper Speed to {}".format(actions._default_arm_speed))
+            except:
+                print("Input Invalid: Not Changing Gripper Speed!")
+
+            print("Current Base Speed is {}".format(actions._default_base_speed))
+
+            val = input("New Base Speed Value: ")
+
+            try:
+                val = int(val)
+
+                if val < 0 or val > 400:
+                    raise Exception("Value should be between 0 and 400")
+
+                actions._default_arm_speed = val
+                print("Changed Base Speed to {}".format(actions._default_base_speed))
+            except:
+                print("Input Invalid: Not Changing Base Speed!")
 
         elif selection =='9':
             print("Andrew didn't implement quitting because he doesn't know how to do it properly")
