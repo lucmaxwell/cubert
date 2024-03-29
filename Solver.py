@@ -203,7 +203,7 @@ class Solver:
 
         return mlArray
 
-    def getAiSolution(self, cubeState, verbose=True):
+    def getAiSolution(self, cubeState, verbose=False):
 
         if (self.env == None or self.policy == None):
             self.loadModel()
@@ -237,7 +237,7 @@ class Solver:
 
             if (verbose):
                 face, spin = decode_action(action)
-                print(f"{attempt_count} {move_count} Action: {face} {spin}")
+                print(f"{move_count} Action: {face} {spin}")
                 self.env.render()
 
             done = self.env.is_solved()
