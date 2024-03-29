@@ -104,11 +104,8 @@ class RubikCube:
 
             # The rotation face is the bottom
             if face is Face.Bottom:
-                self.face_list[Face.Bottom].rotate_clockwise()
                 face_list.reverse()
                 rotate_row = self.size - 1
-            else:
-                self.face_list[Face.Top].rotate_clockwise()
 
             # Rotate the first row across the adjacent faces
             from_row = self.face_list[face_list[0]].get_row(rotate_row)

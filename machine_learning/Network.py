@@ -39,18 +39,18 @@ class Tianshou_Network(nn.Module):
             nn.Dropout(dropout),
 
             # Features
-            Tianshou_Residual_Block(3, hidden_size, dropout),
+            Tianshou_Residual_Block(4, hidden_size, dropout),
         )
 
         # Outputs a single value (V)
         self.value_stream = nn.Sequential(
-            Tianshou_Residual_Block(2, hidden_size, dropout),
+            Tianshou_Residual_Block(3, hidden_size, dropout),
             nn.Linear(hidden_size, 1)
         )
 
         # Outputs advantage for each action (A)
         self.advantage_stream = nn.Sequential(
-            Tianshou_Residual_Block(4, hidden_size, dropout),
+            Tianshou_Residual_Block(5, hidden_size, dropout),
             nn.Linear(hidden_size, action_space)
         )
 

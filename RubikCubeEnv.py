@@ -14,7 +14,7 @@ TOTAL_SPINS = 2  # Clockwise, Counter-clockwise
 def decode_action(action):
     face = action // TOTAL_SPINS
     spin = action % TOTAL_SPINS
-    return face, spin
+    return Face(face), spin
 
 
 class RubikCubeEnv(gymnasium.Env):
@@ -104,6 +104,7 @@ class RubikCubeEnv(gymnasium.Env):
         # Calculate reward based on the number of correct squares
         done = self.cube.is_solved()
         reward = 1 if done else -0.5 - 0.5*(1 - self.cube.percentage_correct())
+        #reward = 1 if done else -0.5 - 0.5*self.cube.entropy()
 
         # Update the episode reward
         self.episode_reward += reward
