@@ -217,31 +217,28 @@ class Solver:
             print("Original state:")
             self.env.render()
 
+
+        # Set the initial cube state
+        obs = self.env.set_observation(cubeState)
+
         # Moves
         print("Solving...")
         action_list = []
         done = False
-        attempt_count = 0
-        while not done and attempt_count < 3:
-            attempt_count += 1
-            action_list = []
+        move_count = 0
+        while not done and move_count < 30:
+            move_count += 1
 
-            obs = self.env.set_observation(cubeState)
+            batch = Batch(obs=np.array([obs]), info={})
+            action = self.policy(batch).act[0]
+            obs, _, done, _, _ = self.env.step(action)
 
-            move_count = 0
-            while not done and move_count < 5:
-                move_count += 1
+            action_list.append(action)
 
-                batch = Batch(obs=np.array([obs]), info={})
-                action = self.policy(batch).act[0]
-                obs, _, done, _, _ = self.env.step(action)
-
-                action_list.append(action)
-
-                if (verbose):
-                    face, spin = decode_action(action)
-                    print(f"{attempt_count} {move_count} Action: {face} {spin}")
-                    self.env.render()
+            if (verbose):
+                face, spin = decode_action(action)
+                print(f"{attempt_count} {move_count} Action: {face} {spin}")
+                self.env.render()
 
             done = self.env.is_solved()
 
