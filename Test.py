@@ -28,7 +28,7 @@ vision = Vision.CubertVision()
 
 solver = Solver.Solver()
 
-actions = CubertActions(motor, vision, solver)
+actions = CubertActions(motor, vision, solver, resize_cubelets=False)
 
 light_on = False
 
@@ -89,9 +89,7 @@ def worker(selection):
         selection = getSelection()
 
         if selection == '0': # Single solve
-            time.sleep(5)
             actions.solve(True)
-            time.sleep(15)
 
         elif selection == '1': # Single scramble
             actions.scramble(13)
@@ -111,14 +109,10 @@ def worker(selection):
             vision.writeImage("testingmask.png", mask)
 
         elif selection =='4':
-            time.sleep(5)
             actions.solve(writeImages=True, aiSolve=True)
-            time.sleep(15)
 
         elif selection =='5':
-            time.sleep(5)
             actions.solve(writeImages=True, aiSolve=True, actuate=False)
-            time.sleep(15)
 
         elif selection == '6':
             print("Current Gripper Strength Offset is {}".format(actions.motor._grip_strength_offset))
