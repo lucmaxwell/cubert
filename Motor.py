@@ -132,7 +132,7 @@ class CubertMotor:
 
     _cubelet_size           = 19                        # cublet size in mm
 
-    _grip_strength_offset   = 25
+    _grip_strength_offset   = 5
 
     _current_gripper_pos    = GripperPosition.UNKNOWN   # tracks the current gripper state
     _current_hand_state     = HandState.UNKOWN          # tracks the current gripper hand state
@@ -444,7 +444,7 @@ class CubertMotor:
 
         self._current_sensor.startMotorSensing()
 
-        for i in range(3):
+        for i in range(9):
 
             self.moveGripperToPos(GripperPosition.TOP, 50)
             self.moveGripperToPos(GripperPosition.MIDDLE, 50)
