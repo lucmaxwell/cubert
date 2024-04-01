@@ -151,7 +151,7 @@ class CubertActions:
             self.motor.disable()
             img = self.vision.getImage()
             self.motor.enable()
-            self.motor.openHand()
+            self.motor.openHandFull()
 
             if i == 0 or i == 1 or i == 2:
                 self.flip()
@@ -360,7 +360,10 @@ class CubertActions:
         self.motor.moveGripperToPos(Motor.GripperPosition.MIDDLE_CUBE, move_speed, acceleration=acceleration, accel_fraction=self._arm_accel_frac)
         time.sleep(self._grip_delay)
         self.motor.closeHand()
-        self.motor.moveBaseSpin(rotation, direction, move_speed, degrees_to_correct=8, acceleration=acceleration, accel_fraction=self._base_accel_frac)
+        if direction == Motor.Direction.CW:
+            self.motor.moveBaseSpin(rotation, direction, move_speed, degrees_to_correct=8, acceleration=acceleration, accel_fraction=self._base_accel_frac)
+        else:
+            self.motor.moveBaseSpin(rotation, direction, move_speed, degrees_to_correct=10, acceleration=acceleration, accel_fraction=self._base_accel_frac)
         time.sleep(self._grip_delay)
         self.motor.openHand()
 

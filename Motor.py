@@ -147,7 +147,7 @@ class CubertMotor:
     # derive class variables
     _dropoff_height         = _DISTANCE_AT_BOTTOM + 1.75 * _cubelet_size           # height in mm to release cube at
     _cube_middle_height     = _DISTANCE_AT_BOTTOM + 0.9 * _cubelet_size         # height of cube center
-    _flip_apex_height       = _DISTANCE_AT_BOTTOM + 2.3 * _cubelet_size         # highest point when flipping cube
+    _flip_apex_height       = _DISTANCE_AT_BOTTOM + 2.4 * _cubelet_size         # highest point when flipping cube
     _pickup_height          = _DISTANCE_AT_BOTTOM + _cubelet_size / 30           # height to grab cube at
 
 
@@ -426,8 +426,8 @@ class CubertMotor:
 
                 attempts += 1
 
-        
         self.homeBase()
+        self.calibrateGripStrength()
 
     def calibrateGripStrength(self):
         """
@@ -961,6 +961,17 @@ class CubertMotor:
         self.moveGripper(self._steps_to_close - self._ENDSTOP_OFFSET_GRIPPER, GripperDirection.OPEN, 75, True, 0.3)
 
         self._current_hand_state = HandState.OPEN
+
+    def openHandFull(self):
+        """
+        Purpose: Open gripper fingers on cube
+        """
+        print("Opening Hand")
+
+        # move until enstop hit
+        self.moveGripper(self._steps_to_close + 400, GripperDirection.OPEN, 75, True, 0.3)
+
+        self._current_hand_state = HandState.OPEN_MAX
 
 
 
