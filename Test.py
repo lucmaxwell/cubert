@@ -28,7 +28,7 @@ vision = Vision.CubertVision()
 
 solver = Solver.Solver()
 
-actions = CubertActions(motor, vision, solver)
+actions = CubertActions(motor, vision, solver, resize_cubelets=False)
 
 light_on = False
 
@@ -38,6 +38,7 @@ current_right = []
 
 
 _run_thread = threading.Event()
+_stop_actuation = threading.Event()
 
 def getSelection():
     print()
@@ -59,11 +60,87 @@ def getSelection():
     selection = input("Select an option: ")
     return selection
 
-def spin_base():
-    actions.rotateCube(BaseRotation.HALF, Direction.CCW)
+def runSelection(selection):
 
-# currentThread = threading.Thread(target=check_light)
-baseThread = threading.Thread(target=spin_base)
+    global actions
+    global sensor
+    global motor
+
+    global _run_thread
+
+    if selection == '0': # Single solve
+            actions.solve(True)
+
+    elif selection == '1': # Single scramble
+        actions.scramble(13)
+
+    elif selection == '2': # Endless scramble + solve
+        while True:
+            actions.scramble(13)
+            time.sleep(5)
+            motor.homeLight()
+            time.sleep(5)
+            actions.solve(True)
+            time.sleep(15)
+
+    elif selection == '3': # Take an image
+        cube, mask = actions.getAllImages(True)
+        vision.writeImage("testingImage.png", cube)
+        vision.writeImage("testingmask.png", mask)
+
+    elif selection =='4':
+        actions.solve(writeImages=True, aiSolve=True)
+
+    elif selection =='5':
+        actions.solve(writeImages=True, aiSolve=True, actuate=False)
+
+    elif selection == '6':
+        print("Current Gripper Strength Offset is {}".format(actions.motor._grip_strength_offset))
+        val = input("New Grip Strength Offest Value: ")
+        try:
+            val = int(val)
+            actions.motor._grip_strength_offset = val
+            print("Changed Grip Strength Offset to {}".format(actions.motor._grip_strength_offset))
+        except:
+            print("Input Invalid: Not Changing Grip Strength Offset!")
+
+        actions.motor.calibrateGripStrength()
+
+    elif selection == '7':
+        print("Current Gripper Speed is {}".format(actions._default_arm_speed))
+
+        val = input("New Gripper Speed Value: ")
+
+        try:
+            val = int(val)
+
+            if val < 0 or val > 400:
+                raise Exception("Value should be between 0 and 400")
+
+            actions._default_arm_speed = val
+            print("Changed Gripper Speed to {}".format(actions._default_arm_speed))
+        except:
+            print("Input Invalid: Not Changing Gripper Speed!")
+
+        print("Current Base Speed is {}".format(actions._default_base_speed))
+
+        val = input("New Base Speed Value: ")
+
+        try:
+            val = int(val)
+
+            if val < 0 or val > 400:
+                raise Exception("Value should be between 0 and 400")
+
+            actions._default_arm_speed = val
+            print("Changed Base Speed to {}".format(actions._default_base_speed))
+        except:
+            print("Input Invalid: Not Changing Base Speed!")
+
+    elif selection =='9':
+        print("Andrew didn't implement quitting because he doesn't know how to do it properly")
+        print("So Matthew fixed it for him")
+        _run_thread.clear()
 
 def sigint_handler(sig, frame):
     global actions
@@ -80,6 +157,7 @@ def sigint_handler(sig, frame):
 def worker(selection):
 
     global _run_thread
+    global _stop_actuation
 
     if selection == '1':
         actions.solver.loadModel()
@@ -88,85 +166,6 @@ def worker(selection):
 
         selection = getSelection()
 
-        if selection == '0': # Single solve
-            time.sleep(5)
-            actions.solve(True)
-            time.sleep(15)
-
-        elif selection == '1': # Single scramble
-            actions.scramble(13)
-
-        elif selection == '2': # Endless scramble + solve
-            while True:
-                actions.scramble(13)
-                time.sleep(5)
-                motor.homeLight()
-                time.sleep(5)
-                actions.solve(True)
-                time.sleep(15)
-
-        elif selection == '3': # Take an image
-            cube, mask = actions.getAllImages(True)
-            vision.writeImage("testingImage.png", cube)
-            vision.writeImage("testingmask.png", mask)
-
-        elif selection =='4':
-            time.sleep(5)
-            actions.solve(writeImages=True, aiSolve=True)
-            time.sleep(15)
-
-        elif selection =='5':
-            time.sleep(5)
-            actions.solve(writeImages=True, aiSolve=True, actuate=False)
-            time.sleep(15)
-
-        elif selection == '6':
-            print("Current Gripper Strength Offset is {}".format(actions.motor._grip_strength_offset))
-            val = input("New Grip Strength Offest Value: ")
-            try:
-                val = int(val)
-                actions.motor._grip_strength_offset = val
-                print("Changed Grip Strength Offset to {}".format(actions.motor._grip_strength_offset))
-            except:
-                print("Input Invalid: Not Changing Grip Strength Offset!")
-
-            actions.motor.calibrateGripStrength()
-
-        elif selection == '7':
-            print("Current Gripper Speed is {}".format(actions._default_arm_speed))
-
-            val = input("New Gripper Speed Value: ")
-
-            try:
-                val = int(val)
-
-                if val < 0 or val > 400:
-                    raise Exception("Value should be between 0 and 400")
-
-                actions._default_arm_speed = val
-                print("Changed Gripper Speed to {}".format(actions._default_arm_speed))
-            except:
-                print("Input Invalid: Not Changing Gripper Speed!")
-
-            print("Current Base Speed is {}".format(actions._default_base_speed))
-
-            val = input("New Base Speed Value: ")
-
-            try:
-                val = int(val)
-
-                if val < 0 or val > 400:
-                    raise Exception("Value should be between 0 and 400")
-
-                actions._default_arm_speed = val
-                print("Changed Base Speed to {}".format(actions._default_base_speed))
-            except:
-                print("Input Invalid: Not Changing Base Speed!")
-
-        elif selection =='9':
-            print("Andrew didn't implement quitting because he doesn't know how to do it properly")
-            print("So Matthew fixed it for him")
-            _run_thread.clear()
 
 _PANIC_BUTTON_PIN = 4
 
@@ -192,6 +191,7 @@ if __name__ == '__main__':
     selection = input()
 
     _run_thread.set()
+    _stop_actuation.clear()
 
     # Set up the work thread
     worker_thread = threading.Thread(target=worker, args=(selection))
@@ -209,7 +209,7 @@ if __name__ == '__main__':
 
         # End the worker thread
         if panic:
-            _run_thread.clear()
+            _stop_actuation.set()
             print("Program terminated due to panic button pressed.")
 
     print("Cleaning Up Program")
