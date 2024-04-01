@@ -132,7 +132,7 @@ class CubertMotor:
 
     _cubelet_size           = 19                        # cublet size in mm
 
-    _grip_strength_offset   = 0
+    _grip_strength_offset   = 25
 
     _current_gripper_pos    = GripperPosition.UNKNOWN   # tracks the current gripper state
     _current_hand_state     = HandState.UNKOWN          # tracks the current gripper hand state
