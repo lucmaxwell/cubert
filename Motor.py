@@ -440,25 +440,37 @@ class CubertMotor:
         step_delay = get_step_delay(10)
         steps_done = 0
 
+        sensor_queue = []
+
         self._current_sensor.startMotorSensing()
 
-        self.moveGripperToPos(GripperPosition.TOP, 50)
-        self.moveGripperToPos(GripperPosition.MIDDLE, 50)
-        time.sleep(0.001)
+        for i in range(3):
 
-        self._current_sensor.clearSkipFlag()
+            self.moveGripperToPos(GripperPosition.TOP, 50)
+            self.moveGripperToPos(GripperPosition.MIDDLE, 50)
+            time.sleep(0.001)
 
-        while (steps_done < MAX_STEPS and not self._current_sensor.getMotorSkipped()):
-            self.stepGripper(GripperDirection.CLOSE, step_delay)
-            libc.usleep(step_delay)
-            steps_done += 1
+            self._current_sensor.clearSkipFlag()
 
-            if steps_done < MIN_STEPS:
-                self._current_sensor.clearSkipFlag()
+            while (steps_done < MAX_STEPS and not self._current_sensor.getMotorSkipped()):
+                self.stepGripper(GripperDirection.CLOSE, step_delay)
+                libc.usleep(step_delay)
+                steps_done += 1
+
+                if steps_done < MIN_STEPS:
+                    self._current_sensor.clearSkipFlag()
+
+            sensor_queue.append(steps_done + self._grip_strength_offset)
+
+            steps_done = 0
+
+            self.openHand()
+
+            self.moveGripperToPos(GripperPosition.BOTTOM_ENDSTOP)
 
         self._current_sensor.stopMotorSensing()
 
-        self._steps_to_close = steps_done + self._grip_strength_offset
+        self._steps_to_close = max(sensor_queue)
 
         self.openHand()
 
