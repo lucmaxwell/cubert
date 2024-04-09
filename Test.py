@@ -2,6 +2,7 @@ import time
 from CurrentSensor import *
 from Motor import *
 import threading
+import multiprocessing
 import signal
 import RPi.GPIO as GPIO
 import sys
@@ -37,7 +38,7 @@ current_left = []
 current_right = []
 
 
-_run_thread = threading.Event()
+_run_thread = multiprocessing.Event()
 
 def getSelection():
     print()
@@ -63,7 +64,7 @@ def spin_base():
     actions.rotateCube(BaseRotation.HALF, Direction.CCW)
 
 # currentThread = threading.Thread(target=check_light)
-baseThread = threading.Thread(target=spin_base)
+baseThread = multiprocessing.Process(target=spin_base)
 
 def sigint_handler(sig, frame):
     global actions
@@ -188,7 +189,7 @@ if __name__ == '__main__':
     _run_thread.set()
 
     # Set up the work thread
-    worker_thread = threading.Thread(target=worker, args=(selection))
+    worker_thread = multiprocessing.Process(target=worker, args=(selection))
     worker_thread.daemon = True
     worker_thread.start()
 

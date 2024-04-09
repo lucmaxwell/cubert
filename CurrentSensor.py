@@ -2,6 +2,7 @@ import time
 from enum import IntEnum
 import INA3221.SDL_Pi_INA3221 as INA3221
 import threading
+import multiprocessing
 import numpy as np
 import ctypes
 # from Motor import MotorType
@@ -20,12 +21,12 @@ class CurrentChannel(IntEnum):
     BASE_LIGHT  = 3
 
 # define globale vairables
-MOTOR_SKIPPED = threading.Event()
-MOTOR_SKIPPED_LOCK = threading.Lock()
+MOTOR_SKIPPED = multiprocessing.Event()
+MOTOR_SKIPPED_LOCK = multiprocessing.Lock()
 
 class CubertCurrentSensor():
 
-    run_gripper_monitor = threading.Event()
+    run_gripper_monitor = multiprocessing.Event()
     
     _current_threshold = 4#2000
 
@@ -35,16 +36,16 @@ class CubertCurrentSensor():
     _left_monitor_list = [[], []]
     _right_monitor_list = [[], []]
 
-    _left_log_lock = threading.Lock()
-    _right_log_lock = threading.Lock()
+    _left_log_lock = multiprocessing.Lock()
+    _right_log_lock = multiprocessing.Lock()
 
     def __init__(self):
         MOTOR_SKIPPED.clear() # set to false
 
         self.sensor = INA3221.SDL_Pi_INA3221(addr=0x40)
 
-        self._left_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.LEFT_MOTOR, self._left_log_list, self._left_log_lock))
-        self._right_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR, self._right_log_list, self._right_log_lock))
+        self._left_motor_monitor = multiprocessing.Process(target=monitor_grip_current, args=(self, CurrentChannel.LEFT_MOTOR, self._left_log_list, self._left_log_lock))
+        self._right_motor_monitor = multiprocessing.Process(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR, self._right_log_list, self._right_log_lock))
 
     def __del__(self):
         
@@ -74,8 +75,8 @@ class CubertCurrentSensor():
         print("Starting Threads")
         self.run_gripper_monitor.set()
 
-        self._left_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.LEFT_MOTOR, self._left_log_list, self._left_log_lock))
-        self._right_motor_monitor = threading.Thread(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR, self._right_log_list, self._right_log_lock))
+        self._left_motor_monitor = multiprocessing.Process(target=monitor_grip_current, args=(self, CurrentChannel.LEFT_MOTOR, self._left_log_list, self._left_log_lock))
+        self._right_motor_monitor = multiprocessing.Process(target=monitor_grip_current, args=(self, CurrentChannel.RIGHT_MOTOR, self._right_log_list, self._right_log_lock))
 
         self._left_motor_monitor.start()
         self._right_motor_monitor.start()
@@ -121,7 +122,7 @@ class CubertCurrentSensor():
                 self._right_monitor_list[1].append(self._right_monitor_list[0][i] - self._right_monitor_list[0][i-1])
     
     
-def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log_list, log_lock:threading.Lock):
+def monitor_grip_current(sensor:CubertCurrentSensor, channel:CurrentChannel, log_list, log_lock:multiprocessing.Lock):
     
     conversion_time = 160 # time to wait for new sample
 
