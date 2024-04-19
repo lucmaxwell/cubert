@@ -1,29 +1,32 @@
+from pprint import pprint
+
 from RubikCube import RubikCube, Face
+from RubikCubeEnv import RubikCubeEnv
 
 if __name__ == '__main__':
-    original_obs = [[[5, 3, 2],
-                     [5, 5, 4],
-                     [3, 0, 3]],
-
-                    [[3, 1, 2],
-                     [2, 2, 0],
-                     [0, 0, 0]],
-
-                    [[4, 4, 5],
-                     [4, 4, 2],
-                     [4, 3, 1]],
-
-                    [[1, 5, 2],
-                     [3, 0, 2],
-                     [2, 4, 0]],
-
-                    [[0, 3, 1],
-                     [1, 1, 2],
-                     [3, 0, 4]],
-
-                    [[4, 5, 5],
-                     [1, 3, 1],
-                     [5, 5, 1]]]
+    # original_obs = [[[5, 3, 2],
+    #                  [5, 5, 4],
+    #                  [3, 0, 3]],
+    #
+    #                 [[3, 1, 2],
+    #                  [2, 2, 0],
+    #                  [0, 0, 0]],
+    #
+    #                 [[4, 4, 5],
+    #                  [4, 4, 2],
+    #                  [4, 3, 1]],
+    #
+    #                 [[1, 5, 2],
+    #                  [3, 0, 2],
+    #                  [2, 4, 0]],
+    #
+    #                 [[0, 3, 1],
+    #                  [1, 1, 2],
+    #                  [3, 0, 4]],
+    #
+    #                 [[4, 5, 5],
+    #                  [1, 3, 1],
+    #                  [5, 5, 1]]]
 
     # Create the environment and vector for parallel environments
     # env = RubiksCubeEnv()
@@ -36,10 +39,24 @@ if __name__ == '__main__':
     #                           verbose=2,
     #                           device="cuda")
 
-    cube = RubikCube(3)
-    cube.set_state_from_observation(original_obs)
+    #cube = RubikCube()
+    #cube.set_state_from_observation(original_obs)
 
-    cube.rotate_clockwise(Face.Front)
+    env = RubikCubeEnv(num_scramble=0)
+    print("Original:")
+    env.render()
+    print()
+    while True:
+        face = int(input("Face: "))
+        spin = int(input("Spin: "))
+
+        action = face * 2 + spin
+        env.step(action)
+
+        env.render()
+        pprint(env._get_observation())
+        print()
+
 
 
     # Solve the cube

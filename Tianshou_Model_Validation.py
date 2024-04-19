@@ -17,12 +17,12 @@ def episode(policy, env, num_scramble):
     # Solve
     done = False
     count = 0
-    obs = env.scramble(num_scramble)
+    obs = env.scramble_eval(num_scramble)
 
     # Convert observation to tensor and move to the specified device
     obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0).to(device)
 
-    while not done and count < 100:
+    while not done and count < env.get_max_steps():
         count += 1
 
         #batch = Batch(obs=np.array([obs]), info={})
@@ -40,12 +40,70 @@ def episode(policy, env, num_scramble):
 
 
 def episode_with_render(policy, env, num_scramble):
+    # 3 scrambles
+    # original_obs = [
+    #     [[3, 3, 3], [4, 0, 4], [4, 0, 4]],
+    #
+    #     [[4, 0, 4], [1, 1, 1], [1, 1, 1]],
+    #
+    #     [[1, 1, 1], [5, 2, 5], [5, 2, 5]],
+    #
+    #     [[5, 2, 5], [3, 3, 3], [3, 3, 3]],
+    #
+    #     [[2, 2, 2], [4, 4, 4], [2, 2, 2]],
+    #
+    #     [[0, 5, 0], [0, 5, 0], [0, 5, 0]]
+    # ];
+
+    # 2 scrambles
+    # original_obs = [[[1, 1, 1],
+    #                  [0, 0, 4],
+    #                  [0, 0, 4]],
+    #
+    #                 [[5, 2, 2],
+    #                  [1, 1, 1],
+    #                  [1, 1, 1]],
+    #
+    #                 [[3, 3, 3],
+    #                  [5, 2, 2],
+    #                  [5, 2, 2]],
+    #
+    #                 [[0, 0, 4],
+    #                  [3, 3, 3],
+    #                  [3, 3, 3]],
+    #
+    #                 [[4, 4, 4],
+    #                  [4, 4, 4],
+    #                  [2, 2, 2]],
+    #
+    #                 [[5, 5, 0],
+    #                  [5, 5, 0],
+    #                  [5, 5, 0]]]
+
+    original_obs = [
+        [[3, 3, 3], [4, 0, 4], [4, 0, 4]],
+
+        [[4, 0, 4], [1, 1, 1], [1, 1, 1]],
+
+        [[1, 1, 1], [5, 2, 5], [5, 2, 5]],
+
+        [[5, 2, 5], [3, 3, 3], [3, 3, 3]],
+
+        [[2, 2, 2], [4, 4, 4], [2, 2, 2]],
+
+        [[0, 5, 0], [0, 5, 0], [0, 5, 0]]
+    ];
+
     # Solve
     done = False
     count = 0
     obs = env.scramble(num_scramble)
+
+    obs = env.set_observation(original_obs)
+    print("Original:")
     env.render()
-    while not done and count < 100:
+
+    while not done and count < 5:
         count += 1
 
         batch = Batch(obs=np.array([obs]), info={})
@@ -65,7 +123,7 @@ def episode_with_render(policy, env, num_scramble):
 def run_episodes(policy, env, num_scramble):
     solved = True
     solved_count = 0
-    while solved and solved_count < 100:
+    while solved and solved_count < 10000:
         solved = episode(policy, env, num_scramble)
 
         if solved:
@@ -75,19 +133,20 @@ def run_episodes(policy, env, num_scramble):
 
 
 if __name__ == '__main__':
-    #MODEL_NAME = "DQN_Tianshou.pth"
-    MODEL_NAME = "DQN_Tianshou_Vector.pth"
+    #MODEL_NAME = "DQN_Tianshou_Vector_test.pth"
+    MODEL_NAME = "DQN_Tianshou_Vector_7.pth"
 
     # Setup environment
-    num_scramble = 1
-    env = RubikCubeEnv(num_scramble=num_scramble)
+    num_scramble = 5
 
-    # Setup model and policy as during training
+    # Setup environment
+    env = RubikCubeEnv()
     state_shape = env.observation_space.shape or env.observation_space.n
     action_shape = env.action_space.shape or env.action_space.n
+
     net = Tianshou_Network(state_shape, action_shape)
     optim = Adam(net.parameters(), lr=1e-3)
-    policy = DQNPolicy(net, optim, estimation_step=10)  # Optimizer and loss function are not needed for inference
+    policy = DQNPolicy(net, optim)
 
     # Load the saved policy state
     model_path = 'Training/Saved Models/' + MODEL_NAME

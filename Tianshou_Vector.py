@@ -2,12 +2,10 @@ import math
 import os
 
 import torch
-import numpy as np
 from tianshou.policy import DQNPolicy
-from tianshou.data import Collector, ReplayBuffer, VectorReplayBuffer
+from tianshou.data import Collector, VectorReplayBuffer
 from tianshou.env import SubprocVectorEnv
 from tianshou.trainer import offpolicy_trainer
-from torch import nn
 from torch.optim import Adam, AdamW
 
 from Network import Tianshou_Network
@@ -15,7 +13,7 @@ from RubikCubeEnv import RubikCubeEnv
 from Tianshou_Model_Validation import run_episodes
 
 
-NUM_SCRAMBLES = 5
+NUM_SCRAMBLES = 1
 NUM_ENVS = 4
 
 
@@ -26,7 +24,6 @@ if __name__ == '__main__':
     torch.backends.cudnn.allow_tf32 = True
 
     MODEL_NAME = "DQN_Tianshou_Vector"
-    #MODEL_NAME = "DQN_Tianshou_Vector_1024_4"
 
     save_path = os.path.join('Training', 'Saved Models')
 
@@ -42,7 +39,7 @@ if __name__ == '__main__':
     net = Tianshou_Network(state_shape, action_shape).to(device)
 
     # Parameters
-    optim = AdamW(net.parameters(), lr=2e-4)
+    optim = Adam(net.parameters(), lr=2e-4)
     policy = DQNPolicy(
         net,
         optim,
@@ -72,12 +69,13 @@ if __name__ == '__main__':
     run_count = 1
     solved_count = run_episodes(policy, env, NUM_SCRAMBLES)
     print(f"Initial solved_count {solved_count}")
-    while solved_count < 100:
+    while solved_count < 10000:
 
         print(f"Run count {run_count}")
         print(f"Solved_count {solved_count}")
         run_count += 1
 
+        net.train()
         result = offpolicy_trainer(
             policy,
             train_collector,
@@ -94,4 +92,7 @@ if __name__ == '__main__':
         # Save the model
         torch.save(policy.state_dict(), model_file_path)
 
+        net.eval()
         solved_count = run_episodes(policy, env, NUM_SCRAMBLES)
+
+        print(f"suboptimal_states {len(env.suboptimal_states)}")

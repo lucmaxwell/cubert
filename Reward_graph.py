@@ -29,7 +29,8 @@ if __name__ == '__main__':
 
         # Calculate the reward, fixing the reward calculation
         done = cube.is_solved()  # This will always be False here
-        reward = 1 if done else -0.5 - 0.5 * (1 - cube.percentage_correct())
+        #reward = 1 if done else -0.5 - 0.5 * (1 - cube.percentage_correct())
+        reward = 1 if done else -1
 
         # Collect the reward
         rewards.append(reward)

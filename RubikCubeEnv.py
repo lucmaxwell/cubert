@@ -14,7 +14,7 @@ TOTAL_SPINS = 2  # Clockwise, Counter-clockwise
 def decode_action(action):
     face = action // TOTAL_SPINS
     spin = action % TOTAL_SPINS
-    return face, spin
+    return Face(face), spin
 
 
 class RubikCubeEnv(gymnasium.Env):
@@ -33,23 +33,19 @@ class RubikCubeEnv(gymnasium.Env):
 
         self.cube_size = cube_size
         self.num_scramble = num_scramble
-        self.current_num_scramble = num_scramble
-
-        # Weight for choosing the number of scramble
-        # 1, 1, 2, 4, 8...
-        self.weights = [1]
-        for _ in range(1, num_scramble):
-            # The new weight is the sum of all previous weights
-            new_weight = sum(self.weights)
-            self.weights.append(new_weight)
 
         self.current_num_steps = 0
         self.episode_reward = 0
 
-        # Create and scramble the Rubik's Cube
+        # Create the cube
         self.cube = RubikCube(self.cube_size)
-        self.scramble(self.current_num_scramble)
 
+        # Keep track of the unsolved states
+        self.initial_state = self._get_observation()
+        self.suboptimal_states = []
+
+        # Create and scramble the Rubik's Cube
+        self.scramble()
 
     def get_max_steps(self):
         #return int(math.ceil(self.num_scramble * 2.5))
@@ -62,23 +58,39 @@ class RubikCubeEnv(gymnasium.Env):
     def get_current_num_steps(self):
         return self.current_num_steps
 
-    def scramble(self, num_scramble):
-        self.current_num_scramble = num_scramble
+    def scramble_eval(self, num_scramble):
+        self.cube = RubikCube()
+        self.cube.scramble(num_scramble)
 
-        self.cube = RubikCube(self.cube_size)
-        self.cube.scramble(self.current_num_scramble)
+        # Track of the initial state
+        self.initial_state = self._get_observation()
 
+        # Initialize
+        self.current_num_steps = 0
+        self.episode_reward = 0
+
+        return self._get_observation()
+
+    def scramble(self):
+        # 10% pick previously unsolved state to start from
+        # if self.suboptimal_states and random.random() < 0.01:
+        #     suboptimal_state = self.suboptimal_states.pop(0)
+        #     self.cube.set_state_from_observation(suboptimal_state)
+        # else:
+        self.cube = RubikCube()
+        self.cube.scramble(self.num_scramble)
+
+        # Track of the initial state
+        self.initial_state = self._get_observation()
+
+        # Initialize
         self.current_num_steps = 0
         self.episode_reward = 0
 
         return self._get_observation()
 
     def reset(self, **kwargs):
-        #self.current_num_scramble = random.choices(range(1, self.num_scramble + 1), weights=self.weights, k=1)[0]
-        self.current_num_scramble = self.num_scramble
-
-        self.cube = RubikCube(self.cube_size)
-        self.cube.scramble(self.current_num_scramble)
+        self.cube.scramble()
 
         self.current_num_steps = 0
         self.episode_reward = 0
@@ -103,7 +115,8 @@ class RubikCubeEnv(gymnasium.Env):
 
         # Calculate reward based on the number of correct squares
         done = self.cube.is_solved()
-        reward = 1 if done else -0.5 - 0.5*self.cube.entropy()
+        reward = 1 if done else -0.5 - 0.5*(1 - self.cube.percentage_correct())
+        #reward = 1 if done else -0.5 - 0.5*self.cube.entropy()
 
         # Update the episode reward
         self.episode_reward += reward
@@ -111,6 +124,10 @@ class RubikCubeEnv(gymnasium.Env):
         # Max number of steps have reached
         if self.current_num_steps >= self.get_max_steps():
             done = True
+
+        # Save the state that is unsolved or suboptimal
+        if done and self.current_num_steps > self.num_scramble:
+            self.suboptimal_states.append(self.initial_state)
 
         # Return
         return self._get_observation(), reward, done, False, {}

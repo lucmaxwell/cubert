@@ -19,8 +19,6 @@ def performance_plot(policy, env, model_name):
 
         # Focus on the first 3 scramble only
         num_episodes = 1000
-        if num_scramble > 6:
-            num_episodes = 100
 
         # Solve the puzzles
         solved_count = 0
@@ -32,7 +30,7 @@ def performance_plot(policy, env, model_name):
         # Solved percentage
         solved_percentage = (solved_count / num_episodes) * 100
 
-        print(f"Scramble {num_scramble:<2d}: {solved_percentage}% solved")
+        print(f"Scramble {num_scramble:<2d}: {solved_percentage:.1f}% solved")
 
         solved_count_list.append(solved_percentage)
 
@@ -47,7 +45,8 @@ def performance_plot(policy, env, model_name):
 
     # Annotate each point with its value
     for i, count in enumerate(solved_count_list):
-        plt.annotate(str(count), (num_scrambles[i], solved_count_list[i]), textcoords="offset points", xytext=(0, 10),
+        plt.annotate(f"{count:.1f}", (num_scrambles[i], solved_count_list[i]), textcoords="offset points",
+                     xytext=(0, 10),
                      ha='center')
 
     # Show the plot
@@ -55,8 +54,13 @@ def performance_plot(policy, env, model_name):
 
 
 if __name__ == '__main__':
-    MODEL_NAME = "DQN_Tianshou_Vector"
+    #MODEL_NAME = "DQN_Tianshou_Vector"
     #MODEL_NAME = "DQN_Tianshou_Vector_1024_4"
+    #MODEL_NAME = "DQN_Tianshou_Vector_2"
+    #MODEL_NAME = "DQN_Tianshou_Vector_3"
+    #MODEL_NAME = "DQN_Tianshou_Vector_5"
+    MODEL_NAME = "DQN_Tianshou_Vector"
+
     save_path = os.path.join('Training', 'Saved Models')
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -75,6 +79,7 @@ if __name__ == '__main__':
     model_file_path = os.path.join(save_path, MODEL_NAME + '.pth')
     if os.path.isfile(model_file_path):
         print("Loading existing model...")
+        print(f"{MODEL_NAME}")
         policy.load_state_dict(torch.load(model_file_path))
         net.eval()  # Set to eval mode
 

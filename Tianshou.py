@@ -2,7 +2,6 @@ import math
 import os
 
 import torch
-import numpy as np
 from tianshou.policy import DQNPolicy
 from tianshou.data import Collector, ReplayBuffer, VectorReplayBuffer
 from tianshou.env import SubprocVectorEnv
@@ -11,7 +10,7 @@ from torch import nn
 from torch.optim import Adam, AdamW
 
 from Network import Tianshou_Network
-from RubikCubeEnv import RubiksCubeEnv
+from RubikCubeEnv import RubikCubeEnv
 from Tianshou_Model_Validation import run_episodes
 
 
@@ -24,7 +23,7 @@ if __name__ == '__main__':
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.backends.cudnn.allow_tf32 = True
 
-    MODEL_NAME = "DQN_Tianshou"
+    MODEL_NAME = "DQN_Tianshou_Vector_2"
 
     save_path = os.path.join('Training', 'Saved Models')
 
@@ -32,7 +31,7 @@ if __name__ == '__main__':
     print(f"Using device: {device}")
 
     # Set up the environment
-    env = RubiksCubeEnv(num_scramble=NUM_SCRAMBLES)
+    env = RubikCubeEnv(num_scramble=NUM_SCRAMBLES)
 
     # Set up the network and policy
     state_shape = env.observation_space.shape or env.observation_space.n
@@ -52,7 +51,7 @@ if __name__ == '__main__':
     buffer = ReplayBuffer(size=10000)
     train_collector = Collector(policy, env, buffer)
     test_envs = SubprocVectorEnv(
-        [lambda: RubiksCubeEnv(num_scramble=NUM_SCRAMBLES) for _ in range(4)]
+        [lambda: RubikCubeEnv(num_scramble=NUM_SCRAMBLES) for _ in range(4)]
     )
     test_collector = Collector(policy, test_envs)
 
