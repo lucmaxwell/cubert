@@ -1,0 +1,220 @@
+import time
+from CurrentSensor import *
+from Motor import *
+import threading
+import multiprocessing
+import signal
+import RPi.GPIO as GPIO
+import sys
+import numpy as np
+import Vision
+from Actions import *
+import Solver
+
+# Motor Pins
+motor_en_pin = 26
+motor_step_pin = [27, 6, 19]
+motor_dir_pin = [17, 5, 13]
+
+# End stop for arm
+end_stop_hand_open_pin      = 16  # GPIO number for arm open limit end stop
+end_stop_arm_upperLimit_pin = 20  # GPIO number for arm upper limit end stop
+end_stop_arm_lowerLimit_pin = 21  # GPIO number for arm lower limit end stop
+
+sensor = CubertCurrentSensor()
+
+motor = CubertMotor(motor_en_pin, motor_step_pin, motor_dir_pin, end_stop_arm_upperLimit_pin, end_stop_arm_lowerLimit_pin, end_stop_hand_open_pin, sensor)
+
+vision = Vision.CubertVision()
+
+solver = Solver.Solver()
+
+actions = CubertActions(motor, vision, solver, resize_cubelets=False)
+
+light_on = False
+
+current_base = []
+current_left = []
+current_right = []
+
+
+_run_thread = multiprocessing.Event()
+
+def getSelection():
+    print()
+    print()
+    print()
+    print("==========================================")
+    print("==========================================")
+    print()
+    
+    print("0: Single solve")
+    print("1: Scramble")
+    print("2: Endless Scramble + solve")
+    print("3: Take picture, save to ./images")
+    print("4: AI solve")
+    print("5: AI solve (no actuation)")
+    print("6: Recalibrate Grip Strength")
+    print("7: Alter Speed")
+    print("9: Quit")
+    selection = input("Select an option: ")
+    return selection
+
+def spin_base():
+    actions.rotateCube(BaseRotation.HALF, Direction.CCW)
+
+# currentThread = threading.Thread(target=check_light)
+baseThread = multiprocessing.Process(target=spin_base)
+
+def sigint_handler(sig, frame):
+    global actions
+    global sensor
+    global motor
+
+    del actions
+    del motor
+    del sensor
+
+    GPIO.cleanup()
+    sys.exit(0)
+
+def worker(selection):
+
+    global _run_thread
+
+    if selection == '1':
+        actions.solver.loadModel()
+
+    while _run_thread.is_set():
+
+        selection = getSelection()
+
+        if selection == '0': # Single solve
+            actions.solve(True)
+
+        elif selection == '1': # Single scramble
+            actions.scramble(13)
+
+        elif selection == '2': # Endless scramble + solve
+            while True:
+                actions.scramble(13)
+                time.sleep(5)
+                motor.homeLight()
+                time.sleep(5)
+                actions.solve(True)
+                time.sleep(15)
+
+        elif selection == '3': # Take an image
+            cube, mask = actions.getAllImages(True)
+            vision.writeImage("testingImage.png", cube)
+            vision.writeImage("testingmask.png", mask)
+
+        elif selection =='4':
+            actions.solve(writeImages=True, aiSolve=True)
+
+        elif selection =='5':
+            actions.solve(writeImages=True, aiSolve=True, actuate=False)
+
+        elif selection == '6':
+            print("Current Gripper Strength Offset is {}".format(actions.motor._grip_strength_offset))
+            val = input("New Grip Strength Offest Value: ")
+            try:
+                val = int(val)
+                actions.motor._grip_strength_offset = val
+                print("Changed Grip Strength Offset to {}".format(actions.motor._grip_strength_offset))
+            except:
+                print("Input Invalid: Not Changing Grip Strength Offset!")
+
+            actions.motor.calibrateGripStrength()
+
+        elif selection == '7':
+            print("Current Gripper Speed is {}".format(actions._default_arm_speed))
+
+            val = input("New Gripper Speed Value: ")
+
+            try:
+                val = int(val)
+
+                if val < 0 or val > 400:
+                    raise Exception("Value should be between 0 and 400")
+
+                actions._default_arm_speed = val
+                print("Changed Gripper Speed to {}".format(actions._default_arm_speed))
+            except:
+                print("Input Invalid: Not Changing Gripper Speed!")
+
+            print("Current Base Speed is {}".format(actions._default_base_speed))
+
+            val = input("New Base Speed Value: ")
+
+            try:
+                val = int(val)
+
+                if val < 0 or val > 400:
+                    raise Exception("Value should be between 0 and 400")
+
+                actions._default_arm_speed = val
+                print("Changed Base Speed to {}".format(actions._default_base_speed))
+            except:
+                print("Input Invalid: Not Changing Base Speed!")
+
+        elif selection =='9':
+            print("Andrew didn't implement quitting because he doesn't know how to do it properly")
+            print("So Matthew fixed it for him")
+            _run_thread.clear()
+
+_PANIC_BUTTON_PIN = 4
+
+if __name__ == '__main__':
+    print("Running Test Script")
+
+    # Setup panic pin
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(_PANIC_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+    signal.signal(signal.SIGINT, sigint_handler)
+
+    print()
+    print()
+    print()
+    print("==========================================")
+    print("==========================================")
+    print()
+    
+    print("0: Continue")
+    print("1: Preload AI Model")
+
+    selection = input()
+
+    _run_thread.set()
+
+    # Set up the work thread
+    worker_thread = multiprocessing.Process(target=worker, args=(selection))
+    worker_thread.daemon = True
+    worker_thread.start()
+
+    # Run the program until panic
+    panic = False
+    _PANIC_BUTTON_PIN = 4
+    while _run_thread.is_set() and not panic:
+        time.sleep(0.01)
+
+        # Take a reading of the panic button
+        panic = (GPIO.input(_PANIC_BUTTON_PIN) == GPIO.LOW)
+
+        # End the worker thread
+        if panic:
+            _run_thread.clear()
+            print("Program terminated due to panic button pressed.")
+
+    print("Cleaning Up Program")
+
+    del sensor
+    del motor
+    del vision
+    del solver
+    del actions
+
+    GPIO.cleanup()
+    sys.exit(0)
+
